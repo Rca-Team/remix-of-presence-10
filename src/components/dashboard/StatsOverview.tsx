@@ -40,18 +40,25 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ isLoading, data, refetch 
       
       if (usersError) throw usersError;
       
-      // Count present users today
-      const { count: presentToday, error: presentError } = await supabase
+      // Count UNIQUE present users today (not total attendance marks)
+      const { data: presentData, error: presentError } = await supabase
         .from('attendance_records')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'present')
+        .select('user_id, device_info')
+        .in('status', ['present', 'late'])
         .gte('timestamp', `${today}T00:00:00`)
         .lte('timestamp', `${today}T23:59:59`);
       
       if (presentError) throw presentError;
       
+      // Get unique users
+      const uniqueUsers = new Set<string>();
+      (presentData || []).forEach(record => {
+        const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
+        if (userId) uniqueUsers.add(String(userId));
+      });
+      
       const totalUsersCount = totalUsers || 0;
-      const presentTodayCount = presentToday || 0;
+      const presentTodayCount = uniqueUsers.size;
       const presentPercentage = totalUsersCount > 0 ? Math.round((presentTodayCount / totalUsersCount) * 100) : 0;
       
       return {

@@ -118,21 +118,38 @@ const Admin = () => {
         setStats(prev => ({ ...prev, totalFaces: uniqueFaces.length }));
       }
 
-      // Fetch today's attendance
+      // Fetch today's attendance - count UNIQUE users only
       const today = new Date().toISOString().split('T')[0];
       const { data: todayData } = await supabase
         .from('attendance_records')
-        .select('status')
+        .select('user_id, status, device_info')
         .gte('timestamp', `${today}T00:00:00`)
         .lte('timestamp', `${today}T23:59:59`)
         .neq('status', 'registered');
 
       if (todayData) {
+        // Get unique users based on user_id or employee_id
+        const uniquePresent = new Set<string>();
+        const uniqueLate = new Set<string>();
+        const uniqueTotal = new Set<string>();
+        
+        todayData.forEach(record => {
+          const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id || record.device_info;
+          if (userId) {
+            uniqueTotal.add(String(userId));
+            if (record.status === 'present') {
+              uniquePresent.add(String(userId));
+            } else if (record.status === 'late') {
+              uniqueLate.add(String(userId));
+            }
+          }
+        });
+        
         setStats(prev => ({
           ...prev,
-          todayAttendance: todayData.length,
-          presentToday: todayData.filter(r => r.status === 'present').length,
-          lateToday: todayData.filter(r => r.status === 'late').length,
+          todayAttendance: uniqueTotal.size,
+          presentToday: uniquePresent.size,
+          lateToday: uniqueLate.size,
         }));
       }
 
@@ -241,7 +258,7 @@ const Admin = () => {
   // Mobile navigation items
   const mobileNavItems = [
     { id: 'principal', icon: School, label: 'Dashboard', color: 'from-blue-500 to-blue-600' },
-    { id: 'categories', icon: FolderKanban, label: 'Categories', color: 'from-purple-500 to-pink-500' },
+    { id: 'categories', icon: FolderKanban, label: 'Sections', color: 'from-purple-500 to-pink-500' },
     { id: 'faces', icon: User, label: 'All Faces', color: 'from-green-500 to-emerald-500', badge: attendanceUpdated },
     { id: 'calendar', icon: Calendar, label: 'Calendar', color: 'from-orange-500 to-red-500' },
     { id: 'register', icon: UserPlus, label: 'Quick Register', color: 'from-cyan-500 to-blue-500' },
@@ -445,7 +462,7 @@ const Admin = () => {
                     </TabsTrigger>
                     <TabsTrigger value="categories" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg">
                       <FolderKanban className="h-4 w-4" />
-                      <span>Categories</span>
+                      <span>Sections</span>
                     </TabsTrigger>
                     <TabsTrigger value="faces" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg">
                       <User className="h-4 w-4" />
