@@ -452,19 +452,19 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
               />
             </div>
             <div className="col-span-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">Section *</Label>
               <Select 
                 value={formData.category} 
                 onValueChange={(value: Category) => setFormData(prev => ({ ...prev, category: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select section" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="A">Category A</SelectItem>
-                  <SelectItem value="B">Category B</SelectItem>
-                  <SelectItem value="C">Category C</SelectItem>
-                  <SelectItem value="D">Category D</SelectItem>
+                  <SelectItem value="A">Section A</SelectItem>
+                  <SelectItem value="B">Section B</SelectItem>
+                  <SelectItem value="C">Section C</SelectItem>
+                  <SelectItem value="D">Section D</SelectItem>
                   <SelectItem value="Teacher">Teacher</SelectItem>
                 </SelectContent>
               </Select>

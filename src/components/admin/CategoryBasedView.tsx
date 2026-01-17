@@ -52,10 +52,10 @@ interface CategoryUser {
 }
 
 const CATEGORIES: { key: Category; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: 'A', label: 'Category A', icon: <span className="font-bold text-lg">A</span>, color: 'bg-blue-500' },
-  { key: 'B', label: 'Category B', icon: <span className="font-bold text-lg">B</span>, color: 'bg-green-500' },
-  { key: 'C', label: 'Category C', icon: <span className="font-bold text-lg">C</span>, color: 'bg-yellow-500' },
-  { key: 'D', label: 'Category D', icon: <span className="font-bold text-lg">D</span>, color: 'bg-orange-500' },
+  { key: 'A', label: 'Section A', icon: <span className="font-bold text-lg">A</span>, color: 'bg-blue-500' },
+  { key: 'B', label: 'Section B', icon: <span className="font-bold text-lg">B</span>, color: 'bg-green-500' },
+  { key: 'C', label: 'Section C', icon: <span className="font-bold text-lg">C</span>, color: 'bg-yellow-500' },
+  { key: 'D', label: 'Section D', icon: <span className="font-bold text-lg">D</span>, color: 'bg-orange-500' },
   { key: 'Teacher', label: 'Teachers', icon: <GraduationCap className="h-5 w-5" />, color: 'bg-purple-500' },
 ];
 
@@ -558,7 +558,7 @@ const CategoryBasedView: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold">Select a Category</h2>
+        <h2 className="text-xl font-semibold">Select a Section</h2>
         <p className="text-sm text-muted-foreground">View users, attendance reports, and send bulk notifications</p>
       </div>
       

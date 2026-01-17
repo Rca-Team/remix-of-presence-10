@@ -536,74 +536,112 @@ const MultipleFaceAttendanceCapture = () => {
                 </div>
               </>
             ) : (
-              <>
-                {/* Results View */}
-                <div className="space-y-4">
-                  {/* Summary */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-green-600">
-                        {processedResults.filter(r => r.status === 'present').length}
-                      </p>
-                      <p className="text-sm text-green-600">Present</p>
-                    </div>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-yellow-600">
-                        {processedResults.filter(r => r.status === 'late').length}
-                      </p>
-                      <p className="text-sm text-yellow-600">Late</p>
-                    </div>
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-red-600">
-                        {processedResults.filter(r => r.status === 'unrecognized').length}
-                      </p>
-                      <p className="text-sm text-red-600">Unknown</p>
-                    </div>
+              <div className="space-y-6">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-5 text-center text-white shadow-lg">
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-90" />
+                    <p className="text-3xl font-bold">
+                      {processedResults.filter(r => r.status === 'present').length}
+                    </p>
+                    <p className="text-sm opacity-90">Present</p>
                   </div>
+                  <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl p-5 text-center text-white shadow-lg">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-90" />
+                    <p className="text-3xl font-bold">
+                      {processedResults.filter(r => r.status === 'late').length}
+                    </p>
+                    <p className="text-sm opacity-90">Late</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-xl p-5 text-center text-white shadow-lg">
+                    <XCircle className="h-8 w-8 mx-auto mb-2 opacity-90" />
+                    <p className="text-3xl font-bold">
+                      {processedResults.filter(r => r.status === 'unrecognized').length}
+                    </p>
+                    <p className="text-sm opacity-90">Unknown</p>
+                  </div>
+                </div>
 
-                  {/* Individual Results */}
-                  <div className="max-h-[400px] overflow-y-auto space-y-2">
-                    {processedResults.map((result, index) => (
-                      <div 
-                        key={result.id}
-                        className={`flex items-center gap-4 p-3 rounded-lg border ${getStatusColor(result.status)}`}
-                      >
-                        <Avatar className="h-12 w-12">
+                {/* Results List - Enhanced Cards */}
+                <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
+                  {processedResults.map((result, index) => (
+                    <div 
+                      key={result.id}
+                      className={`flex items-center gap-4 p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md ${
+                        result.status === 'present' ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800' : 
+                        result.status === 'late' ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800' : 
+                        'bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800'
+                      }`}
+                    >
+                      {/* Profile Photo */}
+                      <div className="relative">
+                        <Avatar className={`h-16 w-16 ring-2 ring-offset-2 ring-offset-background shadow-md ${
+                          result.status === 'present' ? 'ring-green-500' : 
+                          result.status === 'late' ? 'ring-yellow-500' : 
+                          'ring-red-500'
+                        }`}>
                           {result.imageUrl ? (
-                            <AvatarImage src={result.imageUrl} alt={result.name} />
+                            <AvatarImage 
+                              src={result.imageUrl.startsWith('http') ? result.imageUrl : `https://pziiwqqnjwotqxvxdics.supabase.co/storage/v1/object/public/face-images/${result.imageUrl}`} 
+                              alt={result.name} 
+                              className="object-cover"
+                            />
                           ) : (
                             <div className="h-full w-full bg-muted flex items-center justify-center">
-                              <Users className="h-6 w-6" />
+                              <Users className="h-8 w-8 text-muted-foreground" />
                             </div>
                           )}
                         </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium">{result.name}</p>
-                          <p className="text-sm opacity-80">
-                            {result.confidence ? `${(result.confidence * 100).toFixed(1)}% confidence` : 'No match found'}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
+                        {/* Status Badge */}
+                        <div className={`absolute -bottom-1 -right-1 rounded-full p-1.5 shadow-sm ${
+                          result.status === 'present' ? 'bg-green-500 text-white' : 
+                          result.status === 'late' ? 'bg-yellow-500 text-white' : 
+                          'bg-red-500 text-white'
+                        }`}>
                           {getStatusIcon(result.status)}
-                          <span className="capitalize font-medium">{result.status}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Reset Button */}
-                  <div className="flex justify-center pt-4">
-                    <Button
-                      size="lg"
-                      onClick={handleReset}
-                      className="w-full max-w-md"
-                    >
-                      <RotateCcw className="mr-2 h-5 w-5" />
-                      Capture More
-                    </Button>
-                  </div>
+                      {/* User Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg truncate">
+                          {result.status === 'unrecognized' ? 'Unrecognized Person' : result.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge 
+                            variant={result.status === 'present' ? 'default' : result.status === 'late' ? 'secondary' : 'destructive'}
+                            className="text-xs"
+                          >
+                            {result.status === 'present' ? 'Present' : result.status === 'late' ? 'Late' : 'Not Registered'}
+                          </Badge>
+                          {result.confidence && (
+                            <span className="text-xs text-muted-foreground">
+                              {(result.confidence * 100).toFixed(0)}% match
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Index */}
+                      <div className="text-2xl font-bold text-muted-foreground/30">
+                        #{index + 1}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </>
+
+                {/* Reset Button */}
+                <div className="flex justify-center pt-2">
+                  <Button
+                    size="lg"
+                    onClick={handleReset}
+                    className="w-full max-w-md bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+                  >
+                    <RotateCcw className="mr-2 h-5 w-5" />
+                    Scan More Faces
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         )}
