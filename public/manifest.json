@@ -1,0 +1,49 @@
+{
+  "name": "Presence - Face Attendance",
+  "short_name": "Presence",
+  "description": "AI-Powered Face Recognition Attendance System",
+  "theme_color": "#3b82f6",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Mark Attendance",
+      "short_name": "Attendance",
+      "description": "Quick access to attendance marking",
+      "url": "/attendance",
+      "icons": [{ "src": "/og-image.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View attendance dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/og-image.png", "sizes": "512x512" }]
+    }
+  ]
+}

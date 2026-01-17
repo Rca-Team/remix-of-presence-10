@@ -1,0 +1,360 @@
+import { supabase } from '@/integrations/supabase/client';
+import { descriptorToString, stringToDescriptor } from './ModelService';
+import { getAttendanceCutoffTime } from '../attendance/AttendanceSettingsService';
+import { getAllTrainedDescriptors, calculateBestMatchDistance } from './ProgressiveTrainingService';
+
+interface Employee {
+  id: string;
+  name: string;
+  employee_id: string;
+  department: string;
+  position: string;
+  firebase_image_url: string;
+  avatar_url?: string;
+  trainingSamples?: number;
+}
+
+interface RecognitionResult {
+  recognized: boolean;
+  employee?: Employee;
+  confidence?: number;
+}
+
+interface DeviceInfo {
+  metadata?: {
+    name?: string;
+    employee_id?: string;
+    department?: string;
+    position?: string;
+    firebase_image_url?: string;
+    faceDescriptor?: string;
+  };
+  type?: string;
+  timestamp?: string;
+  registration?: boolean;
+  firebase_image_url?: string;
+}
+
+export async function recognizeFace(faceDescriptor: Float32Array): Promise<RecognitionResult> {
+  try {
+    console.log('Starting face recognition with progressive training');
+    
+    const normalizedInput = normalizeDescriptor(faceDescriptor);
+    
+    // First, try matching against progressively trained descriptors
+    const trainedDescriptors = await getAllTrainedDescriptors();
+    
+    let bestMatch: { userId: string; userName: string; distance: number; sampleCount: number } | null = null;
+    let bestDistance = 0.50; // Tighter threshold for trained descriptors
+    
+    for (const [userId, data] of trainedDescriptors) {
+      const distance = calculateBestMatchDistance(
+        normalizedInput,
+        data.descriptors,
+        data.averagedDescriptor
+      );
+      
+      console.log(`Progressive match: ${data.userName} (${data.sampleCount} samples) - distance: ${distance.toFixed(4)}`);
+      
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestMatch = {
+          userId,
+          userName: data.userName,
+          distance,
+          sampleCount: data.sampleCount
+        };
+      }
+    }
+    
+    // If found a match in trained descriptors, fetch full user info
+    if (bestMatch) {
+      console.log(`Best progressive match: ${bestMatch.userName} with ${bestMatch.sampleCount} training samples`);
+      
+      // Fetch registration data for complete employee info
+      const { data: registrationData } = await supabase
+        .from('attendance_records')
+        .select('id, user_id, device_info')
+        .eq('user_id', bestMatch.userId)
+        .in('status', ['registered', 'pending_approval'])
+        .limit(1)
+        .single();
+        
+      if (registrationData) {
+        const deviceInfo = registrationData.device_info as DeviceInfo | null;
+        const employeeData = deviceInfo?.metadata;
+        
+        let avatarUrl = employeeData?.firebase_image_url || '';
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('user_id', bestMatch.userId)
+          .maybeSingle();
+        
+        if (profileData?.avatar_url) {
+          avatarUrl = profileData.avatar_url;
+        }
+        
+        return {
+          recognized: true,
+          employee: {
+            id: bestMatch.userId,
+            name: employeeData?.name || bestMatch.userName,
+            employee_id: employeeData?.employee_id || 'Unknown',
+            department: employeeData?.department || 'Unknown',
+            position: employeeData?.position || 'Unknown',
+            firebase_image_url: employeeData?.firebase_image_url || '',
+            avatar_url: avatarUrl,
+            trainingSamples: bestMatch.sampleCount
+          },
+          confidence: 1 - bestMatch.distance
+        };
+      }
+    }
+    
+    // Fallback to legacy recognition from attendance_records
+    console.log('Falling back to legacy recognition from attendance_records');
+    
+    const { data, error } = await supabase
+      .from('attendance_records')
+      .select('id, user_id, status, device_info, face_descriptor')
+      .in('status', ['registered', 'pending_approval']);
+    
+    if (error) {
+      console.error('Error querying attendance records:', error);
+      throw new Error(`Database query failed: ${error.message}`);
+    }
+    
+    if (!data || data.length === 0) {
+      console.log('No registered faces found in the database');
+      return { recognized: false };
+    }
+    
+    console.log(`Found ${data.length} registered faces for legacy comparison`);
+    
+    let legacyBestMatch: any = null;
+    let legacyBestDistance = 0.55; // Tighter threshold for better accuracy
+    
+    // Compare the face descriptor against all registered faces
+    for (const record of data) {
+      try {
+        // Prefer explicit column first
+        if (record.face_descriptor && typeof record.face_descriptor === 'string') {
+          const registeredDescriptor = stringToDescriptor(record.face_descriptor);
+          const distance = calculateDistance(faceDescriptor, registeredDescriptor);
+          console.log(`Face comparison (column): distance = ${distance.toFixed(4)} for record ${record.id}`);
+          if (distance < legacyBestDistance) {
+            legacyBestDistance = distance;
+            legacyBestMatch = record;
+          }
+        }
+        
+        // Fallback to legacy storage in device_info.metadata.faceDescriptor
+        const deviceInfo = record.device_info as DeviceInfo | null;
+        const metaDescriptor = deviceInfo?.metadata?.faceDescriptor;
+        if (metaDescriptor && typeof metaDescriptor === 'string') {
+          const registeredDescriptor = stringToDescriptor(metaDescriptor);
+          const distance = calculateDistance(faceDescriptor, registeredDescriptor);
+          const personName = deviceInfo?.metadata?.name || 'unknown';
+          console.log(`Face comparison (metadata): distance = ${distance.toFixed(4)} for ${personName}`);
+          if (distance < legacyBestDistance) {
+            legacyBestDistance = distance;
+            legacyBestMatch = record;
+          }
+        }
+      } catch (e) {
+        console.error('Error processing record:', e);
+      }
+    }
+    
+    if (legacyBestMatch) {
+      console.log(`Best legacy match found with confidence: ${((1 - legacyBestDistance) * 100).toFixed(2)}%`);
+      
+      const deviceInfo = legacyBestMatch.device_info as DeviceInfo | null;
+      const employeeData = deviceInfo?.metadata;
+      
+      if (!employeeData) {
+        console.error('Employee metadata missing from best match');
+        return { recognized: false };
+      }
+
+      // Fetch avatar_url from profiles table
+      let avatarUrl = employeeData.firebase_image_url || '';
+      if (legacyBestMatch.user_id && legacyBestMatch.user_id !== 'unknown') {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('user_id', legacyBestMatch.user_id)
+          .maybeSingle();
+        
+        if (profileData?.avatar_url) {
+          avatarUrl = profileData.avatar_url;
+          console.log(`Fetched avatar_url from profiles: ${avatarUrl}`);
+        }
+      }
+      
+      const employee: Employee = {
+        id: legacyBestMatch.user_id || 'unknown',
+        name: employeeData.name || 'Unknown',
+        employee_id: employeeData.employee_id || 'Unknown',
+        department: employeeData.department || 'Unknown',
+        position: employeeData.position || 'Unknown',
+        firebase_image_url: employeeData.firebase_image_url || '',
+        avatar_url: avatarUrl,
+      };
+      
+      return {
+        recognized: true,
+        employee,
+        confidence: 1 - legacyBestDistance
+      };
+    }
+    
+    console.log('No face match found above confidence threshold');
+    return { recognized: false };
+  } catch (error) {
+    console.error('Face recognition error:', error);
+    throw error;
+  }
+}
+
+// Normalize a face descriptor for consistent comparison
+function normalizeDescriptor(descriptor: Float32Array): Float32Array {
+  let magnitude = 0;
+  for (let i = 0; i < descriptor.length; i++) {
+    magnitude += descriptor[i] * descriptor[i];
+  }
+  magnitude = Math.sqrt(magnitude);
+  
+  if (magnitude === 0) return descriptor;
+  
+  const normalized = new Float32Array(descriptor.length);
+  for (let i = 0; i < descriptor.length; i++) {
+    normalized[i] = descriptor[i] / magnitude;
+  }
+  return normalized;
+}
+
+// Calculate Euclidean distance between two face descriptors
+function calculateDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+  if (descriptor1.length !== descriptor2.length) {
+    throw new Error('Face descriptors have different dimensions');
+  }
+  
+  // Normalize both descriptors before comparison
+  const norm1 = normalizeDescriptor(descriptor1);
+  const norm2 = normalizeDescriptor(descriptor2);
+  
+  let sum = 0;
+  for (let i = 0; i < norm1.length; i++) {
+    const diff = norm1[i] - norm2[i];
+    sum += diff * diff;
+  }
+  
+  return Math.sqrt(sum);
+}
+
+// Check if current time is past cutoff time
+async function isPastCutoffTime(): Promise<boolean> {
+  try {
+    const cutoffTime = await getAttendanceCutoffTime();
+    const now = new Date();
+    const cutoffDate = new Date();
+    cutoffDate.setHours(cutoffTime.hour, cutoffTime.minute, 0, 0);
+    
+    return now > cutoffDate;
+  } catch (error) {
+    console.error('Error checking cutoff time, defaulting to 9:00 AM:', error);
+    // Fallback to 9:00 AM if there's an error
+    const now = new Date();
+    const cutoffDate = new Date();
+    cutoffDate.setHours(9, 0, 0, 0);
+    return now > cutoffDate;
+  }
+}
+
+export async function recordAttendance(
+  userId: string,
+  status: 'present' | 'late' | 'absent' | 'unauthorized',
+  confidence?: number,
+  deviceInfo?: any
+): Promise<any> {
+  try {
+    console.log(`Recording attendance for user ${userId} with status ${status}`);
+    
+    // Apply time-based status logic - if it's past cutoff time, mark as late
+    let timeAdjustedStatus = status;
+    if (status === 'present') {
+      const pastCutoff = await isPastCutoffTime();
+      if (pastCutoff) {
+        timeAdjustedStatus = 'late';
+        console.log('Adjusting status to late based on cutoff time');
+      } else {
+        console.log('Status remains present - before cutoff time');
+      }
+    }
+    
+    // Normalize status to 'present' for universal compatibility
+    let normalizedStatus = timeAdjustedStatus;
+    if (status === 'unauthorized') {
+      normalizedStatus = 'present';
+      console.log('Normalizing status from unauthorized to present for consistency');
+    }
+    
+    const timestamp = new Date().toISOString();
+    
+    // First, check if we can get user info from profiles table
+    let userName = null;
+    let userMetadata = null;
+    
+    if (userId && userId !== 'unknown') {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single();
+        
+      if (profileData && profileData.username) {
+        userName = profileData.username;
+        console.log(`Found username '${userName}' in profiles table`);
+      }
+    }
+    
+    // Preserve existing device info if available
+    const fullDeviceInfo = {
+      type: 'webcam',
+      timestamp,
+      confidence,
+      ...deviceInfo,
+      metadata: {
+        ...deviceInfo?.metadata,
+        name: userName || deviceInfo?.metadata?.name || 'Unknown'
+      }
+    };
+    
+    console.log('Recording attendance with device info:', fullDeviceInfo);
+    
+    const { data, error } = await supabase
+      .from('attendance_records')
+      .insert({
+        user_id: userId,
+        timestamp,
+        status: normalizedStatus,
+        device_info: fullDeviceInfo,
+        confidence_score: confidence
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error recording attendance:', error);
+      throw new Error(`Failed to record attendance: ${error.message}`);
+    }
+    
+    console.log('Attendance recorded successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in recordAttendance:', error);
+    throw error;
+  }
+}
