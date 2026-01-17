@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import PageLayout from '@/components/layouts/PageLayout';
@@ -13,10 +13,9 @@ import QRCodeScanner from '@/components/attendance/QRCodeScanner';
 import LiveAttendanceFeed from '@/components/attendance/LiveAttendanceFeed';
 import QuickStatsPanel from '@/components/attendance/QuickStatsPanel';
 import VoiceCommands from '@/components/attendance/VoiceCommands';
-import GestureControls from '@/components/attendance/GestureControls';
 import AttendanceMethodToggle from '@/components/attendance/AttendanceMethodToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Users, BarChart3, Info, Grid3x3, Scan, Sparkles, Zap, Activity, Brain, QrCode, Hand } from 'lucide-react';
+import { Camera, Users, BarChart3, Info, Grid3x3, Scan, Sparkles, Zap, Activity, Brain, QrCode } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -46,47 +45,6 @@ const Attendance = () => {
     }
   };
 
-  const handleSwipeLeft = useCallback(() => {
-    const currentIndex = tabConfig.findIndex(t => t.value === activeTab);
-    const nextIndex = (currentIndex + 1) % tabConfig.length;
-    setActiveTab(tabConfig[nextIndex].value);
-    toast({
-      title: tabConfig[nextIndex].label,
-      description: 'Switched tab',
-      duration: 1500
-    });
-  }, [activeTab, toast]);
-
-  const handleSwipeRight = useCallback(() => {
-    const currentIndex = tabConfig.findIndex(t => t.value === activeTab);
-    const prevIndex = (currentIndex - 1 + tabConfig.length) % tabConfig.length;
-    setActiveTab(tabConfig[prevIndex].value);
-    toast({
-      title: tabConfig[prevIndex].label,
-      description: 'Switched tab',
-      duration: 1500
-    });
-  }, [activeTab, toast]);
-
-  const handleSwipeDown = useCallback(() => {
-    toast({
-      title: "Refreshing...",
-      description: "Updating attendance data",
-      duration: 1500
-    });
-  }, [toast]);
-
-  const handleDoubleTap = useCallback(() => {
-    setAttendanceMethod(m => m === 'face' ? 'qr' : 'face');
-    toast({
-      title: `Switched to ${attendanceMethod === 'face' ? 'QR Code' : 'Face Recognition'}`,
-      duration: 1500
-    });
-  }, [attendanceMethod, toast]);
-
-  const handleLongPress = useCallback(() => {
-    // Shows gesture help
-  }, []);
 
   return (
     <PageTransition>
@@ -128,17 +86,7 @@ const Attendance = () => {
           />
         </div>
 
-        <GestureControls
-          enabled={isMobile}
-          onSwipeLeft={handleSwipeLeft}
-          onSwipeRight={handleSwipeRight}
-          onSwipeDown={handleSwipeDown}
-          onDoubleTap={handleDoubleTap}
-          onLongPress={handleLongPress}
-          activeTab={activeTab}
-          tabs={tabConfig}
-        >
-          <div className="relative mobile-container py-6 sm:py-8">
+        <div className="relative mobile-container py-6 sm:py-8">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -179,7 +127,6 @@ const Attendance = () => {
                   { icon: Zap, text: '<0.5s Scan', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/30' },
                   { icon: Sparkles, text: '99.7% Accuracy', color: 'text-cyan-400', bg: 'bg-cyan-400/10 border-cyan-400/30' },
                   { icon: Activity, text: 'Live Processing', color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/30' },
-                  { icon: Hand, text: 'Gesture Control', color: 'text-purple-400', bg: 'bg-purple-400/10 border-purple-400/30' },
                 ].map((item, i) => (
                   <motion.div 
                     key={i} 
@@ -458,7 +405,6 @@ const Attendance = () => {
               </AnimatePresence>
             </Tabs>
           </div>
-        </GestureControls>
       </PageLayout>
     </PageTransition>
   );

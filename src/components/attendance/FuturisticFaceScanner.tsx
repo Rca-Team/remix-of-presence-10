@@ -34,6 +34,7 @@ import {
   Users
 } from 'lucide-react';
 import OfflineIndicator from './OfflineIndicator';
+import LiveFaceOverlay, { RecognizedFaceData } from './LiveFaceOverlay';
 
 interface FuturisticFaceScannerProps {
   onScanComplete?: (result: { recognized: boolean; name?: string; confidence?: number }) => void;
@@ -48,6 +49,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
   const { toast } = useToast();
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const detectionIntervalRef = useRef<number | null>(null);
   
   const [modelsLoaded, setModelsLoaded] = useState(areModelsLoaded());
@@ -58,12 +60,29 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
   const [faceCount, setFaceCount] = useState(0);
+  const [recognizedFaces, setRecognizedFaces] = useState<RecognizedFaceData[]>([]);
+  const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [systemStatus, setSystemStatus] = useState({
     neural: true,
     biometric: true,
     cloud: navigator.onLine,
     recognition: true
   });
+
+  // Track container dimensions for overlay positioning
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setContainerDimensions({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight
+        });
+      }
+    };
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   useEffect(() => {
     const initModels = async () => {
@@ -198,71 +217,122 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
     setIsScanning(true);
     setScanPhase('detecting');
     setScanResult(null);
+    setRecognizedFaces([]);
 
     try {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (!imageSrc) throw new Error('Failed to capture image');
+      const video = webcamRef.current.video;
+      if (!video) throw new Error('Video not available');
 
-      // Phase 1: Detecting
-      await new Promise(r => setTimeout(r, 600));
+      // Phase 1: Detecting all faces with descriptors
+      await new Promise(r => setTimeout(r, 400));
       setScanPhase('analyzing');
 
-      // Phase 2: Analyzing - Get face descriptor from image
-      const img = document.createElement('img');
-      img.src = imageSrc;
-      await new Promise<void>((resolve) => { img.onload = () => resolve(); });
-      
-      const descriptor = await getFaceDescriptor(img);
-      if (!descriptor) {
-        throw new Error('Could not extract face features');
+      // Detect all faces with full descriptors
+      const fullDetections = await faceapi
+        .detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+        .withFaceLandmarks()
+        .withFaceDescriptors();
+
+      console.log(`Found ${fullDetections.length} faces to process`);
+
+      if (fullDetections.length === 0) {
+        throw new Error('No faces detected in frame');
       }
 
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 400));
       setScanPhase('matching');
 
-      // Phase 3: Matching
-      const result = await recognizeFace(descriptor);
-      
-      await new Promise(r => setTimeout(r, 400));
-      setScanPhase('complete');
+      // Process all detected faces
+      const results: RecognizedFaceData[] = [];
+      let recognizedCount = 0;
 
-      if (result.recognized && result.employee) {
-        const isPastCutoff = new Date().getHours() >= 9;
-        const status = isPastCutoff ? 'late' : 'present';
+      for (const detection of fullDetections) {
+        const box = detection.detection.box;
+        const descriptor = detection.descriptor;
         
-        // Use offline service for attendance
-        const attendanceResult = await offlineService.recordAttendance(
-          result.employee.id,
-          status,
-          result.confidence ? result.confidence * 100 : 0,
-          { metadata: { name: result.employee.name } }
-        );
-        
+        try {
+          const result = await recognizeFace(descriptor);
+          const isPastCutoff = new Date().getHours() >= 9;
+          
+          if (result.recognized && result.employee) {
+            const status = isPastCutoff ? 'late' : 'present';
+            
+            // Record attendance for each recognized face
+            await offlineService.recordAttendance(
+              result.employee.id,
+              status,
+              result.confidence ? result.confidence * 100 : 0,
+              { metadata: { name: result.employee.name } }
+            );
+            
+            results.push({
+              id: result.employee.id,
+              name: result.employee.name || 'Unknown',
+              status: status,
+              confidence: result.confidence ? result.confidence * 100 : 0,
+              imageUrl: result.employee.avatar_url || result.employee.firebase_image_url,
+              box: { x: box.x, y: box.y, width: box.width, height: box.height }
+            });
+            recognizedCount++;
+          } else {
+            results.push({
+              id: `unknown-${Math.random().toString(36).substr(2, 9)}`,
+              name: 'Unknown',
+              status: 'unrecognized',
+              confidence: detection.detection.score * 100,
+              box: { x: box.x, y: box.y, width: box.width, height: box.height }
+            });
+          }
+        } catch (recognitionErr) {
+          console.error('Recognition error for face:', recognitionErr);
+          results.push({
+            id: `error-${Math.random().toString(36).substr(2, 9)}`,
+            name: 'Unknown',
+            status: 'unrecognized',
+            confidence: detection.detection.score * 100,
+            box: { x: box.x, y: box.y, width: box.width, height: box.height }
+          });
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 300));
+      setScanPhase('complete');
+      setRecognizedFaces(results);
+
+      // Set scan result for primary face (first recognized, or first in list)
+      const primaryResult = results.find(r => r.status !== 'unrecognized') || results[0];
+      if (primaryResult && primaryResult.status !== 'unrecognized') {
         setScanResult({
           recognized: true,
-          name: result.employee.name,
-          confidence: result.confidence ? result.confidence * 100 : 0
-        });
-
-        toast({
-          title: attendanceResult.offline ? "✓ Saved Offline" : "✓ Attendance Recorded",
-          description: `Welcome, ${result.employee.name}! (${Math.round((result.confidence || 0) * 100)}% match)`,
-        });
-        
-        onScanComplete?.({ 
-          recognized: true, 
-          name: result.employee.name, 
-          confidence: result.confidence ? result.confidence * 100 : 0 
+          name: primaryResult.name,
+          confidence: primaryResult.confidence
         });
       } else {
         setScanResult({ recognized: false });
+      }
+
+      // Show summary toast
+      const unrecognizedCount = results.length - recognizedCount;
+      if (recognizedCount > 0) {
         toast({
-          title: "Face Not Recognized",
-          description: "Please register your face first or try again.",
+          title: `✓ ${recognizedCount} Attendance${recognizedCount > 1 ? 's' : ''} Recorded`,
+          description: unrecognizedCount > 0 
+            ? `${unrecognizedCount} face${unrecognizedCount > 1 ? 's' : ''} not recognized`
+            : `All ${recognizedCount} face${recognizedCount > 1 ? 's' : ''} recognized!`,
+        });
+      } else {
+        toast({
+          title: "No Faces Recognized",
+          description: `${results.length} face${results.length > 1 ? 's' : ''} detected but not registered`,
           variant: "destructive"
         });
-        onScanComplete?.({ recognized: false });
       }
+      
+      onScanComplete?.({ 
+        recognized: recognizedCount > 0, 
+        name: primaryResult?.name,
+        confidence: primaryResult?.confidence
+      });
 
     } catch (err) {
       console.error('Scan error:', err);
@@ -277,6 +347,8 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       setTimeout(() => {
         setIsScanning(false);
         setScanPhase('idle');
+        // Keep recognized faces visible for a moment longer
+        setTimeout(() => setRecognizedFaces([]), 3000);
       }, 2000);
     }
   }, [modelsLoaded, faceCount, onScanComplete, toast]);
@@ -285,6 +357,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
     setScanResult(null);
     setScanPhase('idle');
     setIsScanning(false);
+    setRecognizedFaces([]);
   };
 
   return (
@@ -314,7 +387,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       </motion.div>
 
       {/* Scanner Container */}
-      <div className="relative aspect-[4/5] sm:aspect-video rounded-2xl overflow-hidden bg-slate-950 shadow-2xl shadow-cyan-500/20">
+      <div ref={containerRef} className="relative aspect-[4/5] sm:aspect-video rounded-2xl overflow-hidden bg-slate-950 shadow-2xl shadow-cyan-500/20">
         {/* Tech Grid Background */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
@@ -345,6 +418,14 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
           ref={canvasRef}
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+        />
+
+        {/* Live Face Recognition Overlay */}
+        <LiveFaceOverlay
+          faces={recognizedFaces}
+          containerWidth={containerDimensions.width}
+          containerHeight={containerDimensions.height}
+          mirrored={facingMode === 'user'}
         />
 
         {/* Scanning Overlay */}

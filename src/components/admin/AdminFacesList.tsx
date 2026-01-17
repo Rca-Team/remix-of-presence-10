@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, User, UserCheck, Calendar, MoreVertical, Phone, Mail } from 'lucide-react';
+import { Search, User, UserCheck, Calendar, MoreVertical, Phone, Mail, Filter } from 'lucide-react';
 import NotificationService from './NotificationService';
 import ExistingUserContactPopup from './ExistingUserContactPopup';
 import { 
@@ -17,6 +17,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AdminFacesListProps {
   viewMode: 'grid' | 'list';
@@ -48,6 +55,14 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
   const [faces, setFaces] = useState<RegisteredFace[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [attendanceCounts, setAttendanceCounts] = useState<Record<string, number>>({});
+  const [sectionFilter, setSectionFilter] = useState<string>('all');
+
+  // Extract section from department (e.g., "Section A" -> "A")
+  const extractSection = (department: string): string => {
+    if (!department) return '';
+    const match = department.match(/Section\s*([A-D])/i);
+    return match ? match[1].toUpperCase() : '';
+  };
 
   // Memoize filtered faces to prevent unnecessary re-computations
   const filteredFaces = useMemo(() => {
@@ -55,6 +70,14 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
       // First apply name filter
       if (nameFilter !== 'all' && face.id !== nameFilter) {
         return false;
+      }
+      
+      // Apply section filter
+      if (sectionFilter !== 'all') {
+        const faceSection = extractSection(face.department);
+        if (faceSection !== sectionFilter) {
+          return false;
+        }
       }
       
       // Then apply search term
@@ -65,7 +88,7 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
         face.department?.toLowerCase().includes(searchLower)
       );
     });
-  }, [faces, nameFilter, searchTerm]);
+  }, [faces, nameFilter, searchTerm, sectionFilter]);
 
   // Memoize the fetch function to prevent unnecessary re-creation
   const fetchRegisteredFaces = useCallback(async () => {
@@ -270,8 +293,8 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
     <>
       <ExistingUserContactPopup />
       <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, ID, or department..."
@@ -280,12 +303,33 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        
+        {/* Section Filter */}
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={sectionFilter} onValueChange={setSectionFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Sections" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sections</SelectItem>
+              <SelectItem value="A">Section A</SelectItem>
+              <SelectItem value="B">Section B</SelectItem>
+              <SelectItem value="C">Section C</SelectItem>
+              <SelectItem value="D">Section D</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
         <Button 
           variant="outline" 
-          onClick={() => setSelectedFaceId(null)}
-          disabled={!selectedFaceId}
+          onClick={() => {
+            setSelectedFaceId(null);
+            setSectionFilter('all');
+          }}
+          disabled={!selectedFaceId && sectionFilter === 'all'}
         >
-          Clear Selection
+          Clear Filters
         </Button>
       </div>
 
