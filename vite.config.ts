@@ -16,12 +16,10 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
     },
-    define: {
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(env.VITE_SUPABASE_URL),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
-        env.VITE_SUPABASE_PUBLISHABLE_KEY
-      ),
-    },
+    // NOTE: We intentionally avoid overriding `import.meta.env.*` via `define` here.
+    // Some Vite builds can behave unexpectedly when sub-properties are manually defined.
+    // Standard Vite `VITE_` env injection is used instead.
+
     plugins: [
       react(),
       mode === "development" && componentTagger(),
