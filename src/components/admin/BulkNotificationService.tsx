@@ -9,13 +9,19 @@ import { Label } from '@/components/ui/label';
 import { Mail, Users, AlertCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
 interface BulkNotificationServiceProps {
-  availableFaces: { id: string; name: string; employee_id: string }[];
+  availableFaces: {
+    id: string;
+    name: string;
+    employee_id: string;
+  }[];
 }
-
-const BulkNotificationService: React.FC<BulkNotificationServiceProps> = ({ availableFaces }) => {
-  const { toast } = useToast();
+const BulkNotificationService: React.FC<BulkNotificationServiceProps> = ({
+  availableFaces
+}) => {
+  const {
+    toast
+  } = useToast();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
@@ -38,7 +44,6 @@ Please contact the school if you have any questions.
 Best regards,
 School Administration`;
   };
-
   const getDefaultMessage = () => {
     return `Dear Parent/Guardian of {STUDENT_NAME},
 
@@ -52,18 +57,14 @@ Please contact the school if you have any questions.
 Best regards,
 School Administration`;
   };
-
   const getDefaultSubject = () => {
     return `School Notification for {STUDENT_NAME} - ${new Date().toLocaleDateString()}`;
   };
 
   // Replace placeholders with actual values
   const personalizeMessage = (template: string, studentName: string, studentId: string) => {
-    return template
-      .replace(/\{STUDENT_NAME\}/g, studentName)
-      .replace(/\{STUDENT_ID\}/g, studentId);
+    return template.replace(/\{STUDENT_NAME\}/g, studentName).replace(/\{STUDENT_ID\}/g, studentId);
   };
-
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
     if (checked) {
@@ -72,7 +73,6 @@ School Administration`;
       setSelectedStudents([]);
     }
   };
-
   const handleStudentToggle = (studentId: string, checked: boolean) => {
     if (checked) {
       setSelectedStudents(prev => [...prev, studentId]);
@@ -81,41 +81,32 @@ School Administration`;
       setSelectAll(false);
     }
   };
-
   const sendBulkNotification = async () => {
     if (selectedStudents.length === 0) {
       toast({
         title: "No Students Selected",
         description: "Please select at least one student to send notifications.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsLoading(true);
     let successCount = 0;
     let errorCount = 0;
-
     try {
-      const notificationPromises = selectedStudents.map(async (studentId) => {
+      const notificationPromises = selectedStudents.map(async studentId => {
         try {
           const selectedFace = availableFaces.find(face => face.id === studentId);
-          
+
           // Get real parent email from profiles table
           // Try to get profile by user_id first, then by id
-          let { data: profile } = await supabase
-            .from('profiles')
-            .select('parent_email, parent_name, display_name')
-            .eq('user_id', studentId)
-            .maybeSingle();
+          let {
+            data: profile
+          } = await supabase.from('profiles').select('parent_email, parent_name, display_name').eq('user_id', studentId).maybeSingle();
 
           // If not found, try by id
           if (!profile) {
-            const result = await supabase
-              .from('profiles')
-              .select('parent_email, parent_name, display_name')
-              .eq('id', studentId)
-              .maybeSingle();
+            const result = await supabase.from('profiles').select('parent_email, parent_name, display_name').eq('id', studentId).maybeSingle();
             profile = result.data;
           }
 
@@ -125,7 +116,6 @@ School Administration`;
             errorCount++;
             return;
           }
-
           const parentInfo = {
             parent_email: profile.parent_email,
             parent_name: profile.parent_name || `Parent of ${selectedFace?.name}`
@@ -138,7 +128,10 @@ School Administration`;
           const personalizedBody = personalizeMessage(message || getDefaultMessage(), studentName, studentEmployeeId);
 
           // Call Supabase Edge Function for email notification
-          const { data, error } = await supabase.functions.invoke('send-notification', {
+          const {
+            data,
+            error
+          } = await supabase.functions.invoke('send-notification', {
             body: {
               recipient: {
                 email: parentInfo.parent_email,
@@ -155,7 +148,6 @@ School Administration`;
               }
             }
           });
-
           if (error) throw error;
           successCount++;
         } catch (error) {
@@ -163,15 +155,12 @@ School Administration`;
           errorCount++;
         }
       });
-
       await Promise.all(notificationPromises);
-
       toast({
         title: "Bulk Email Notification Complete",
         description: `Successfully sent ${successCount} email notifications. ${errorCount > 0 ? `${errorCount} failed.` : ''}`,
-        variant: errorCount > 0 ? "destructive" : "default",
+        variant: errorCount > 0 ? "destructive" : "default"
       });
-      
       setOpen(false);
       setMessage('');
       setSubject('');
@@ -182,59 +171,43 @@ School Administration`;
       toast({
         title: "Bulk Notification Failed",
         description: "Failed to send bulk notifications. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     const checkParentEmails = async () => {
       if (open) {
         const studentsWithoutEmails: string[] = [];
-        
         for (const face of availableFaces) {
           // Try to get profile by user_id first, then by id
-          let { data: profile } = await supabase
-            .from('profiles')
-            .select('parent_email')
-            .eq('user_id', face.id)
-            .maybeSingle();
+          let {
+            data: profile
+          } = await supabase.from('profiles').select('parent_email').eq('user_id', face.id).maybeSingle();
 
           // If not found, try by id
           if (!profile) {
-            const result = await supabase
-              .from('profiles')
-              .select('parent_email')
-              .eq('id', face.id)
-              .maybeSingle();
+            const result = await supabase.from('profiles').select('parent_email').eq('id', face.id).maybeSingle();
             profile = result.data;
           }
-          
           if (!profile?.parent_email || profile.parent_email.trim() === '') {
             studentsWithoutEmails.push(face.name);
           }
         }
-        
         setStudentsWithoutEmail(studentsWithoutEmails);
       }
     };
-
     if (open) {
       setMessage(getDefaultMessage());
       setSubject(getDefaultSubject());
       checkParentEmails();
     }
   }, [open, availableFaces]);
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Users className="h-4 w-4 mr-2" />
-          Bulk Notify
-        </Button>
+        
       </DialogTrigger>
       
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -243,8 +216,7 @@ School Administration`;
         </DialogHeader>
         
         <div className="space-y-4">
-          {studentsWithoutEmail.length > 0 && (
-            <Alert>
+          {studentsWithoutEmail.length > 0 && <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="ml-2">
                 <p className="font-medium text-sm mb-1">⚠️ Missing Parent Emails</p>
@@ -255,16 +227,10 @@ School Administration`;
                   They will be skipped. Please add parent emails in the <a href="https://supabase.com/dashboard/project/tegpyalokurixuvgeuks/editor/29584?schema=public" target="_blank" rel="noopener noreferrer" className="underline">Profiles table</a>.
                 </p>
               </AlertDescription>
-            </Alert>
-          )}
+            </Alert>}
           <div className="space-y-2">
             <Label htmlFor="subject">Email Subject</Label>
-            <Input
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Enter email subject"
-            />
+            <Input id="subject" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter email subject" />
           </div>
           
           <div className="space-y-2">
@@ -274,41 +240,25 @@ School Administration`;
                 (Use {'{STUDENT_NAME}'} and {'{STUDENT_ID}'} for personalization)
               </span>
             </Label>
-            <Textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Enter email message with {STUDENT_NAME} and {STUDENT_ID} placeholders"
-              rows={6}
-            />
+            <Textarea id="message" value={message} onChange={e => setMessage(e.target.value)} placeholder="Enter email message with {STUDENT_NAME} and {STUDENT_ID} placeholders" rows={6} />
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Select Students</Label>
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="select-all"
-                  checked={selectAll}
-                  onCheckedChange={handleSelectAll}
-                />
+                <Checkbox id="select-all" checked={selectAll} onCheckedChange={handleSelectAll} />
                 <Label htmlFor="select-all" className="text-sm">Select All ({availableFaces.length})</Label>
               </div>
             </div>
             
             <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
-              {availableFaces.map((face) => (
-                <div key={face.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={face.id}
-                    checked={selectedStudents.includes(face.id)}
-                    onCheckedChange={(checked) => handleStudentToggle(face.id, checked as boolean)}
-                  />
+              {availableFaces.map(face => <div key={face.id} className="flex items-center space-x-2">
+                  <Checkbox id={face.id} checked={selectedStudents.includes(face.id)} onCheckedChange={checked => handleStudentToggle(face.id, checked as boolean)} />
                   <Label htmlFor={face.id} className="text-sm flex-1">
                     {face.name} (ID: {face.employee_id})
                   </Label>
-                </div>
-              ))}
+                </div>)}
             </div>
             
             <p className="text-sm text-muted-foreground">
@@ -327,8 +277,6 @@ School Administration`;
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default BulkNotificationService;
