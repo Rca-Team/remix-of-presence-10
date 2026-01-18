@@ -56,12 +56,19 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [attendanceCounts, setAttendanceCounts] = useState<Record<string, number>>({});
   const [sectionFilter, setSectionFilter] = useState<string>('all');
-
+  const [classFilter, setClassFilter] = useState<string>('all');
   // Extract section from department (e.g., "Section A" -> "A")
   const extractSection = (department: string): string => {
     if (!department) return '';
     const match = department.match(/Section\s*([A-D])/i);
     return match ? match[1].toUpperCase() : '';
+  };
+
+  // Extract class/grade from department (e.g., "Class 10" or "Grade 5")
+  const extractClass = (department: string): string => {
+    if (!department) return '';
+    const match = department.match(/(?:Class|Grade)\s*(\d+)/i);
+    return match ? match[1] : '';
   };
 
   // Memoize filtered faces to prevent unnecessary re-computations
@@ -80,6 +87,14 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
         }
       }
       
+      // Apply class/grade filter
+      if (classFilter !== 'all') {
+        const faceClass = extractClass(face.department);
+        if (faceClass !== classFilter) {
+          return false;
+        }
+      }
+      
       // Then apply search term
       const searchLower = searchTerm.toLowerCase();
       return (
@@ -88,7 +103,7 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
         face.department?.toLowerCase().includes(searchLower)
       );
     });
-  }, [faces, nameFilter, searchTerm, sectionFilter]);
+  }, [faces, nameFilter, searchTerm, sectionFilter, classFilter]);
 
   // Memoize the fetch function to prevent unnecessary re-creation
   const fetchRegisteredFaces = useCallback(async () => {
@@ -308,8 +323,8 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select value={sectionFilter} onValueChange={setSectionFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All Sections" />
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Section" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sections</SelectItem>
@@ -321,13 +336,29 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
           </Select>
         </div>
         
+        {/* Class/Grade Filter */}
+        <div className="flex items-center gap-2">
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Class" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {[1,2,3,4,5,6,7,8,9,10,11,12].map(grade => (
+                <SelectItem key={grade} value={String(grade)}>Class {grade}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
         <Button 
           variant="outline" 
           onClick={() => {
             setSelectedFaceId(null);
             setSectionFilter('all');
+            setClassFilter('all');
           }}
-          disabled={!selectedFaceId && sectionFilter === 'all'}
+          disabled={!selectedFaceId && sectionFilter === 'all' && classFilter === 'all'}
         >
           Clear Filters
         </Button>

@@ -1,70 +1,108 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Users,
   UserCheck,
   Clock,
-  TrendingUp,
-  Activity,
   Percent,
-  Timer,
-  CalendarCheck
+  CalendarCheck,
+  Users
 } from 'lucide-react';
 
 interface Stats {
-  totalToday: number;
+  totalRegistered: number;
   presentCount: number;
   lateCount: number;
-  avgTime: string;
   attendanceRate: number;
-  streak: number;
 }
 
 const QuickStatsPanel: React.FC = () => {
   const [stats, setStats] = useState<Stats>({
-    totalToday: 0,
+    totalRegistered: 0,
     presentCount: 0,
     lateCount: 0,
-    avgTime: '08:30',
-    attendanceRate: 0,
-    streak: 0
+    attendanceRate: 0
   });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+  const fetchStats = useCallback(async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Get today's attendance (unique users)
+    const { data: todayData } = await supabase
+      .from('attendance_records')
+      .select('user_id, status, device_info')
+      .gte('timestamp', today.toISOString())
+      .in('status', ['present', 'late', 'absent']);
+
+    // Get total registered faces
+    const { count: registeredCount } = await supabase
+      .from('attendance_records')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'registered');
+
+    if (todayData) {
+      // Count unique users
+      const uniquePresent = new Set<string>();
+      const uniqueLate = new Set<string>();
       
-      const { data, count } = await supabase
-        .from('attendance_records')
-        .select('*', { count: 'exact' })
-        .gte('timestamp', today.toISOString());
+      todayData.forEach(record => {
+        const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
+        if (userId) {
+          if (record.status === 'present') {
+            uniquePresent.add(String(userId));
+          } else if (record.status === 'late') {
+            uniqueLate.add(String(userId));
+          }
+        }
+      });
 
-      if (data) {
-        const present = data.filter(r => r.status === 'present').length;
-        const late = data.filter(r => r.status === 'late').length;
-        const total = count || data.length;
-        
-        setStats({
-          totalToday: total,
-          presentCount: present,
-          lateCount: late,
-          avgTime: '08:30',
-          attendanceRate: total > 0 ? Math.round((present / total) * 100) : 0,
-          streak: 5
-        });
-      }
-    };
-
-    fetchStats();
-
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
+      const present = uniquePresent.size;
+      const late = uniqueLate.size;
+      const total = registeredCount || 0;
+      
+      setStats({
+        totalRegistered: total,
+        presentCount: present,
+        lateCount: late,
+        attendanceRate: total > 0 ? Math.round(((present + late) / total) * 100) : 0
+      });
+    }
   }, []);
 
+  useEffect(() => {
+    fetchStats();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('quick-stats-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_records'
+        },
+        () => {
+          // Refresh stats on any attendance change
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchStats]);
+
   const statItems = [
+    { 
+      icon: Users, 
+      label: 'Registered', 
+      value: stats.totalRegistered,
+      color: 'from-indigo-500 to-purple-500',
+      textColor: 'text-indigo-500'
+    },
     { 
       icon: UserCheck, 
       label: 'Present Today', 
@@ -85,13 +123,6 @@ const QuickStatsPanel: React.FC = () => {
       value: `${stats.attendanceRate}%`,
       color: 'from-blue-500 to-cyan-500',
       textColor: 'text-blue-500'
-    },
-    { 
-      icon: CalendarCheck, 
-      label: 'Day Streak', 
-      value: stats.streak,
-      color: 'from-purple-500 to-pink-500',
-      textColor: 'text-purple-500'
     },
   ];
 
@@ -114,7 +145,7 @@ const QuickStatsPanel: React.FC = () => {
             </div>
             
             <motion.div
-              key={item.value}
+              key={String(item.value)}
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className={`text-2xl font-bold ${item.textColor}`}

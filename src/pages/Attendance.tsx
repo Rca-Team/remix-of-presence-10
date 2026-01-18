@@ -5,7 +5,6 @@ import PageLayout from '@/components/layouts/PageLayout';
 import PageTransition from '@/components/PageTransition';
 import MultipleAttendanceCapture from '@/components/attendance/MultipleAttendanceCapture';
 import AttendanceInstructions from '@/components/attendance/AttendanceInstructions';
-import AttendanceToday from '@/components/attendance/AttendanceToday';
 import AttendanceStats from '@/components/attendance/AttendanceStats';
 import AttendanceGallery from '@/components/attendance/AttendanceGallery';
 import FuturisticFaceScanner from '@/components/attendance/FuturisticFaceScanner';
@@ -264,26 +263,22 @@ const Attendance = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden h-80"
+                        className="bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden"
+                        style={{ height: 'calc(100vh - 450px)', minHeight: '400px', maxHeight: '600px' }}
                       >
                         <div className="p-3 border-b border-cyan-500/20 bg-gradient-to-r from-green-600 to-emerald-600">
                           <div className="flex items-center gap-2">
                             <Activity className="w-4 h-4 text-white" />
-                            <span className="text-sm font-semibold text-white">Live Feed</span>
+                            <span className="text-sm font-semibold text-white">Live Attendance Feed</span>
+                            <span className="relative flex h-2 w-2 ml-auto">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
                           </div>
                         </div>
-                        <div className="p-3 h-[calc(100%-48px)]">
+                        <div className="p-3 h-[calc(100%-48px)] overflow-auto">
                           <LiveAttendanceFeed />
                         </div>
-                      </motion.div>
-                      
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden"
-                      >
-                        <AttendanceToday />
                       </motion.div>
                     </div>
                   </motion.div>
@@ -370,9 +365,17 @@ const Attendance = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden"
+                        className="bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden h-80"
                       >
-                        <AttendanceToday />
+                        <div className="p-3 border-b border-cyan-500/20 bg-gradient-to-r from-green-600 to-emerald-600">
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-white" />
+                            <span className="text-sm font-semibold text-white">Live Feed</span>
+                          </div>
+                        </div>
+                        <div className="p-3 h-[calc(100%-48px)]">
+                          <LiveAttendanceFeed />
+                        </div>
                       </motion.div>
                     </div>
                   </motion.div>

@@ -14,6 +14,8 @@ import {
   recordAttendance
 } from '@/services/face-recognition/RecognitionService';
 import { offlineService } from '@/services/OfflineAttendanceService';
+import { sendAutoParentNotification } from '@/services/notification/AutoNotificationService';
+import { getCutoffTime, isPastCutoffTime, getAttendanceCutoffTime } from '@/services/attendance/AttendanceSettingsService';
 import * as faceapi from 'face-api.js';
 import {
   Camera,
@@ -246,13 +248,16 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       const results: RecognizedFaceData[] = [];
       let recognizedCount = 0;
 
+      // Get cutoff time from settings
+      const cutoffTime = await getAttendanceCutoffTime();
+      const isPastCutoff = isPastCutoffTime(cutoffTime);
+      
       for (const detection of fullDetections) {
         const box = detection.detection.box;
         const descriptor = detection.descriptor;
         
         try {
           const result = await recognizeFace(descriptor);
-          const isPastCutoff = new Date().getHours() >= 9;
           
           if (result.recognized && result.employee) {
             const status = isPastCutoff ? 'late' : 'present';
@@ -264,6 +269,14 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
               result.confidence ? result.confidence * 100 : 0,
               { metadata: { name: result.employee.name } }
             );
+            
+            // Send automatic parent notification (non-blocking)
+            sendAutoParentNotification(
+              result.employee.id,
+              result.employee.name || 'Student',
+              status,
+              result.employee.avatar_url || result.employee.firebase_image_url
+            ).catch(err => console.error('Auto notification error:', err));
             
             results.push({
               id: result.employee.id,
