@@ -112,6 +112,49 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
   };
 
   const generateIDCard = async (student: StudentData): Promise<string> => {
+    // Generate QR code data
+    const qrData = JSON.stringify({
+      type: 'student_id',
+      id: student.id,
+      name: student.name,
+      employee_id: student.employee_id
+    });
+
+    // Create a temporary container to render the QR code using React
+    const qrContainer = document.createElement('div');
+    qrContainer.style.position = 'absolute';
+    qrContainer.style.left = '-9999px';
+    document.body.appendChild(qrContainer);
+
+    // Create QR code SVG string manually using a simple pattern
+    // We'll use the QRCodeSVG component's output
+    const tempQRDiv = document.createElement('div');
+    document.body.appendChild(tempQRDiv);
+    
+    // Use ReactDOM to render QR code
+    const { createRoot } = await import('react-dom/client');
+    const qrRoot = createRoot(tempQRDiv);
+    
+    await new Promise<void>((resolve) => {
+      qrRoot.render(
+        <QRCodeSVG
+          value={qrData}
+          size={100}
+          level="M"
+          bgColor="white"
+          fgColor="black"
+        />
+      );
+      setTimeout(resolve, 100);
+    });
+
+    const qrSvg = tempQRDiv.querySelector('svg');
+    const qrSvgString = qrSvg ? new XMLSerializer().serializeToString(qrSvg) : '';
+    const qrBase64 = btoa(unescape(encodeURIComponent(qrSvgString)));
+
+    qrRoot.unmount();
+    document.body.removeChild(tempQRDiv);
+
     // Create temporary element for rendering
     const container = document.createElement('div');
     container.style.position = 'absolute';
@@ -195,7 +238,7 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
             background: white;
             border-radius: 12px;
           ">
-            <div id="qr-placeholder" style="width: 100px; height: 100px;"></div>
+            <img src="data:image/svg+xml;base64,${qrBase64}" style="width: 100px; height: 100px;" />
           </div>
           
           <div style="text-align: center; margin-top: 12px; font-size: 10px; color: #64748b;">
@@ -207,25 +250,7 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
     
     document.body.appendChild(container);
 
-    // Add QR code
-    const qrPlaceholder = container.querySelector('#qr-placeholder');
-    if (qrPlaceholder) {
-      const qrData = JSON.stringify({
-        type: 'student_id',
-        id: student.id,
-        name: student.name,
-        employee_id: student.employee_id
-      });
-      
-      const qrSvg = document.createElement('div');
-      const root = document.createElement('div');
-      root.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-        <rect width="100" height="100" fill="white"/>
-      </svg>`;
-      qrPlaceholder.appendChild(root);
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
       scale: 2,
@@ -235,6 +260,7 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
     });
 
     document.body.removeChild(container);
+    document.body.removeChild(qrContainer);
     
     return canvas.toDataURL('image/png');
   };

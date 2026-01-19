@@ -333,12 +333,12 @@ const Admin = () => {
                       </AnimatedNotificationBadge>
                     </motion.button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-80 p-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-blue-100 dark:border-blue-900">
-                    <div className="p-4 border-b border-blue-100 dark:border-blue-900 bg-gradient-to-r from-blue-600 to-blue-500">
+                  <SheetContent side="right" className="w-80 p-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-blue-100 dark:border-blue-900 flex flex-col h-full">
+                    <div className="p-4 border-b border-blue-100 dark:border-blue-900 bg-gradient-to-r from-blue-600 to-blue-500 flex-shrink-0">
                       <h2 className="font-bold text-white text-lg">Navigation</h2>
                       <p className="text-blue-100 text-sm">Quick access to all features</p>
                     </div>
-                    <div className="py-2">
+                    <div className="py-2 flex-1 overflow-y-auto">
                       {mobileNavItems.map((item, i) => (
                         <motion.button
                           key={item.id}
@@ -368,7 +368,7 @@ const Admin = () => {
                         </motion.button>
                       ))}
                     </div>
-                    <div className="p-4 border-t border-blue-100 dark:border-blue-900 space-y-3">
+                    <div className="p-4 border-t border-blue-100 dark:border-blue-900 space-y-3 flex-shrink-0">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-medium">Theme</span>
                         <ThemeToggle />
