@@ -200,6 +200,25 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
     };
   }, [modelsLoaded, isScanning]);
 
+  // Helper to create a timeout promise for biometric operations
+  const withTimeout = <T,>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(errorMessage));
+      }, ms);
+      
+      promise
+        .then((value) => {
+          clearTimeout(timer);
+          resolve(value);
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
+  };
+
   const scanFace = useCallback(async () => {
     if (!webcamRef.current || !modelsLoaded || faceCount === 0) {
       toast({
@@ -221,6 +240,19 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
     setScanResult(null);
     setRecognizedFaces([]);
 
+    // Overall scan timeout - 15 seconds max
+    const scanTimeout = setTimeout(() => {
+      console.warn('Scan timeout - forcing completion');
+      setIsScanning(false);
+      setScanPhase('idle');
+      setScanResult({ recognized: false });
+      toast({
+        title: "Scan Timeout",
+        description: "The scan took too long. Please try again.",
+        variant: "destructive"
+      });
+    }, 15000);
+
     try {
       const video = webcamRef.current.video;
       if (!video) throw new Error('Video not available');
@@ -229,11 +261,24 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       await new Promise(r => setTimeout(r, 400));
       setScanPhase('analyzing');
 
-      // Detect all faces with full descriptors
-      const fullDetections = await faceapi
-        .detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
-        .withFaceLandmarks()
-        .withFaceDescriptors();
+      // Detect all faces with full descriptors - with 8 second timeout
+      const detectionPromise = new Promise<faceapi.WithFaceDescriptor<faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }, faceapi.FaceLandmarks68>>[]>(async (resolve, reject) => {
+        try {
+          const result = await faceapi
+            .detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+            .withFaceLandmarks()
+            .withFaceDescriptors();
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
+      });
+      
+      const fullDetections = await withTimeout(
+        detectionPromise,
+        8000,
+        'Face detection timed out. Please ensure good lighting and try again.'
+      );
 
       console.log(`Found ${fullDetections.length} faces to process`);
 
@@ -248,29 +293,50 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       const results: RecognizedFaceData[] = [];
       let recognizedCount = 0;
 
-      // Get cutoff time from settings
-      const cutoffTime = await getAttendanceCutoffTime();
-      const isPastCutoff = isPastCutoffTime(cutoffTime);
+      // Get cutoff time from settings - with timeout
+      let cutoffTimeObj = { hour: 9, minute: 0 };
+      let isPastCutoff = false;
+      try {
+        cutoffTimeObj = await withTimeout(getAttendanceCutoffTime(), 3000, 'Cutoff time fetch failed');
+        isPastCutoff = isPastCutoffTime(cutoffTimeObj);
+      } catch (e) {
+        console.warn('Using default cutoff time:', e);
+        isPastCutoff = isPastCutoffTime(cutoffTimeObj);
+      }
       
+      // Process faces with individual timeouts
       for (const detection of fullDetections) {
         const box = detection.detection.box;
         const descriptor = detection.descriptor;
         
         try {
-          const result = await recognizeFace(descriptor);
+          // Recognition with 5 second timeout per face
+          const result = await withTimeout(
+            recognizeFace(descriptor),
+            5000,
+            'Face recognition timed out'
+          );
           
           if (result.recognized && result.employee) {
             const status = isPastCutoff ? 'late' : 'present';
             
-            // Record attendance for each recognized face
-            await offlineService.recordAttendance(
-              result.employee.id,
-              status,
-              result.confidence ? result.confidence * 100 : 0,
-              { metadata: { name: result.employee.name } }
-            );
+            // Record attendance for each recognized face - with timeout
+            try {
+              await withTimeout(
+                offlineService.recordAttendance(
+                  result.employee.id,
+                  status,
+                  result.confidence ? result.confidence * 100 : 0,
+                  { metadata: { name: result.employee.name } }
+                ),
+                5000,
+                'Attendance recording timed out'
+              );
+            } catch (recordErr) {
+              console.error('Failed to record attendance:', recordErr);
+            }
             
-            // Send automatic parent notification (non-blocking)
+            // Send automatic parent notification (non-blocking - fire and forget)
             sendAutoParentNotification(
               result.employee.id,
               result.employee.name || 'Student',
@@ -308,6 +374,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
         }
       }
 
+      clearTimeout(scanTimeout);
       await new Promise(r => setTimeout(r, 300));
       setScanPhase('complete');
       setRecognizedFaces(results);
@@ -348,12 +415,13 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       });
 
     } catch (err) {
+      clearTimeout(scanTimeout);
       console.error('Scan error:', err);
       setScanPhase('complete');
       setScanResult({ recognized: false });
       toast({
         title: "Scan Failed",
-        description: err instanceof Error ? err.message : "Unknown error",
+        description: err instanceof Error ? err.message : "Unknown error occurred",
         variant: "destructive"
       });
     } finally {

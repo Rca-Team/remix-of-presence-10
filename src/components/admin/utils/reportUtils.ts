@@ -46,25 +46,37 @@ export const generatePrintableReport = async ({
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(today.getDate() - 30);
 
-  // First, get the registration record to find the face ID and face descriptor
+  // First, get the registration record to find the face ID and identifiers
   const { data: registrationRecord, error: regError } = await supabase
     .from('attendance_records')
     .select('*')
-    .eq('id', selectedFace.recordId) // Use the record ID to fetch the registration record
+    .eq('id', selectedFace.recordId)
     .eq('status', 'registered')
-    .single();
+    .maybeSingle();
 
-  if (regError || !registrationRecord) {
-    console.warn('No registration record found for selected face ID:', selectedFace.recordId);
+  // If no record found by recordId, try by user_id
+  let regRecord = registrationRecord;
+  if (!regRecord) {
+    const { data: altRecord } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('user_id', selectedFace.recordId)
+      .eq('status', 'registered')
+      .maybeSingle();
+    regRecord = altRecord;
+  }
+
+  if (!regRecord) {
+    console.warn('No registration record found for selected face:', selectedFace);
     return null;
   }
 
-  const deviceInfo = registrationRecord.device_info as any;
+  const deviceInfo = regRecord.device_info as any;
+  const registeredEmployeeId = selectedFace.employee_id || deviceInfo?.metadata?.employee_id || deviceInfo?.employee_id;
+  const registeredUserId = regRecord.user_id || selectedFace.recordId;
   const faceDescriptor = deviceInfo?.metadata?.faceDescriptor;
-  if (!faceDescriptor) {
-    console.warn('No face descriptor found in registration record');
-    return null;
-  }
+  
+  console.log('Report matching identifiers:', { registeredEmployeeId, registeredUserId });
 
   // Now get all attendance records for the last 30 days
   const { data: allAttendanceRecords, error: attendanceError } = await supabase
@@ -72,6 +84,7 @@ export const generatePrintableReport = async ({
     .select('*')
     .gte('timestamp', thirtyDaysAgo.toISOString())
     .lte('timestamp', today.toISOString())
+    .in('status', ['present', 'late', 'unauthorized'])
     .order('timestamp', { ascending: false });
 
   if (attendanceError) {
@@ -79,31 +92,44 @@ export const generatePrintableReport = async ({
     return null;
   }
 
-  // Filter records to find matches for this specific face by comparing descriptors
+  // Filter records to find matches for this specific person
   let attendanceRecords: any[] = [];
   if (allAttendanceRecords) {
     attendanceRecords = allAttendanceRecords.filter(record => {
-      const deviceInfo = record.device_info as any;
-      if (!deviceInfo || deviceInfo.registration) return false;
+      const recordDeviceInfo = record.device_info as any;
+      if (!recordDeviceInfo) return false;
       
-      // If there's a face descriptor in the record, compare it
-      if (deviceInfo.faceDescriptor) {
-        const recordDescriptor = deviceInfo.faceDescriptor;
-        if (Array.isArray(recordDescriptor) && Array.isArray(faceDescriptor)) {
-          // Calculate similarity between descriptors (simple comparison)
-          const similarity = calculateDescriptorSimilarity(faceDescriptor, recordDescriptor);
-          return similarity > 0.6; // Threshold for matching faces
-        }
+      // Primary: Match by employee_id (most reliable)
+      const recordEmployeeId = recordDeviceInfo?.metadata?.employee_id || recordDeviceInfo?.employee_id;
+      if (registeredEmployeeId && recordEmployeeId && registeredEmployeeId === recordEmployeeId) {
+        return true;
       }
       
-      // Fallback: try to match by user_id if available
-      if (record.user_id && registrationRecord.user_id) {
-        return record.user_id === registrationRecord.user_id;
+      // Secondary: Match by user_id
+      if (record.user_id && registeredUserId && record.user_id === registeredUserId) {
+        return true;
+      }
+      
+      // Tertiary: Match by name (fallback)
+      const recordName = recordDeviceInfo?.metadata?.name;
+      if (recordName && selectedFace.name && recordName.toLowerCase() === selectedFace.name.toLowerCase()) {
+        return true;
+      }
+      
+      // Last resort: Face descriptor matching
+      if (faceDescriptor && recordDeviceInfo.faceDescriptor) {
+        const recordDescriptor = recordDeviceInfo.faceDescriptor;
+        if (Array.isArray(recordDescriptor) && Array.isArray(faceDescriptor)) {
+          const similarity = calculateDescriptorSimilarity(faceDescriptor, recordDescriptor);
+          return similarity > 0.6;
+        }
       }
       
       return false;
     });
   }
+  
+  console.log(`Found ${attendanceRecords.length} matching attendance records for ${selectedFace.name}`);
 
   // Helper function to calculate descriptor similarity
   function calculateDescriptorSimilarity(desc1: number[], desc2: number[]): number {
@@ -449,25 +475,37 @@ export const exportToCSV = async ({
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(today.getDate() - 30);
 
-  // First, get the registration record to find the face ID and face descriptor
+  // First, get the registration record to find identifiers
   const { data: registrationRecord, error: regError } = await supabase
     .from('attendance_records')
     .select('*')
-    .eq('id', selectedFace.recordId) // Use the record ID to fetch the registration record
+    .eq('id', selectedFace.recordId)
     .eq('status', 'registered')
-    .single();
+    .maybeSingle();
 
-  if (regError || !registrationRecord) {
-    console.warn('No registration record found for selected face ID:', selectedFace.recordId);
+  // If no record found by recordId, try by user_id
+  let regRecord = registrationRecord;
+  if (!regRecord) {
+    const { data: altRecord } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('user_id', selectedFace.recordId)
+      .eq('status', 'registered')
+      .maybeSingle();
+    regRecord = altRecord;
+  }
+
+  if (!regRecord) {
+    console.warn('No registration record found for CSV export:', selectedFace);
     return;
   }
 
-  const regDeviceInfo = registrationRecord.device_info as any;
+  const regDeviceInfo = regRecord.device_info as any;
+  const registeredEmployeeId = selectedFace.employee_id || regDeviceInfo?.metadata?.employee_id || regDeviceInfo?.employee_id;
+  const registeredUserId = regRecord.user_id || selectedFace.recordId;
   const faceDescriptor = regDeviceInfo?.metadata?.faceDescriptor;
-  if (!faceDescriptor) {
-    console.warn('No face descriptor found in registration record');
-    return;
-  }
+
+  console.log('CSV export matching identifiers:', { registeredEmployeeId, registeredUserId });
 
   // Now get all attendance records for the last 30 days
   const { data: allAttendanceRecords, error: attendanceError } = await supabase
@@ -475,6 +513,7 @@ export const exportToCSV = async ({
     .select('*')
     .gte('timestamp', thirtyDaysAgo.toISOString())
     .lte('timestamp', today.toISOString())
+    .in('status', ['present', 'late', 'unauthorized'])
     .order('timestamp', { ascending: false });
 
   if (attendanceError) {
@@ -482,32 +521,44 @@ export const exportToCSV = async ({
     return;
   }
 
-  // Filter records to find matches for this specific face by comparing descriptors
+  // Filter records to find matches for this specific person
   let attendanceRecords: any[] = [];
   if (allAttendanceRecords) {
     attendanceRecords = allAttendanceRecords.filter(record => {
-      const deviceInfo = record.device_info as any;
-      if (!deviceInfo || deviceInfo.registration) return false;
+      const recordDeviceInfo = record.device_info as any;
+      if (!recordDeviceInfo) return false;
       
-      // If there's a face descriptor in the record, compare it
-      if (deviceInfo.faceDescriptor) {
-        const recordDescriptor = deviceInfo.faceDescriptor;
-        if (Array.isArray(recordDescriptor) && Array.isArray(faceDescriptor)) {
-          // Calculate similarity between descriptors (simple comparison)
-          const similarity = calculateDescriptorSimilarityCSV(faceDescriptor, recordDescriptor);
-          return similarity > 0.6; // Threshold for matching faces
-        }
+      // Primary: Match by employee_id (most reliable)
+      const recordEmployeeId = recordDeviceInfo?.metadata?.employee_id || recordDeviceInfo?.employee_id;
+      if (registeredEmployeeId && recordEmployeeId && registeredEmployeeId === recordEmployeeId) {
+        return true;
       }
       
-      // Fallback: try to match by user_id if available
-      if (record.user_id && registrationRecord.user_id) {
-        return record.user_id === registrationRecord.user_id;
+      // Secondary: Match by user_id
+      if (record.user_id && registeredUserId && record.user_id === registeredUserId) {
+        return true;
+      }
+      
+      // Tertiary: Match by name (fallback)
+      const recordName = recordDeviceInfo?.metadata?.name;
+      if (recordName && selectedFace.name && recordName.toLowerCase() === selectedFace.name.toLowerCase()) {
+        return true;
+      }
+      
+      // Last resort: Face descriptor matching
+      if (faceDescriptor && recordDeviceInfo.faceDescriptor) {
+        const recordDescriptor = recordDeviceInfo.faceDescriptor;
+        if (Array.isArray(recordDescriptor) && Array.isArray(faceDescriptor)) {
+          const similarity = calculateDescriptorSimilarityCSV(faceDescriptor, recordDescriptor);
+          return similarity > 0.6;
+        }
       }
       
       return false;
     });
   }
 
+  console.log(`CSV: Found ${attendanceRecords.length} matching attendance records for ${selectedFace.name}`);
   // Helper function to calculate descriptor similarity for CSV
   function calculateDescriptorSimilarityCSV(desc1: number[], desc2: number[]): number {
     if (desc1.length !== desc2.length) return 0;
