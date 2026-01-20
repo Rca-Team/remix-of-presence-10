@@ -56,12 +56,17 @@ export const AnimatedNotificationBadge: React.FC<AnimatedNotificationBadgeProps>
         }
       : { scale: 1, opacity: 1 },
     exit: { scale: 0, opacity: 0 },
-    transition: {
-      type: 'spring',
-      stiffness: 500,
-      damping: 15,
-      duration: 0.5,
-    },
+    transition: shouldBounce
+      ? {
+          type: 'tween',
+          ease: 'easeOut',
+          duration: 0.5,
+        }
+      : {
+          type: 'spring',
+          stiffness: 500,
+          damping: 15,
+        },
   };
 
   const pulseRingAnimation = {
