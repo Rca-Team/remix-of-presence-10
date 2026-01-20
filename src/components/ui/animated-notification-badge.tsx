@@ -87,12 +87,12 @@ export const AnimatedNotificationBadge: React.FC<AnimatedNotificationBadgeProps>
       <AnimatePresence mode="wait">
         {count > 0 && (
           <>
-            {/* Pulse ring for attention */}
+            {/* Pulse ring for attention - using design tokens */}
             {variant !== 'dot' && (
               <motion.span
                 {...pulseRingAnimation}
                 className={cn(
-                  'absolute rounded-full bg-red-500/50',
+                  'absolute rounded-full bg-destructive/50',
                   variant === 'default' ? 'min-w-[20px] h-5' : 'w-3 h-3',
                   positionClasses[position]
                 )}
@@ -103,7 +103,7 @@ export const AnimatedNotificationBadge: React.FC<AnimatedNotificationBadgeProps>
               <motion.span
                 {...bounceAnimation}
                 className={cn(
-                  'absolute w-3 h-3 rounded-full bg-gradient-to-br from-red-500 to-rose-600 border-2 border-background shadow-lg shadow-red-500/30',
+                  'absolute w-3 h-3 rounded-full bg-gradient-to-br from-destructive to-destructive/80 border-2 border-background shadow-lg shadow-destructive/30',
                   positionClasses[position]
                 )}
               />
@@ -113,7 +113,7 @@ export const AnimatedNotificationBadge: React.FC<AnimatedNotificationBadgeProps>
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.8, repeat: Infinity }}
                 className={cn(
-                  'absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white border-2 border-background shadow-lg shadow-red-500/30',
+                  'absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground border-2 border-background shadow-lg shadow-destructive/30',
                   positionClasses[position]
                 )}
               >
@@ -124,7 +124,7 @@ export const AnimatedNotificationBadge: React.FC<AnimatedNotificationBadgeProps>
                 key={count}
                 {...bounceAnimation}
                 className={cn(
-                  'absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white border-2 border-background shadow-lg shadow-red-500/30',
+                  'absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground border-2 border-background shadow-lg shadow-destructive/30',
                   positionClasses[position]
                 )}
               >
