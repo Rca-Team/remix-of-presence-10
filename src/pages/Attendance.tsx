@@ -12,6 +12,7 @@ import QRCodeScanner from '@/components/attendance/QRCodeScanner';
 import LiveAttendanceFeed from '@/components/attendance/LiveAttendanceFeed';
 import QuickStatsPanel from '@/components/attendance/QuickStatsPanel';
 import VoiceCommands from '@/components/attendance/VoiceCommands';
+import PresenceTracker from '@/components/attendance/PresenceTracker';
 import AttendanceMethodToggle from '@/components/attendance/AttendanceMethodToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, Users, BarChart3, Info, Grid3x3, Scan, Sparkles, Zap, Activity, Brain, QrCode } from 'lucide-react';
@@ -251,20 +252,50 @@ const Attendance = () => {
                         </div>
                       </div>
 
-                      {/* Voice Commands */}
+                      {/* Voice Commands - Enhanced */}
                       <div className="mt-4">
-                        <VoiceCommands onCommand={handleVoiceCommand} />
+                        <VoiceCommands 
+                          onCommand={handleVoiceCommand}
+                          onStartScan={() => {
+                            // Trigger scan action
+                            toast({
+                              title: "Starting Scan",
+                              description: "Voice command activated face scanning",
+                            });
+                          }}
+                          onStopScan={() => {
+                            toast({
+                              title: "Scan Stopped",
+                              description: "Voice command stopped the scanner",
+                            });
+                          }}
+                          onConfirmAttendance={() => {
+                            toast({
+                              title: "Attendance Confirmed",
+                              description: "Voice command confirmed attendance",
+                            });
+                          }}
+                        />
                       </div>
 
                     </div>
                     
                     <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
+                      {/* Presence Tracker */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15 }}
+                      >
+                        <PresenceTracker showDetailed={false} />
+                      </motion.div>
+
                       <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
                         className="bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-xl overflow-hidden"
-                        style={{ height: 'calc(100vh - 450px)', minHeight: '400px', maxHeight: '600px' }}
+                        style={{ height: 'calc(100vh - 550px)', minHeight: '300px', maxHeight: '500px' }}
                       >
                         <div className="p-3 border-b border-cyan-500/20 bg-gradient-to-r from-green-600 to-emerald-600">
                           <div className="flex items-center gap-2">

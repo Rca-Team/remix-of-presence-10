@@ -19,6 +19,7 @@ import BatchIDCardExtractor from '@/components/admin/BatchIDCardExtractor';
 import StudentIDCardGenerator from '@/components/admin/StudentIDCardGenerator';
 import AttendanceReportGenerator from '@/components/admin/AttendanceReportGenerator';
 import PDFBulkRegistration from '@/components/admin/PDFBulkRegistration';
+import StatsCardSkeleton from '@/components/admin/StatsCardSkeleton';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,7 @@ const Admin = () => {
   const [selectedFaceId, setSelectedFaceId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState('');
+  const [statsLoading, setStatsLoading] = useState(true);
   const [attendanceUpdated, setAttendanceUpdated] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('all');
   const [availableFaces, setAvailableFaces] = useState<{id: string, name: string, employee_id: string}[]>([]);
