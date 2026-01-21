@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { pushNotificationService } from '@/services/PushNotificationService';
 
 interface AttendanceUpdate {
   id: string;
@@ -15,6 +16,7 @@ interface UseRealtimeAttendanceOptions {
   categories?: string[];
   onNewAttendance?: (record: AttendanceUpdate) => void;
   showNotifications?: boolean;
+  enablePushNotifications?: boolean;
 }
 
 export const useRealtimeAttendance = (options: UseRealtimeAttendanceOptions = {}) => {
@@ -22,7 +24,7 @@ export const useRealtimeAttendance = (options: UseRealtimeAttendanceOptions = {}
   const [recentAttendance, setRecentAttendance] = useState<AttendanceUpdate[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
-  const handleNewAttendance = useCallback((payload: any) => {
+  const handleNewAttendance = useCallback(async (payload: any) => {
     const record = payload.new as AttendanceUpdate;
     
     // Filter by categories if specified
@@ -44,22 +46,36 @@ export const useRealtimeAttendance = (options: UseRealtimeAttendanceOptions = {}
       // Call callback if provided
       options.onNewAttendance?.(record);
 
-      // Show notification if enabled
+      // Show toast notification if enabled
       if (options.showNotifications) {
         toast({
           title: record.status === 'present' ? '✓ Attendance Marked' : '⏰ Late Arrival',
           description: `${studentName} marked ${record.status} in Category ${record.category || 'Unknown'}`,
           duration: 5000,
         });
+      }
 
-        // Also try browser notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(`Attendance: ${studentName}`, {
-            body: `Marked ${record.status} in Category ${record.category}`,
-            icon: '/favicon.ico',
-            tag: record.id, // Prevent duplicate notifications
-          });
+      // Send push notification if enabled
+      if (options.enablePushNotifications) {
+        try {
+          await pushNotificationService.sendAttendanceNotification(
+            studentName,
+            record.status as 'present' | 'late' | 'absent',
+            record.category || 'Unknown',
+            new Date(record.timestamp)
+          );
+        } catch (error) {
+          console.error('Failed to send push notification:', error);
         }
+      }
+
+      // Also try browser notification as fallback
+      if (options.showNotifications && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification(`Attendance: ${studentName}`, {
+          body: `Marked ${record.status} in Category ${record.category}`,
+          icon: '/favicon.ico',
+          tag: record.id, // Prevent duplicate notifications
+        });
       }
     }
   }, [options, toast]);
@@ -68,6 +84,11 @@ export const useRealtimeAttendance = (options: UseRealtimeAttendanceOptions = {}
     // Request notification permission
     if (options.showNotifications && 'Notification' in window) {
       Notification.requestPermission();
+    }
+
+    // Register service worker for push notifications if enabled
+    if (options.enablePushNotifications) {
+      pushNotificationService.registerServiceWorker().catch(console.error);
     }
 
     // Subscribe to realtime attendance updates
@@ -89,7 +110,7 @@ export const useRealtimeAttendance = (options: UseRealtimeAttendanceOptions = {}
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [handleNewAttendance, options.showNotifications]);
+  }, [handleNewAttendance, options.showNotifications, options.enablePushNotifications]);
 
   const clearRecentAttendance = useCallback(() => {
     setRecentAttendance([]);
