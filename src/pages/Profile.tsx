@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import PageLayout from '@/components/layouts/PageLayout';
+import PushNotificationSettings from '@/components/notifications/PushNotificationSettings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -555,14 +556,19 @@ const Profile = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
+                      className="space-y-4"
                     >
+                      {/* Push Notification Settings */}
+                      <PushNotificationSettings className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-xl" />
+                      
+                      {/* Notification History */}
                       <Card className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-xl">
                         <CardHeader className="pb-4">
                           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
                               <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
-                            Notifications & Alerts
+                            Notification History
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 sm:space-y-3">
