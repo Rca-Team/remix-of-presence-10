@@ -37,3 +37,37 @@ export {
   getUserTrainingStats,
   calculateBestMatchDistance
 } from './face-recognition/ProgressiveTrainingService';
+
+// Turbo recognition exports (GPU + Workers + Cache)
+export {
+  initializeTurboPipeline,
+  turboDetectAndRecognize,
+  turboRecognizeSingle,
+  turboClassroomScan,
+  getTurboPerformanceStats,
+  isTurboPipelineReady
+} from './face-recognition/TurboRecognitionService';
+
+// GPU acceleration exports
+export {
+  initializeGPU,
+  warmupGPU,
+  isGPUAvailable,
+  getGPUStats
+} from './face-recognition/GPUAccelerationService';
+
+// Worker pool exports
+export {
+  initializeWorkerPool,
+  matchDescriptorParallel,
+  batchMatchDescriptors,
+  getWorkerPoolStats
+} from './face-recognition/WorkerPoolService';
+
+// Descriptor cache exports
+export {
+  initializeDescriptorCache,
+  syncFromSupabase,
+  findNearestMatch,
+  getCacheStats
+} from './face-recognition/DescriptorCacheService';
