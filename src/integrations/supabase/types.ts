@@ -41,6 +41,69 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_points: {
+        Row: {
+          created_at: string
+          earned_at: string
+          id: string
+          points: number
+          reason: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          earned_at?: string
+          id?: string
+          points: number
+          reason?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          earned_at?: string
+          id?: string
+          points?: number
+          reason?: string | null
+          student_id?: string
+        }
+        Relationships: []
+      }
+      attendance_predictions: {
+        Row: {
+          actual_status: string | null
+          created_at: string
+          factors: Json | null
+          id: string
+          notification_sent: boolean | null
+          predicted_date: string
+          probability: number
+          risk_level: string | null
+          student_id: string
+        }
+        Insert: {
+          actual_status?: string | null
+          created_at?: string
+          factors?: Json | null
+          id?: string
+          notification_sent?: boolean | null
+          predicted_date: string
+          probability: number
+          risk_level?: string | null
+          student_id: string
+        }
+        Update: {
+          actual_status?: string | null
+          created_at?: string
+          factors?: Json | null
+          id?: string
+          notification_sent?: boolean | null
+          predicted_date?: string
+          probability?: number
+          risk_level?: string | null
+          student_id?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           category: string | null
@@ -106,6 +169,262 @@ export type Database = {
           value?: string | null
         }
         Relationships: []
+      }
+      badges: {
+        Row: {
+          badge_type: string | null
+          created_at: string
+          criteria: Json | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          points: number | null
+        }
+        Insert: {
+          badge_type?: string | null
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          points?: number | null
+        }
+        Update: {
+          badge_type?: string | null
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          points?: number | null
+        }
+        Relationships: []
+      }
+      bus_events: {
+        Row: {
+          bus_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          location: string | null
+          parent_notified: boolean | null
+          student_id: string
+          timestamp: string
+          verified_by: string | null
+        }
+        Insert: {
+          bus_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          location?: string | null
+          parent_notified?: boolean | null
+          student_id: string
+          timestamp?: string
+          verified_by?: string | null
+        }
+        Update: {
+          bus_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          location?: string | null
+          parent_notified?: boolean | null
+          student_id?: string
+          timestamp?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bus_events_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "buses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buses: {
+        Row: {
+          bus_number: string
+          capacity: number | null
+          created_at: string
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          is_active: boolean | null
+          route_name: string | null
+        }
+        Insert: {
+          bus_number: string
+          capacity?: number | null
+          created_at?: string
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          is_active?: boolean | null
+          route_name?: string | null
+        }
+        Update: {
+          bus_number?: string
+          capacity?: number | null
+          created_at?: string
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          is_active?: boolean | null
+          route_name?: string | null
+        }
+        Relationships: []
+      }
+      campus_zones: {
+        Row: {
+          allowed_categories: string[] | null
+          camera_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_restricted: boolean | null
+          name: string
+          zone_type: string | null
+        }
+        Insert: {
+          allowed_categories?: string[] | null
+          camera_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_restricted?: boolean | null
+          name: string
+          zone_type?: string | null
+        }
+        Update: {
+          allowed_categories?: string[] | null
+          camera_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_restricted?: boolean | null
+          name?: string
+          zone_type?: string | null
+        }
+        Relationships: []
+      }
+      class_leaderboard: {
+        Row: {
+          average_attendance: number | null
+          category: string
+          created_at: string
+          id: string
+          month_year: string
+          rank: number | null
+          total_points: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_attendance?: number | null
+          category: string
+          created_at?: string
+          id?: string
+          month_year: string
+          rank?: number | null
+          total_points?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_attendance?: number | null
+          category?: string
+          created_at?: string
+          id?: string
+          month_year?: string
+          rank?: number | null
+          total_points?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      emergency_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          location: string | null
+          notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          trigger_method: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          trigger_method?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          trigger_method?: string | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      emergency_responses: {
+        Row: {
+          created_at: string
+          emergency_id: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          responder_id: string
+          response_time: string
+          response_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          emergency_id?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          responder_id: string
+          response_time?: string
+          response_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          emergency_id?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          responder_id?: string
+          response_time?: string
+          response_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_responses_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       face_descriptors: {
         Row: {
@@ -203,6 +522,41 @@ export type Database = {
         }
         Relationships: []
       }
+      student_badges: {
+        Row: {
+          badge_id: string | null
+          created_at: string
+          earned_at: string
+          id: string
+          month_year: string | null
+          student_id: string
+        }
+        Insert: {
+          badge_id?: string | null
+          created_at?: string
+          earned_at?: string
+          id?: string
+          month_year?: string | null
+          student_id: string
+        }
+        Update: {
+          badge_id?: string | null
+          created_at?: string
+          earned_at?: string
+          id?: string
+          month_year?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_permissions: {
         Row: {
           can_take_attendance: boolean | null
@@ -256,6 +610,149 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      visitors: {
+        Row: {
+          approved_by: string | null
+          badge_code: string | null
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string
+          email: string | null
+          face_descriptor: Json | null
+          id: string
+          name: string
+          phone: string | null
+          photo_url: string | null
+          purpose: string
+          status: string | null
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+          visiting_student_id: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          badge_code?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          email?: string | null
+          face_descriptor?: Json | null
+          id?: string
+          name: string
+          phone?: string | null
+          photo_url?: string | null
+          purpose: string
+          status?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          visiting_student_id?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          badge_code?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          email?: string | null
+          face_descriptor?: Json | null
+          id?: string
+          name?: string
+          phone?: string | null
+          photo_url?: string | null
+          purpose?: string
+          status?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+          visiting_student_id?: string | null
+        }
+        Relationships: []
+      }
+      wellness_scores: {
+        Row: {
+          attendance_score: number | null
+          created_at: string
+          emotion_score: number | null
+          id: string
+          intervention_needed: boolean | null
+          notes: string | null
+          overall_score: number | null
+          punctuality_score: number | null
+          score_date: string
+          student_id: string
+          trend: string | null
+        }
+        Insert: {
+          attendance_score?: number | null
+          created_at?: string
+          emotion_score?: number | null
+          id?: string
+          intervention_needed?: boolean | null
+          notes?: string | null
+          overall_score?: number | null
+          punctuality_score?: number | null
+          score_date: string
+          student_id: string
+          trend?: string | null
+        }
+        Update: {
+          attendance_score?: number | null
+          created_at?: string
+          emotion_score?: number | null
+          id?: string
+          intervention_needed?: boolean | null
+          notes?: string | null
+          overall_score?: number | null
+          punctuality_score?: number | null
+          score_date?: string
+          student_id?: string
+          trend?: string | null
+        }
+        Relationships: []
+      }
+      zone_entries: {
+        Row: {
+          alert_triggered: boolean | null
+          created_at: string
+          entry_time: string
+          exit_time: string | null
+          id: string
+          is_authorized: boolean | null
+          student_id: string
+          zone_id: string | null
+        }
+        Insert: {
+          alert_triggered?: boolean | null
+          created_at?: string
+          entry_time?: string
+          exit_time?: string | null
+          id?: string
+          is_authorized?: boolean | null
+          student_id: string
+          zone_id?: string | null
+        }
+        Update: {
+          alert_triggered?: boolean | null
+          created_at?: string
+          entry_time?: string
+          exit_time?: string | null
+          id?: string
+          is_authorized?: boolean | null
+          student_id?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zone_entries_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "campus_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
