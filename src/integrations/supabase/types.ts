@@ -313,6 +313,48 @@ export type Database = {
         }
         Relationships: []
       }
+      circulars: {
+        Row: {
+          acknowledgments_count: number | null
+          attachment_url: string | null
+          circular_type: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_urgent: boolean | null
+          sent_at: string | null
+          target_categories: string[] | null
+          title: string
+        }
+        Insert: {
+          acknowledgments_count?: number | null
+          attachment_url?: string | null
+          circular_type?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_urgent?: boolean | null
+          sent_at?: string | null
+          target_categories?: string[] | null
+          title: string
+        }
+        Update: {
+          acknowledgments_count?: number | null
+          attachment_url?: string | null
+          circular_type?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_urgent?: boolean | null
+          sent_at?: string | null
+          target_categories?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
       class_leaderboard: {
         Row: {
           average_attendance: number | null
@@ -453,6 +495,173 @@ export type Database = {
         }
         Relationships: []
       }
+      gate_entries: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          entry_time: string
+          entry_type: string
+          gate_name: string | null
+          gate_session_id: string | null
+          id: string
+          is_recognized: boolean | null
+          photo_url: string | null
+          student_id: string | null
+          student_name: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          entry_time?: string
+          entry_type?: string
+          gate_name?: string | null
+          gate_session_id?: string | null
+          id?: string
+          is_recognized?: boolean | null
+          photo_url?: string | null
+          student_id?: string | null
+          student_name?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          entry_time?: string
+          entry_type?: string
+          gate_name?: string | null
+          gate_session_id?: string | null
+          id?: string
+          is_recognized?: boolean | null
+          photo_url?: string | null
+          student_id?: string | null
+          student_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_entries_gate_session_id_fkey"
+            columns: ["gate_session_id"]
+            isOneToOne: false
+            referencedRelation: "gate_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_sessions: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          ended_at: string | null
+          gate_name: string
+          id: string
+          started_at: string
+          started_by: string | null
+          total_entries: number | null
+          unknown_entries: number | null
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          ended_at?: string | null
+          gate_name?: string
+          id?: string
+          started_at?: string
+          started_by?: string | null
+          total_entries?: number | null
+          unknown_entries?: number | null
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          ended_at?: string | null
+          gate_name?: string
+          id?: string
+          started_at?: string
+          started_by?: string | null
+          total_entries?: number | null
+          unknown_entries?: number | null
+        }
+        Relationships: []
+      }
+      late_entries: {
+        Row: {
+          created_at: string
+          entry_time: string
+          id: string
+          notes: string | null
+          parent_notified: boolean | null
+          photo_url: string | null
+          reason: string
+          reason_detail: string | null
+          student_id: string
+          student_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          entry_time?: string
+          id?: string
+          notes?: string | null
+          parent_notified?: boolean | null
+          photo_url?: string | null
+          reason?: string
+          reason_detail?: string | null
+          student_id: string
+          student_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          entry_time?: string
+          id?: string
+          notes?: string | null
+          parent_notified?: boolean | null
+          photo_url?: string | null
+          reason?: string
+          reason_detail?: string | null
+          student_id?: string
+          student_name?: string | null
+        }
+        Relationships: []
+      }
+      notification_log: {
+        Row: {
+          created_at: string
+          gateway_response: Json | null
+          id: string
+          language: string | null
+          message_content: string | null
+          message_template: string | null
+          notification_type: string | null
+          recipient_id: string | null
+          recipient_phone: string | null
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          gateway_response?: Json | null
+          id?: string
+          language?: string | null
+          message_content?: string | null
+          message_template?: string | null
+          notification_type?: string | null
+          recipient_id?: string | null
+          recipient_phone?: string | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          gateway_response?: Json | null
+          id?: string
+          language?: string | null
+          message_content?: string | null
+          message_template?: string | null
+          notification_type?: string | null
+          recipient_id?: string | null
+          recipient_phone?: string | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -519,6 +728,72 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      school_gates: {
+        Row: {
+          camera_id: string | null
+          created_at: string
+          gate_type: string | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          name: string
+        }
+        Insert: {
+          camera_id?: string | null
+          created_at?: string
+          gate_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+        }
+        Update: {
+          camera_id?: string | null
+          created_at?: string
+          gate_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      school_holidays: {
+        Row: {
+          academic_year: string | null
+          created_at: string
+          holiday_date: string
+          holiday_type: string
+          id: string
+          is_half_day: boolean | null
+          name: string
+          name_hindi: string | null
+          state: string | null
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string
+          holiday_date: string
+          holiday_type?: string
+          id?: string
+          is_half_day?: boolean | null
+          name: string
+          name_hindi?: string | null
+          state?: string | null
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string
+          holiday_date?: string
+          holiday_type?: string
+          id?: string
+          is_half_day?: boolean | null
+          name?: string
+          name_hindi?: string | null
+          state?: string | null
         }
         Relationships: []
       }
