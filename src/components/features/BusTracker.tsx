@@ -262,7 +262,7 @@ const BusTracker = () => {
                              event.event_type === 'alight' ? 'Student alighted' : 'Missed pickup'}
                           </span>
                           {event.parent_notified && (
-                            <Check className="h-3 w-3 text-green-400" title="Parent notified" />
+                            <Check className="h-3 w-3 text-green-400" aria-label="Parent notified" />
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
