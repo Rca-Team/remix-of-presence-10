@@ -93,10 +93,10 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           const result = await recognizeFace(detection.descriptor);
           const entry: GateEntry = {
             id: uuidv4(),
-            studentName: result?.name || 'Unknown Person',
-            studentId: result?.userId || null,
+            studentName: result?.recognized && result.employee ? result.employee.name : 'Unknown Person',
+            studentId: result?.recognized && result.employee ? result.employee.id : null,
             time: new Date(),
-            isRecognized: !!result,
+            isRecognized: result?.recognized || false,
             confidence: result?.confidence || detection.detection.score,
           };
           onFaceDetected(entry);

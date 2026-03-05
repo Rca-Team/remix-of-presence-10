@@ -69,11 +69,11 @@ const AssemblyMode = () => {
       for (const d of detections) {
         try {
           const result = await recognizeFace(d.descriptor);
-          if (result && !detectedIdsRef.current.has(result.userId)) {
-            detectedIdsRef.current.add(result.userId);
+          if (result?.recognized && result.employee && !detectedIdsRef.current.has(result.employee.id)) {
+            detectedIdsRef.current.add(result.employee.id);
             setDetected(prev => [...prev, {
-              id: result.userId,
-              name: result.name,
+              id: result.employee!.id,
+              name: result.employee!.name,
               confidence: result.confidence,
               time: new Date()
             }]);
