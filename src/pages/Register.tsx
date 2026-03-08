@@ -71,11 +71,12 @@ const Register = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleMultiAngleComplete = (averaged: Float32Array, primaryImage: string) => {
+  const handleMultiAngleComplete = (averaged: Float32Array, primaryImage: string, rawDescriptors: Float32Array[]) => {
     setFaceDescriptor(averaged);
     setFaceImage(primaryImage);
+    setAllDescriptors(rawDescriptors);
     setFaceCaptured(true);
-    toast({ title: "3D Scan Complete! 🎉", description: "3D face map captured for maximum accuracy." });
+    toast({ title: "3D Scan Complete! 🎉", description: `${rawDescriptors.length} angle samples captured for maximum accuracy.` });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

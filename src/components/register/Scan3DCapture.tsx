@@ -453,7 +453,7 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     soundRef.current.playComplete();
     setScanComplete(true);
     setStatusText(`3D scan complete! ${descriptors.length} samples captured.`);
-    onComplete(averaged, primaryImage!);
+    onComplete(averaged, primaryImage!, descriptors);
   }, [onComplete, primaryImage]);
 
   const resetScan = () => {
