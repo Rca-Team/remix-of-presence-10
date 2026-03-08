@@ -293,13 +293,13 @@ const Index = () => {
                 key={i} 
                 variants={itemVariants} 
                 whileHover={{ y: -5 }}
-                className="group relative p-6 md:p-8 rounded-2xl bg-card border border-blue-100 dark:border-blue-900/50 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-500"
+                className="group relative p-6 md:p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-500"
               >
-                {/* Hover Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-500" />
+                {/* Multi-color top accent */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-t-2xl opacity-60 group-hover:opacity-100 transition-opacity`} />
                 
                 <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} mb-4 shadow-lg`}>
-                  <feature.icon className="w-6 h-6 text-white" />
+                  <feature.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
                 
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
