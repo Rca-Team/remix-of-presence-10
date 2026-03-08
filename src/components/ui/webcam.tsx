@@ -283,6 +283,15 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
     setIsActive(prev => !prev);
   };
 
+  const flipCamera = () => {
+    attemptCountRef.current = 0;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setCurrentFacing(prev => prev === 'user' ? 'environment' : 'user');
+  };
+
   return (
     <div className={cn(
       "relative overflow-hidden bg-muted rounded-xl",
