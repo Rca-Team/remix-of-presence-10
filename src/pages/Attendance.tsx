@@ -24,8 +24,6 @@ const Attendance = () => {
 
   const tabConfig = [
     { value: 'single', label: 'AI Scanner', shortLabel: 'Scan', icon: Scan },
-    { value: 'multiple', label: 'Multi-Face', shortLabel: 'Multi', icon: Users },
-    { value: 'gallery', label: 'Gallery', shortLabel: 'Gallery', icon: Grid3x3 },
     { value: 'stats', label: 'Analytics', shortLabel: 'Stats', icon: BarChart3 },
     { value: 'help', label: 'Help', shortLabel: 'Help', icon: Info },
   ];
