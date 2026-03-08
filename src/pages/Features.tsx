@@ -81,6 +81,12 @@ const Features = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full whitespace-nowrap">
           <TabsList className="inline-flex mb-6">
+            <TabsTrigger value="voice" className="gap-2">
+              <Mic className="h-4 w-4" /> Voice Roll Call
+            </TabsTrigger>
+            <TabsTrigger value="reportcard" className="gap-2">
+              <FileBarChart className="h-4 w-4" /> Smart Reports
+            </TabsTrigger>
             <TabsTrigger value="heatmap" className="gap-2">
               <CalendarDays className="h-4 w-4" /> Heat Map
             </TabsTrigger>
