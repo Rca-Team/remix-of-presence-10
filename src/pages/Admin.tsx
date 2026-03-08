@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import PageLayout from '@/components/layouts/PageLayout';
 import PageTransition from '@/components/PageTransition';
 import AdminFacesList from '@/components/admin/AdminFacesList';
