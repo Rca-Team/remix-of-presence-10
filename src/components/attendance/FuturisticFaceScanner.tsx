@@ -92,6 +92,15 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
         await loadModels();
         setModelsLoaded(true);
       }
+      // Pre-load SSD MobileNetV1 so first scan doesn't timeout
+      if (!faceapi.nets.ssdMobilenetv1?.isLoaded) {
+        try {
+          await faceapi.nets.ssdMobilenetv1.load('/models');
+          console.log('SSD MobileNetV1 pre-loaded for scanning');
+        } catch (e) {
+          console.warn('SSD MobileNetV1 pre-load failed, will use TinyFaceDetector', e);
+        }
+      }
     };
     initModels();
   }, []);
@@ -240,7 +249,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
     setScanResult(null);
     setRecognizedFaces([]);
 
-    // Overall scan timeout - 15 seconds max
+    // Overall scan timeout - 25 seconds max (first scan may need model loading)
     const scanTimeout = setTimeout(() => {
       console.warn('Scan timeout - forcing completion');
       setIsScanning(false);
@@ -251,7 +260,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
         description: "The scan took too long. Please try again.",
         variant: "destructive"
       });
-    }, 15000);
+    }, 25000);
 
     try {
       const video = webcamRef.current.video;
@@ -272,7 +281,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
             try {
               await withTimeout(
                 faceapi.nets.ssdMobilenetv1.load('/models'),
-                4000,
+                10000,
                 'SSD model load timed out'
               );
             } catch (e) {
@@ -303,7 +312,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       
       const fullDetections = await withTimeout(
         detectionPromise,
-        8000,
+        12000,
         'Face detection timed out. Please ensure good lighting and try again.'
       );
 
