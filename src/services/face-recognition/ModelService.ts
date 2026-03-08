@@ -7,7 +7,7 @@ let isLoadingModels = false;
 let loadAttempts = 0;
 const MAX_LOAD_ATTEMPTS = 5; // Increased from 3 to 5
 const MODEL_PATHS = [
-  { net: faceapi.nets.tinyFaceDetector, name: 'TinyFaceDetector' },
+  { net: faceapi.nets.ssdMobilenetv1, name: 'SSD MobileNetV1' },
   { net: faceapi.nets.faceLandmark68Net, name: 'FaceLandmark68' },
   { net: faceapi.nets.faceRecognitionNet, name: 'FaceRecognition' }
 ];
