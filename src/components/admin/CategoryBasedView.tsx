@@ -245,6 +245,16 @@ const CategoryBasedView: React.FC = () => {
     );
   }
 
+  // Teacher Manager View
+  if (selectedCategory && showTeacherManager) {
+    return (
+      <ClassTeacherManager
+        category={selectedCategory}
+        onBack={() => setShowTeacherManager(false)}
+      />
+    );
+  }
+
   // Level 3: Show students in a specific class-section
   if (selectedCategory) {
     return (
