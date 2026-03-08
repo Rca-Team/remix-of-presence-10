@@ -32,29 +32,29 @@ const GateEntryFeedback = ({ entry, onDismiss }: GateEntryFeedbackProps) => {
       <motion.div
         initial={{ y: 30 }}
         animate={{ y: 0 }}
-        className="bg-card/95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl text-center max-w-sm pointer-events-auto"
+        className="bg-card/95 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-8 shadow-2xl text-center max-w-[85vw] sm:max-w-sm pointer-events-auto mx-4"
       >
         {isRecognized ? (
           isLate ? (
-            <Clock className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+            <Clock className="h-10 w-10 sm:h-16 sm:w-16 text-yellow-500 mx-auto mb-2 sm:mb-4" />
           ) : (
-            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <CheckCircle2 className="h-10 w-10 sm:h-16 sm:w-16 text-green-500 mx-auto mb-2 sm:mb-4" />
           )
         ) : (
-          <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <AlertTriangle className="h-10 w-10 sm:h-16 sm:w-16 text-destructive mx-auto mb-2 sm:mb-4" />
         )}
         
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+        <h2 className="text-lg sm:text-2xl font-bold text-foreground mb-1 sm:mb-2 truncate">
           {isRecognized ? entry.studentName : 'Unknown Person'}
         </h2>
         
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-sm sm:text-lg">
           {isRecognized 
             ? isLate ? '⏰ Late Entry' : '✅ Welcome!'
             : '⚠️ Not Registered'}
         </p>
         
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
           {entry.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           {isRecognized && ` • ${(entry.confidence * 100).toFixed(0)}% match`}
         </p>
