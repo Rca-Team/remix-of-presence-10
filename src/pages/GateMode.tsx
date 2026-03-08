@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, X, Settings, Volume2, VolumeX, Maximize, Minimize,
   Users, Clock, AlertTriangle, CheckCircle2, Wifi, WifiOff,
-  DoorOpen, Eye
+  DoorOpen, Eye, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import StrangerAlert from '@/components/gate/StrangerAlert';
 import LateEntryForm from '@/components/gate/LateEntryForm';
 import GateModeSetup from '@/components/gate/GateModeSetup';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface GateEntry {
   id: string;
