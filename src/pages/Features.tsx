@@ -155,6 +155,8 @@ const Features = () => {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
+        <TabsContent value="voice"><VoiceAttendance /></TabsContent>
+        <TabsContent value="reportcard"><SmartReportCard /></TabsContent>
         <TabsContent value="heatmap"><AttendanceHeatMap /></TabsContent>
         <TabsContent value="assembly"><AssemblyMode /></TabsContent>
         <TabsContent value="holidays"><IndianHolidayCalendar /></TabsContent>
