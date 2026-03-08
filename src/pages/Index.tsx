@@ -38,37 +38,43 @@ const Index = () => {
       icon: Scan,
       title: "AI Face Recognition",
       description: "Advanced neural networks detect and verify faces in milliseconds",
-      gradient: "from-blue-500 to-blue-600"
+      gradient: "from-cyan to-primary",
+      glow: "glow-cyan"
     },
     {
       icon: Clock,
       title: "Real-time Tracking",
       description: "Instant attendance updates with live dashboard monitoring",
-      gradient: "from-cyan-500 to-blue-500"
+      gradient: "from-emerald to-teal",
+      glow: "glow-emerald"
     },
     {
       icon: BarChart3,
       title: "Smart Analytics",
       description: "Deep insights with AI-powered attendance pattern analysis",
-      gradient: "from-blue-600 to-indigo-600"
+      gradient: "from-violet to-indigo",
+      glow: "glow-violet"
     },
     {
       icon: Bell,
       title: "Auto Notifications",
       description: "Instant alerts to parents when students check in or out",
-      gradient: "from-sky-500 to-blue-500"
+      gradient: "from-amber to-rose",
+      glow: "glow-amber"
     },
     {
       icon: Shield,
       title: "Enterprise Security",
       description: "Bank-grade encryption protects all biometric data",
-      gradient: "from-indigo-500 to-blue-600"
+      gradient: "from-indigo to-violet",
+      glow: "glow-violet"
     },
     {
       icon: Smartphone,
       title: "Mobile First",
       description: "Works seamlessly on any device, anywhere, anytime",
-      gradient: "from-blue-500 to-cyan-500"
+      gradient: "from-teal to-cyan",
+      glow: "glow-cyan"
     }
   ];
 
