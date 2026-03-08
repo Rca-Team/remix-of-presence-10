@@ -190,10 +190,23 @@ export const useFaceRecognition = () => {
       const status: 'present' | 'late' = isPastCutoff ? 'late' : 'present';
       console.log(`Attendance status determined: ${status} (past cutoff: ${isPastCutoff})`);
       
+      // Capture the frame for notification email
+      let capturedImageDataUrl: string | undefined;
+      if (mediaElement instanceof HTMLVideoElement) {
+        const capCanvas = document.createElement('canvas');
+        capCanvas.width = mediaElement.videoWidth;
+        capCanvas.height = mediaElement.videoHeight;
+        const capCtx = capCanvas.getContext('2d');
+        capCtx?.drawImage(mediaElement, 0, 0);
+        capturedImageDataUrl = capCanvas.toDataURL('image/jpeg', 0.85);
+      }
+      
       await recordAttendance(
         recognitionResult.employee.id, 
         status, 
-        recognitionResult.confidence
+        recognitionResult.confidence,
+        undefined,
+        capturedImageDataUrl
       );
       
       // Store face sample for progressive training (improves accuracy over time)
