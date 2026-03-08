@@ -172,7 +172,7 @@ const Signup = () => {
                   onChange={handleInputChange} className="h-12 text-base" required />
               </div>
 
-              <Button type="submit" variant="ios" className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold" disabled={isLoading}>
+              <Button type="submit" variant="ios" className="w-full h-12 text-base font-semibold" disabled={isLoading}>
                 {isLoading ? (
                   <><span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-r-transparent animate-spin" />Creating...</>
                 ) : "Create Account"}
