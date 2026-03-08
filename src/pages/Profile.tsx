@@ -33,7 +33,8 @@ import {
   LogOut,
   Settings,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Scan
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
