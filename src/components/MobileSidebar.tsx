@@ -97,10 +97,10 @@ const MobileSidebar = () => {
   const navigation = useMemo(() => {
     const items = [
       { name: 'Home', path: '/', icon: Home },
-      { name: 'Gate', path: '/dashboard', icon: BarChart, requiresAuth: true },
       { name: 'Profile', path: '/profile', icon: User, requiresAuth: true },
       { name: 'Register', path: '/register', icon: UserPlus },
       { name: 'Attendance', path: '/attendance', icon: Clock, requiresAuth: true },
+      { name: 'Gate Mode', path: '/gate', icon: Scan, show: isAdminOrPrincipal || isTeacher },
       { name: isTeacher && !isAdminOrPrincipal ? 'Teacher' : 'Admin', path: '/admin', icon: isTeacher && !isAdminOrPrincipal ? GraduationCap : ShieldCheck, show: isAdminOrPrincipal || isTeacher },
     ];
     return items.filter(item => item.show !== false);
