@@ -247,7 +247,7 @@ const Index = () => {
                 <div className={`inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br ${cat.gradient} shadow-lg`}>
                   <cat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">{cat.category}</h2>
+                <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">{cat.category}</h2>
               </motion.div>
 
               {/* Feature Cards - 2 columns on mobile, 4 on desktop */}
