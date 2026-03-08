@@ -11,7 +11,8 @@ import UnrecognizedFaceAlert from './UnrecognizedFaceAlert';
 import RecognizedFaceAlert from './RecognizedFaceAlert';
 import { loadOptimizedModels } from '@/services/face-recognition/OptimizedModelService';
 import { videoEnhancementService } from '@/services/ai/VideoEnhancementService';
-import { AlertCircle, Sparkles, Users, Camera } from 'lucide-react';
+import { usePhotoEnhancer } from '@/hooks/usePhotoEnhancer';
+import { AlertCircle, Sparkles, Users, Camera, Wand2 } from 'lucide-react';
 import * as faceapi from 'face-api.js';
 
 const AttendanceCapture = () => {
@@ -55,6 +56,8 @@ const AttendanceCapture = () => {
     error,
     resetProcessing: resetResult
   } = useOptimizedFaceRecognition();
+
+  const { isEnhancing: isAIEnhancing, autoEnhance, lastQualityScore } = usePhotoEnhancer();
 
   // Wrapper to reset all state including captured image and detected faces
   const handleReset = () => {
@@ -312,12 +315,12 @@ const AttendanceCapture = () => {
       canvas.height = webcamRef.current.videoHeight;
       ctx.drawImage(webcamRef.current, 0, 0);
       
-      // Apply video enhancement if enabled
+      // Apply video enhancement if enabled (legacy)
       let imageToProcess = canvas;
       if (enhancementEnabled && videoEnhancementService.isEnhancementAvailable()) {
         setIsEnhancing(true);
         try {
-          console.log('Enhancing captured image...');
+          console.log('Enhancing captured image (legacy)...');
           const enhancedCanvas = await videoEnhancementService.enhanceVideoFrame(webcamRef.current);
           imageToProcess = enhancedCanvas;
         } catch (enhanceError) {
@@ -327,7 +330,10 @@ const AttendanceCapture = () => {
         }
       }
       
-      const imageDataUrl = imageToProcess.toDataURL('image/jpeg', 0.95);
+      let imageDataUrl = imageToProcess.toDataURL('image/jpeg', 0.95);
+      
+      // AI auto-enhance for low-quality images
+      imageDataUrl = await autoEnhance(imageDataUrl, imageToProcess);
       
       // Add to photos array (max 3 photos)
       setCapturedPhotos(prev => {
@@ -451,6 +457,18 @@ const AttendanceCapture = () => {
             {detectedFaces.length > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {detectedFaces.length} face{detectedFaces.length > 1 ? 's' : ''} detected
+              </Badge>
+            )}
+            {isAIEnhancing && (
+              <Badge variant="outline" className="ml-2 gap-1 animate-pulse">
+                <Wand2 className="h-3 w-3" />
+                AI Enhancing...
+              </Badge>
+            )}
+            {lastQualityScore !== null && lastQualityScore < 0.45 && !isAIEnhancing && (
+              <Badge variant="outline" className="ml-2 gap-1 text-amber-600 border-amber-300">
+                <Wand2 className="h-3 w-3" />
+                Low Quality Detected
               </Badge>
             )}
           </div>

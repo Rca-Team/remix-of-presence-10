@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert, SwitchCamera } from 'lucide-react';
+import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert, SwitchCamera, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GateEntry } from '@/pages/GateMode';
 import { loadModels, areModelsLoaded } from '@/services/face-recognition/ModelService';
 import { recognizeFace, recordAttendance } from '@/services/face-recognition/RecognitionService';
+import { usePhotoEnhancer } from '@/hooks/usePhotoEnhancer';
 import * as faceapi from 'face-api.js';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
   const attendanceMarkedRef = useRef<Set<string>>(new Set());
   // Store per-face labels for canvas overlay
   const faceLabelsRef = useRef<Map<string, { name: string; confidence: number; recognized: boolean }>>(new Map());
+  const { isEnhancing: isAIEnhancing, autoEnhance } = usePhotoEnhancer();
 
   // Clear stale live matches
   useEffect(() => {
@@ -354,6 +356,12 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
             <span className="text-[10px] sm:text-xs font-medium text-foreground">Live</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {isAIEnhancing && (
+              <div className="bg-accent/80 backdrop-blur rounded-full px-2 sm:px-3 py-1 sm:py-1.5 flex items-center gap-1">
+                <Wand2 className="h-3 w-3 text-accent-foreground animate-pulse" />
+                <span className="text-[10px] sm:text-xs font-medium text-accent-foreground">Enhancing</span>
+              </div>
+            )}
             {facesInFrame > 0 && (
               <div className="bg-primary/80 backdrop-blur rounded-full px-2 sm:px-3 py-1 sm:py-1.5 flex items-center gap-1">
                 <Scan className="h-3 w-3 text-primary-foreground" />
