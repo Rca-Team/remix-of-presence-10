@@ -270,7 +270,7 @@ const Index = () => {
             viewport={{ once: true }} 
             variants={containerVariants}
           >
-            <motion.span variants={itemVariants} className="inline-block px-4 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm font-medium mb-4">
+            <motion.span variants={itemVariants} className="inline-block px-4 py-1 rounded-full bg-violet/10 text-violet text-sm font-medium mb-4">
               Powerful Features
             </motion.span>
             <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
