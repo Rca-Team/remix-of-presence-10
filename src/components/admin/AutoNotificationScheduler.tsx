@@ -81,6 +81,26 @@ const AutoNotificationScheduler: React.FC = () => {
     }
   };
 
+  const triggerCutoffAbsenceNotify = async () => {
+    setIsCutoffLoading(true);
+    setCutoffResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('absence-cutoff-notify', { body: {} });
+      if (error) throw error;
+
+      setCutoffResult({ absentCount: data?.absentCount, emailsSent: data?.emailsSent, inAppSent: data?.inAppSent });
+      toast({
+        title: 'Absence Notifications Sent',
+        description: data?.message || `${data?.absentCount || 0} absent user(s) notified.`,
+      });
+    } catch (error) {
+      console.error('Cutoff notify error:', error);
+      toast({ title: 'Error', description: 'Failed to send absence cutoff notifications', variant: 'destructive' });
+    } finally {
+      setIsCutoffLoading(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
