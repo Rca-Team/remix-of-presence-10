@@ -257,17 +257,30 @@ export const useAttendanceCalendar = (selectedFaceId: string | null) => {
           const recordDate = new Date(record.timestamp);
           const dateKey = format(recordDate, 'yyyy-MM-dd');
           
+          // Only keep the earliest record per day
           if (!recordsByDate[dateKey]) {
-            recordsByDate[dateKey] = [];
+            recordsByDate[dateKey] = [{
+              id: record.id,
+              timestamp: record.timestamp,
+              status: typeof record.status === 'string' ? record.status.toLowerCase() : 'unknown',
+              name,
+              image_url: (record as any).image_url
+            }];
+          } else {
+            // Compare timestamps - keep only if this is earlier
+            const existingTimestamp = new Date(recordsByDate[dateKey][0].timestamp).getTime();
+            const currentTimestamp = new Date(record.timestamp).getTime();
+            
+            if (currentTimestamp < existingTimestamp) {
+              recordsByDate[dateKey] = [{
+                id: record.id,
+                timestamp: record.timestamp,
+                status: typeof record.status === 'string' ? record.status.toLowerCase() : 'unknown',
+                name,
+                image_url: (record as any).image_url
+              }];
+            }
           }
-          
-          recordsByDate[dateKey].push({
-            id: record.id,
-            timestamp: record.timestamp,
-            status: typeof record.status === 'string' ? record.status.toLowerCase() : 'unknown',
-            name,
-            image_url: (record as any).image_url
-          });
         }
         
         setAttendanceRecords(recordsByDate);
