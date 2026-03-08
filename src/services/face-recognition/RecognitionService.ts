@@ -381,10 +381,11 @@ export async function recordAttendance(
     
     console.log('Attendance recorded successfully:', data);
     
-    // Auto-send parent notification (non-blocking)
+    // Auto-send parent notification with photo proof (non-blocking)
     import('@/services/notification/AutoNotificationService').then(({ sendAutoParentNotification }) => {
       const studentName = fullDeviceInfo?.metadata?.name || 'Student';
-      sendAutoParentNotification(userId, studentName, normalizedStatus as 'present' | 'late' | 'absent')
+      const photoUrl = data?.image_url || deviceInfo?.metadata?.firebase_image_url;
+      sendAutoParentNotification(userId, studentName, normalizedStatus as 'present' | 'late' | 'absent', photoUrl)
         .then(res => console.log('Auto notification result:', res))
         .catch(err => console.error('Auto notification error:', err));
     }).catch(err => console.error('Failed to load notification service:', err));

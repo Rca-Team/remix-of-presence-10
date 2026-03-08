@@ -74,15 +74,23 @@ serve(async (req) => {
         const currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
         const subject = `${statusEmoji} Attendance Alert: ${studentName} marked ${status}`;
 
+        const photoSection = imageUrl ? `
+<tr><td style="padding:10px 30px 20px 30px;text-align:center;">
+<p style="margin:0 0 10px 0;color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;">📸 Photo Proof</p>
+<img src="${imageUrl}" alt="Attendance photo of ${escapeHtml(studentName)}" style="max-width:280px;width:100%;border-radius:12px;border:3px solid ${statusColor};box-shadow:0 4px 12px rgba(0,0,0,0.15);" />
+<p style="margin:8px 0 0 0;color:#9ca3af;font-size:11px;">Captured at ${currentTime}</p>
+</td></tr>` : '';
+
         const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;line-height:1.6;margin:0;padding:0;background-color:#f4f4f5;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:20px;"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-<tr><td style="background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);padding:30px;text-align:center;"><h1 style="color:#ffffff;margin:0;font-size:24px;">📚 School Attendance System</h1></td></tr>
+<tr><td style="background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);padding:30px;text-align:center;"><h1 style="color:#ffffff;margin:0;font-size:24px;">📚 Presence - Attendance System</h1></td></tr>
 <tr><td style="padding:20px;text-align:center;"><span style="display:inline-block;background-color:${statusColor};color:white;padding:8px 20px;border-radius:20px;font-weight:600;font-size:14px;">${statusEmoji} ${statusBadge}</span></td></tr>
 <tr><td style="padding:20px 30px;"><p style="color:#374151;margin:0 0 10px 0;">Dear ${escapeHtml(parentName)},</p><p style="color:#4b5563;">Your child <strong>${escapeHtml(studentName)}</strong> has been marked as <strong style="color:${statusColor};">${status.toUpperCase()}</strong> for today's attendance.</p></td></tr>
+${photoSection}
 <tr><td style="padding:0 30px 20px 30px;"><table width="100%" style="background-color:#f9fafb;border-radius:8px;padding:15px;"><tr><td><p style="margin:0;color:#6b7280;font-size:12px;text-transform:uppercase;">Student</p><p style="margin:5px 0 0 0;color:#111827;font-weight:600;">${escapeHtml(studentName)}</p></td><td align="right"><p style="margin:0;color:#6b7280;font-size:12px;text-transform:uppercase;">Date & Time</p><p style="margin:5px 0 0 0;color:#111827;font-weight:600;">${currentDate}<br/>${currentTime}</p></td></tr></table></td></tr>
-<tr><td style="background-color:#f9fafb;padding:20px 30px;text-align:center;border-top:1px solid #e5e7eb;"><p style="margin:0;color:#6b7280;font-size:12px;">Automated message from the School Attendance System.</p></td></tr>
+<tr><td style="background-color:#f9fafb;padding:20px 30px;text-align:center;border-top:1px solid #e5e7eb;"><p style="margin:0;color:#6b7280;font-size:12px;">Automated message from Presence - School Attendance System.</p></td></tr>
 </table></td></tr></table></body></html>`;
 
         const resendResponse = await fetch('https://api.resend.com/emails', {
