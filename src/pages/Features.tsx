@@ -6,7 +6,8 @@ import {
   IdCard, CalendarDays, Smile, Users, FileText, 
   Shield, Database, MessageCircle, Sparkles, Bus,
   MapPin, Brain, Heart, Trophy, Camera, Siren,
-  Flag, DoorOpen, MessageSquare, Megaphone, BookOpen
+  Flag, DoorOpen, MessageSquare, Megaphone, BookOpen,
+  Mic, FileBarChart
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
