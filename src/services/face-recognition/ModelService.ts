@@ -7,7 +7,7 @@ let isLoadingModels = false;
 let loadAttempts = 0;
 const MAX_LOAD_ATTEMPTS = 5; // Increased from 3 to 5
 const MODEL_PATHS = [
-  { net: faceapi.nets.tinyFaceDetector, name: 'TinyFaceDetector' },
+  { net: faceapi.nets.ssdMobilenetv1, name: 'SSD MobileNetV1' },
   { net: faceapi.nets.faceLandmark68Net, name: 'FaceLandmark68' },
   { net: faceapi.nets.faceRecognitionNet, name: 'FaceRecognition' }
 ];
@@ -49,7 +49,7 @@ export async function loadModels() {
     
     // Check if models directory exists by attempting to fetch a manifest file
     try {
-      const testResponse = await fetch('/models/tiny_face_detector_model-weights_manifest.json');
+      const testResponse = await fetch('/models/ssd_mobilenetv1_model-weights_manifest.json');
       if (!testResponse.ok) {
         throw new Error(`Failed to access models directory: ${testResponse.status} ${testResponse.statusText}`);
       }
@@ -208,10 +208,9 @@ export async function getFaceDescriptor(
         : `Image dimensions: ${imageElement.width}x${imageElement.height}`
     );
     
-    // Use TinyFaceDetector with better settings for accuracy
-    const detectionOptions = new faceapi.TinyFaceDetectorOptions({ 
-      inputSize: 512,       // Larger input = better accuracy (was 416)
-      scoreThreshold: 0.4   // Slightly more permissive detection (was 0.5)
+    // Use SSD MobileNetV1 for higher accuracy detection
+    const detectionOptions = new faceapi.SsdMobilenetv1Options({ 
+      minConfidence: 0.4   // Permissive detection threshold
     });
     
     const detections = await faceapi.detectSingleFace(imageElement, detectionOptions)
