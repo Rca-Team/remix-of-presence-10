@@ -168,31 +168,6 @@ const Index = () => {
               {/* Hero Visual */}
               <motion.div variants={itemVariants} className="relative flex justify-center lg:block">
                 <div className="relative group">
-                  {/* Mascot on mobile - compact */}
-                  <div className="lg:hidden flex justify-center">
-                    <motion.img
-                      src={brandMascot}
-                      alt="Presence mascot"
-                      className="w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-2xl"
-                      animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  </div>
-
-                  {/* Desktop card with mascot */}
-                  <div className="hidden lg:block">
-                    <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 via-primary/30 to-accent/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative bg-gradient-to-br from-background via-background to-muted border border-primary/20 rounded-3xl p-6 md:p-8 shadow-2xl">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-t-3xl" />
-                      
-                      {/* Mascot floating over the card */}
-                      <motion.img
-                        src={brandMascot}
-                        alt="Presence brand ambassador"
-                        className="absolute -top-16 -right-8 w-36 h-36 object-contain drop-shadow-2xl z-10"
-                        animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                      />
 
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         {[

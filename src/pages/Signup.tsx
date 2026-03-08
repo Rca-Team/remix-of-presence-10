@@ -95,21 +95,6 @@ const Signup = () => {
             Join Smart School Platform
           </motion.h2>
 
-          {/* Mascot */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.35, type: 'spring' }}
-            className="flex justify-center"
-          >
-            <motion.img
-              src={brandMascot}
-              alt="Presence brand ambassador"
-              className="w-44 h-44 object-contain drop-shadow-2xl"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
             className="grid grid-cols-2 gap-3">
