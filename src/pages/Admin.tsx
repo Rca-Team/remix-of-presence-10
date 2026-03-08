@@ -36,7 +36,7 @@ import {
   User, Calendar, Clock, UserPlus, FolderKanban, School,
   LayoutDashboard, Settings, FileText, Bell, Users, BarChart3,
   Shield, Activity, TrendingUp, ChevronRight, Send, UserCog,
-  CreditCard, Image, Download, RefreshCw, MessageSquareText, Mail } from
+  CreditCard, Image, Download, RefreshCw, MessageSquareText, Mail, Siren } from
 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
