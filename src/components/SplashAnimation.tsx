@@ -151,7 +151,7 @@ const SplashAnimation: React.FC<SplashAnimationProps> = ({
                       <motion.circle cx="32" cy="24" r="8" stroke="#22d3ee" strokeWidth="1.5"
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, delay: 1 }}/>
                       {/* Body/shoulders */}
-                      <motion.path d="M16 52c0-8.8 7.2-16 16-16s16 7.2 16 52" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round"
+                      <motion.path d="M16 52c0-8.8 7.2-16 16-16s16 8.8 16 16" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round"
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 1.3 }}/>
                     </svg>
 
