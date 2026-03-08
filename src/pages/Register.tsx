@@ -41,6 +41,7 @@ const Register = () => {
   });
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [faceDescriptor, setFaceDescriptor] = useState<Float32Array | null>(null);
+  const [allDescriptors, setAllDescriptors] = useState<Float32Array[]>([]);
   const [registrationStep, setRegistrationStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
