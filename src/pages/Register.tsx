@@ -158,7 +158,7 @@ const Register = () => {
               </div>
               <div className="space-y-4">
                 {[
-                  { icon: Sparkles, text: "4-angle face scan for 99%+ accuracy" },
+                  { icon: Sparkles, text: "3D face scan for 99%+ accuracy" },
                   { icon: Shield, text: "Bank-grade security & privacy" },
                   { icon: Users, text: "Instant attendance via face recognition" }
                 ].map((item, i) => (
