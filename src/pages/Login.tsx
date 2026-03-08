@@ -10,6 +10,7 @@ import Logo from '@/components/Logo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sparkles, Lock, Mail, ArrowLeft, Scan, BookOpen, Shield, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable/index';
 import { motion } from 'framer-motion';
 
 const Login = () => {
