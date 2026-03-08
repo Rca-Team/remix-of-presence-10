@@ -299,8 +299,8 @@ const Index = () => {
                   <div className={`inline-flex p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.gradient} mb-3 sm:mb-5 shadow-lg`}>
                     <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <h3 className="text-base sm:text-xl font-bold mb-2 sm:mb-3">{item.title}</h3>
-                  <p className="text-xs sm:text-base text-muted-foreground">{item.desc}</p>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
