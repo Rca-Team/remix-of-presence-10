@@ -182,7 +182,7 @@ const MobileSidebar = () => {
                 </div>
                 <div>
                   <Logo className="text-lg" />
-                  <p className="text-[10px] text-muted-foreground tracking-wide">Smart Attendance</p>
+                  
                 </div>
               </div>
 
