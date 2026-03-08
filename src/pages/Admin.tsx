@@ -461,6 +461,7 @@ const Admin = () => {
               return (
                 <button
                   key={item.id}
+                  data-nav-id={item.id}
                   onClick={() => handleTabChange(item.id)}
                   className={cn(
                     "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all min-w-0 flex-1",
