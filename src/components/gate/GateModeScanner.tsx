@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Eye, Loader2, Scan, Zap } from 'lucide-react';
+import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { GateEntry } from '@/pages/GateMode';
 import { loadModels, areModelsLoaded } from '@/services/face-recognition/ModelService';
 import { recognizeFace, recordAttendance } from '@/services/face-recognition/RecognitionService';
@@ -11,6 +12,13 @@ interface GateModeScannerProps {
   isActive: boolean;
 }
 
+interface LiveConfidence {
+  name: string;
+  confidence: number;
+  recognized: boolean;
+  timestamp: number;
+}
+
 const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,20 +26,31 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [fps, setFps] = useState(0);
   const [facesInFrame, setFacesInFrame] = useState(0);
+  const [liveMatches, setLiveMatches] = useState<LiveConfidence[]>([]);
   const processingRef = useRef(false);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fpsCounterRef = useRef({ frames: 0, lastTime: Date.now() });
   const attendanceMarkedRef = useRef<Set<string>>(new Set());
+  // Store per-face labels for canvas overlay
+  const faceLabelsRef = useRef<Map<string, { name: string; confidence: number; recognized: boolean }>>(new Map());
 
-  // Start camera with optimal settings for gate use
+  // Clear stale live matches
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      setLiveMatches(prev => prev.filter(m => now - m.timestamp < 5000));
+    }, 1000);
+    return () => clearInterval(cleanup);
+  }, []);
+
+  // Start camera
   useEffect(() => {
     if (!isActive) return;
     let mounted = true;
 
     const startCamera = async () => {
       try {
-        // Prefer rear camera for gate mode (tablet on a stand)
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280 },
@@ -40,7 +59,6 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
             frameRate: { ideal: 30 }
           }
         }).catch(() =>
-          // Fallback to any camera
           navigator.mediaDevices.getUserMedia({
             video: { width: { ideal: 1280 }, height: { ideal: 720 } }
           })
@@ -73,7 +91,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
     };
   }, [isActive]);
 
-  // Continuous detection loop with attendance marking
+  // Continuous detection loop
   const detectLoop = useCallback(async () => {
     if (processingRef.current || !videoRef.current || videoRef.current.paused) return;
     processingRef.current = true;
@@ -81,8 +99,8 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
     try {
       const detections = await faceapi
         .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions({
-          inputSize: 416,
-          scoreThreshold: 0.5
+          inputSize: 512,
+          scoreThreshold: 0.4
         }))
         .withFaceLandmarks()
         .withFaceDescriptors();
@@ -97,19 +115,27 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
         fpsCounterRef.current = { frames: 0, lastTime: now };
       }
 
-      // Draw overlays with names
+      // Draw overlays with confidence
       if (canvasRef.current && videoRef.current) {
         const dims = faceapi.matchDimensions(canvasRef.current, videoRef.current, true);
         const resized = faceapi.resizeResults(detections, dims);
         const ctx = canvasRef.current.getContext('2d');
         if (ctx) {
           ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          resized.forEach(d => {
+          resized.forEach((d, idx) => {
             const box = d.detection.box;
-            ctx.strokeStyle = '#22c55e';
+            const descriptorKey = Array.from(detections[idx].descriptor.slice(0, 8)).map(v => v.toFixed(2)).join(',');
+            const label = faceLabelsRef.current.get(descriptorKey);
+            
+            // Color based on recognition status
+            const isRecognized = label?.recognized ?? false;
+            const color = isRecognized ? '#22c55e' : '#ef4444';
+            const colorAlpha = isRecognized ? '#22c55e80' : '#ef444480';
+            
+            // Draw rounded box
+            ctx.strokeStyle = color;
             ctx.lineWidth = 3;
             ctx.beginPath();
-            // Rounded corners
             const r = 8;
             ctx.moveTo(box.x + r, box.y);
             ctx.lineTo(box.x + box.width - r, box.y);
@@ -124,12 +150,48 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
 
             // Scanning animation line
             const scanY = box.y + (box.height * ((now % 2000) / 2000));
-            ctx.strokeStyle = '#22c55e80';
+            ctx.strokeStyle = colorAlpha;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(box.x, scanY);
             ctx.lineTo(box.x + box.width, scanY);
             ctx.stroke();
+
+            // Draw confidence label above the box
+            if (label) {
+              const confPercent = Math.round(label.confidence * 100);
+              const labelText = label.recognized 
+                ? `${label.name} · ${confPercent}%` 
+                : `Unknown · ${Math.round(d.detection.score * 100)}%`;
+              
+              ctx.font = 'bold 14px system-ui, sans-serif';
+              const textWidth = ctx.measureText(labelText).width;
+              const labelX = box.x;
+              const labelY = box.y - 8;
+
+              // Background pill
+              ctx.fillStyle = isRecognized ? 'rgba(34,197,94,0.85)' : 'rgba(239,68,68,0.85)';
+              const pillPad = 6;
+              const pillH = 22;
+              ctx.beginPath();
+              ctx.roundRect(labelX - pillPad, labelY - pillH + 2, textWidth + pillPad * 2, pillH, 6);
+              ctx.fill();
+
+              // Text
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(labelText, labelX, labelY - 4);
+            } else {
+              // Show detection score even before recognition
+              const scoreText = `Detecting... ${Math.round(d.detection.score * 100)}%`;
+              ctx.font = '12px system-ui, sans-serif';
+              const textWidth = ctx.measureText(scoreText).width;
+              ctx.fillStyle = 'rgba(100,116,139,0.8)';
+              ctx.beginPath();
+              ctx.roundRect(box.x - 4, box.y - 24, textWidth + 8, 20, 4);
+              ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(scoreText, box.x, box.y - 10);
+            }
           });
         }
       }
@@ -148,6 +210,20 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           const isRecognized = result?.recognized || false;
           const studentName = isRecognized && result?.employee ? result.employee.name : 'Unknown Person';
           const studentId = isRecognized && result?.employee ? result.employee.id : null;
+          const confidence = result?.confidence || detection.detection.score;
+
+          // Store label for canvas overlay
+          faceLabelsRef.current.set(descriptorKey, {
+            name: studentName,
+            confidence,
+            recognized: isRecognized
+          });
+
+          // Update live confidence HUD
+          setLiveMatches(prev => {
+            const filtered = prev.filter(m => m.name !== studentName || now - m.timestamp > 3000);
+            return [...filtered, { name: studentName, confidence, recognized: isRecognized, timestamp: now }].slice(-5);
+          });
 
           const entry: GateEntry = {
             id: uuidv4(),
@@ -155,10 +231,10 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
             studentId,
             time: new Date(),
             isRecognized,
-            confidence: result?.confidence || detection.detection.score,
+            confidence,
           };
 
-          // Auto-mark attendance for recognized students (once per day)
+          // Auto-mark attendance for recognized students (once per session)
           if (isRecognized && studentId && !attendanceMarkedRef.current.has(studentId)) {
             attendanceMarkedRef.current.add(studentId);
             try {
@@ -187,20 +263,22 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
     processingRef.current = false;
   }, [onFaceDetected]);
 
-  // Detection interval - adaptive FPS
+  // Detection interval
   useEffect(() => {
     if (!isActive || isLoading) return;
-    // Run detection every 200ms (~5 detection FPS)
     intervalRef.current = setInterval(detectLoop, 200);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isActive, isLoading, detectLoop]);
 
-  // Clean up old cooldowns every 30s
+  // Clean up old cooldowns & labels
   useEffect(() => {
     const cleanup = setInterval(() => {
       const now = Date.now();
       cooldownRef.current.forEach((time, key) => {
-        if (now - time > 30000) cooldownRef.current.delete(key);
+        if (now - time > 30000) {
+          cooldownRef.current.delete(key);
+          faceLabelsRef.current.delete(key);
+        }
       });
     }, 30000);
     return () => clearInterval(cleanup);
@@ -233,7 +311,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
         </div>
       )}
 
-      {/* Status bar - mobile friendly */}
+      {/* Status bar */}
       {!isLoading && (
         <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5 sm:gap-2 bg-card/80 backdrop-blur rounded-full px-2 sm:px-3 py-1 sm:py-1.5">
@@ -254,6 +332,53 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           </div>
         </div>
       )}
+
+      {/* Live confidence HUD */}
+      <AnimatePresence>
+        {liveMatches.length > 0 && !isLoading && (
+          <div className="absolute bottom-14 sm:bottom-4 left-2 right-2 sm:left-3 sm:right-auto sm:max-w-xs space-y-1.5 z-10">
+            {liveMatches.slice(-3).map((match, i) => (
+              <motion.div
+                key={`${match.name}-${match.timestamp}`}
+                initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -20, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl border shadow-lg ${
+                  match.recognized 
+                    ? 'bg-emerald-500/20 border-emerald-500/40' 
+                    : 'bg-rose-500/20 border-rose-500/40'
+                }`}
+              >
+                {match.recognized 
+                  ? <ShieldCheck className="h-4 w-4 text-emerald-400 flex-shrink-0" /> 
+                  : <ShieldAlert className="h-4 w-4 text-rose-400 flex-shrink-0" />
+                }
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white truncate">{match.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {/* Confidence bar */}
+                    <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.round(match.confidence * 100)}%` }}
+                        className={`h-full rounded-full ${
+                          match.recognized ? 'bg-emerald-400' : 'bg-rose-400'
+                        }`}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-bold ${
+                      match.recognized ? 'text-emerald-300' : 'text-rose-300'
+                    }`}>
+                      {Math.round(match.confidence * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
