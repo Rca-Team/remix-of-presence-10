@@ -74,7 +74,7 @@ const Register = () => {
     setFaceDescriptor(averaged);
     setFaceImage(primaryImage);
     setFaceCaptured(true);
-    toast({ title: "All Angles Captured! 🎉", description: "4-angle face scan complete for maximum accuracy." });
+    toast({ title: "3D Scan Complete! 🎉", description: "3D face map captured for maximum accuracy." });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
