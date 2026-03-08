@@ -297,6 +297,7 @@ const Admin = () => {
   // Mobile bottom nav
   const mobileQuickNav = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
+  { id: 'sections', icon: FolderKanban, label: 'Class' },
   { id: 'students', icon: Users, label: 'Students' },
   { id: 'register', icon: UserPlus, label: 'Register' },
   { id: 'reports', icon: BarChart3, label: 'Reports' }];
