@@ -57,13 +57,23 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
     const start = new Date(selectedDate); start.setHours(0, 0, 0, 0);
     const end = new Date(selectedDate); end.setHours(23, 59, 59, 999);
     const userName = selectedUserName || (dailyAttendance.length > 0 ? dailyAttendance[0].name : null);
-    return recentAttendance.filter(r => {
+    
+    // Filter records strictly for selected user only
+    const userRecords = recentAttendance.filter(r => {
       const d = new Date(r.timestamp);
       const matchesDate = d >= start && d <= end;
-      const matchesUser = r.user_id === selectedFaceId || r.id === selectedFaceId || (userName && r.name === userName);
+      // Must match by user_id OR id - not by name alone to avoid showing other users
+      const matchesUser = r.user_id === selectedFaceId || r.id === selectedFaceId;
       const isKnown = r.name && r.name !== 'User' && r.name !== 'Unknown Student' && !r.name.toLowerCase().includes('unknown');
       return matchesDate && matchesUser && isKnown;
     });
+    
+    // Sort by timestamp and return only the earliest record
+    if (userRecords.length > 0) {
+      userRecords.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      return [userRecords[0]]; // Return only earliest
+    }
+    return [];
   };
 
   if (!selectedDate) {
