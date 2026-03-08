@@ -312,7 +312,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       
       const fullDetections = await withTimeout(
         detectionPromise,
-        8000,
+        12000,
         'Face detection timed out. Please ensure good lighting and try again.'
       );
 
