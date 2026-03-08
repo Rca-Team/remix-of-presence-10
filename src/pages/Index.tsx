@@ -252,23 +252,33 @@ const Index = () => {
             viewport={{ once: true }} 
             variants={containerVariants}
           >
-            {stats.map((stat, i) => (
-              <motion.div 
-                key={i} 
-                variants={itemVariants} 
-                className="relative group text-center p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 hover:border-primary/30 transition-all duration-300 touch-target"
-              >
+            {stats.map((stat, i) => {
+              const colors = ['ios-blue', 'ios-green', 'ios-purple', 'ios-pink'];
+              const color = colors[i % colors.length];
+              return (
                 <motion.div 
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ delay: i * 0.1, type: "spring" }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient-neon"
+                  key={i} 
+                  variants={itemVariants} 
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className={`relative group text-center p-5 sm:p-6 md:p-8 rounded-3xl bg-card/80 backdrop-blur-xl border border-${color}/20 hover:border-${color}/50 shadow-lg hover:shadow-2xl touch-target overflow-hidden`}
+                  style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
                 >
-                  {stat.value}
+                  {/* Gradient glow effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-br from-${color}/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
+                  <div className={`absolute -top-10 -right-10 w-32 h-32 bg-${color}/30 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500`} />
+                  
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+                    className="relative text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink"
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="relative mt-2 sm:mt-3 text-sm sm:text-base font-medium text-muted-foreground">{stat.label}</div>
                 </motion.div>
-                <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
         </section>
 
@@ -281,19 +291,20 @@ const Index = () => {
             viewport={{ once: true }} 
             variants={containerVariants}
           >
-            <motion.span variants={itemVariants} className="inline-block px-4 py-1 rounded-full bg-violet/10 text-violet text-sm font-medium mb-4">
+            <motion.span variants={itemVariants} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-ios-purple/15 to-ios-pink/15 border border-ios-purple/30 text-ios-purple text-sm font-semibold mb-6 shadow-lg shadow-ios-purple/10">
+              <Zap className="w-4 h-4" />
               Powerful Features
             </motion.span>
-            <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-muted-foreground">
               Everything You Need
             </motion.h2>
-            <motion.p variants={itemVariants} className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <motion.p variants={itemVariants} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               A complete attendance solution designed for modern educational institutions
             </motion.p>
           </motion.div>
 
           <motion.div 
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" 
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" 
             initial="hidden" 
             whileInView="visible" 
             viewport={{ once: true }} 
@@ -303,18 +314,25 @@ const Index = () => {
               <motion.div 
                 key={i} 
                 variants={itemVariants} 
-                whileHover={{ y: -5 }}
-                className="group relative p-6 md:p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-500"
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="group relative p-6 md:p-8 rounded-3xl bg-card/80 backdrop-blur-xl border border-border/50 hover:border-ios-blue/30 shadow-lg hover:shadow-2xl overflow-hidden"
+                style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
               >
                 {/* Multi-color top accent */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-t-2xl opacity-60 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${feature.gradient} rounded-t-3xl opacity-70 group-hover:opacity-100 transition-opacity duration-500`} />
                 
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} mb-4 shadow-lg`}>
-                  <feature.icon className="w-6 h-6 text-primary-foreground" />
+                {/* Background glow */}
+                <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${feature.gradient} rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-700`} />
+                
+                <div className={`relative inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-5 shadow-xl group-hover:scale-110 transition-transform duration-500`}>
+                  <feature.icon className="w-7 h-7 text-white" />
                 </div>
                 
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="relative text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="relative text-muted-foreground leading-relaxed">{feature.description}</p>
+                
+                {/* Bottom gradient line on hover */}
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${feature.gradient} scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`} />
               </motion.div>
             ))}
           </motion.div>
