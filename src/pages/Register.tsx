@@ -242,18 +242,16 @@ const Register = () => {
                               <SelectValue placeholder="Select class" />
                             </SelectTrigger>
                             <SelectContent>
-                              {CLASSES.map(cls => (
-                                <React.Fragment key={cls}>
-                                  <SelectItem value={`__label_${cls}`} disabled className="font-bold text-xs text-muted-foreground">
-                                    — Class {cls} —
+                              {CLASSES.flatMap(cls => [
+                                <SelectItem key={`label_${cls}`} value={`__label_${cls}`} disabled className="font-bold text-xs text-muted-foreground">
+                                  — Class {cls} —
+                                </SelectItem>,
+                                ...SECTIONS.map(sec => (
+                                  <SelectItem key={`${cls}-${sec}`} value={`${cls}-${sec}`}>
+                                    Class {cls} - Section {sec}
                                   </SelectItem>
-                                  {SECTIONS.map(sec => (
-                                    <SelectItem key={`${cls}-${sec}`} value={`${cls}-${sec}`}>
-                                      Class {cls} - Section {sec}
-                                    </SelectItem>
-                                  ))}
-                                </React.Fragment>
-                              ))}
+                                ))
+                              ])}
                               <SelectItem value="Teacher">Teacher / Staff</SelectItem>
                             </SelectContent>
                           </Select>

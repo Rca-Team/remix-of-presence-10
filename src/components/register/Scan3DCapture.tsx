@@ -10,7 +10,123 @@ interface Scan3DCaptureProps {
 }
 
 const MIN_SAMPLES = 8;
-const SCAN_DURATION_MS = 8000; // 8 seconds for full scan
+const SCAN_DURATION_MS = 8000;
+const PARTICLE_COUNT = 40;
+
+// --- Sound Engine (Web Audio API) ---
+class ScanSoundEngine {
+  private ctx: AudioContext | null = null;
+  private sampleIndex = 0;
+
+  private getCtx() {
+    if (!this.ctx) this.ctx = new AudioContext();
+    return this.ctx;
+  }
+
+  playSampleBeep() {
+    try {
+      const ctx = this.getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      // Rising pitch for each successive sample
+      const baseFreq = 600 + this.sampleIndex * 80;
+      osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(baseFreq + 200, ctx.currentTime + 0.08);
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.12);
+      this.sampleIndex++;
+    } catch {}
+  }
+
+  playScanStart() {
+    try {
+      const ctx = this.getCtx();
+      this.sampleIndex = 0;
+      // Two-tone start chime
+      [440, 660].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.12, ctx.currentTime + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.2);
+        osc.start(ctx.currentTime + i * 0.1);
+        osc.stop(ctx.currentTime + i * 0.1 + 0.2);
+      });
+    } catch {}
+  }
+
+  playComplete() {
+    try {
+      const ctx = this.getCtx();
+      // Triumphant 3-note ascending chime
+      [523, 659, 784, 1047].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        const start = ctx.currentTime + i * 0.12;
+        gain.gain.setValueAtTime(0.18, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+        osc.start(start);
+        osc.stop(start + 0.35);
+      });
+    } catch {}
+  }
+
+  playFail() {
+    try {
+      const ctx = this.getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.3);
+      osc.type = 'sawtooth';
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } catch {}
+  }
+}
+
+// --- Particle System ---
+interface Particle {
+  angle: number;
+  radius: number;
+  speed: number;
+  size: number;
+  hue: number;
+  alpha: number;
+  drift: number;
+  life: number;
+  maxLife: number;
+}
+
+const createParticle = (): Particle => ({
+  angle: Math.random() * Math.PI * 2,
+  radius: 0.85 + Math.random() * 0.35,
+  speed: (0.3 + Math.random() * 0.7) * (Math.random() > 0.5 ? 1 : -1),
+  size: 1.5 + Math.random() * 3,
+  hue: 160 + Math.random() * 40, // cyan-green range
+  alpha: 0.3 + Math.random() * 0.7,
+  drift: (Math.random() - 0.5) * 0.02,
+  life: 0,
+  maxLife: 60 + Math.random() * 120,
+});
 
 const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoading }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -30,6 +146,18 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
   const scanStartRef = useRef<number>(0);
   const animFrameRef = useRef<number>(0);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const soundRef = useRef(new ScanSoundEngine());
+  const particlesRef = useRef<Particle[]>([]);
+  const progressRef = useRef(0);
+  const scanningRef = useRef(false);
+  const scanCompleteRef = useRef(false);
+  const faceDetectedRef = useRef(false);
+
+  // Keep refs in sync with state
+  useEffect(() => { progressRef.current = progress; }, [progress]);
+  useEffect(() => { scanningRef.current = scanning; }, [scanning]);
+  useEffect(() => { scanCompleteRef.current = scanComplete; }, [scanComplete]);
+  useEffect(() => { faceDetectedRef.current = faceDetected; }, [faceDetected]);
 
   // Start camera
   useEffect(() => {
@@ -52,7 +180,7 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     return () => { mounted = false; stream?.getTracks().forEach(t => t.stop()); };
   }, []);
 
-  // Face detection loop (lightweight, runs before scan starts)
+  // Face detection loop
   useEffect(() => {
     if (!cameraReady || scanning || scanComplete || isModelLoading) return;
     const interval = setInterval(async () => {
@@ -64,12 +192,15 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     return () => clearInterval(interval);
   }, [cameraReady, scanning, scanComplete, isModelLoading]);
 
-  // 3D scanning overlay animation
+  // 3D scanning overlay + particles
   useEffect(() => {
     if (!overlayCanvasRef.current || !cameraReady) return;
     const canvas = overlayCanvasRef.current;
     const ctx = canvas.getContext('2d')!;
     let running = true;
+
+    // Initialize particles
+    particlesRef.current = Array.from({ length: PARTICLE_COUNT }, createParticle);
 
     const draw = () => {
       if (!running) return;
@@ -82,24 +213,26 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
       const rx = w * 0.28;
       const ry = h * 0.38;
       const t = Date.now() / 1000;
+      const isScanning = scanningRef.current;
+      const prog = progressRef.current;
+      const isFaceDetected = faceDetectedRef.current;
+      const isComplete = scanCompleteRef.current;
 
       // Outer oval guide
-      ctx.strokeStyle = scanning
-        ? `hsla(${142 + progress * 1.2}, 80%, 55%, ${0.5 + Math.sin(t * 3) * 0.2})`
-        : faceDetected
+      ctx.strokeStyle = isScanning
+        ? `hsla(${142 + prog * 1.2}, 80%, 55%, ${0.5 + Math.sin(t * 3) * 0.2})`
+        : isFaceDetected
           ? 'hsla(142, 70%, 50%, 0.6)'
           : 'hsla(220, 50%, 60%, 0.4)';
-      ctx.lineWidth = scanning ? 4 : 2;
-      ctx.setLineDash(scanning ? [] : [8, 8]);
+      ctx.lineWidth = isScanning ? 4 : 2;
+      ctx.setLineDash(isScanning ? [] : [8, 8]);
       ctx.beginPath();
       ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      if (scanning) {
-        // Rotating scan beam
-        const angle = (progress / 100) * Math.PI * 2 - Math.PI / 2;
-        const beamLen = Math.max(rx, ry) * 1.1;
+      if (isScanning) {
+        const angle = (prog / 100) * Math.PI * 2 - Math.PI / 2;
 
         // Sweep glow
         const grad = ctx.createConicGradient(angle - 0.5, cx, cy);
@@ -121,11 +254,14 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
         ctx.lineTo(lx, ly);
         ctx.stroke();
 
-        // Scan dot
+        // Scan dot with glow
+        ctx.shadowColor = 'hsla(170, 90%, 60%, 0.8)';
+        ctx.shadowBlur = 12;
         ctx.fillStyle = 'hsla(170, 90%, 70%, 1)';
         ctx.beginPath();
         ctx.arc(lx, ly, 6, 0, Math.PI * 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
 
         // Progress arc
         ctx.strokeStyle = 'hsla(170, 90%, 55%, 0.8)';
@@ -134,38 +270,81 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
         ctx.ellipse(cx, cy, rx + 12, ry + 12, 0, -Math.PI / 2, angle);
         ctx.stroke();
 
-        // Sample dots on the ring
+        // Sample dots on ring
         descriptorsRef.current.forEach((_, i) => {
           const sAngle = (i / MIN_SAMPLES) * Math.PI * 2 - Math.PI / 2;
           const sx = cx + Math.cos(sAngle) * (rx + 12);
           const sy = cy + Math.sin(sAngle) * (ry + 12);
+          ctx.shadowColor = 'hsla(142, 80%, 55%, 0.6)';
+          ctx.shadowBlur = 8;
           ctx.fillStyle = 'hsla(142, 80%, 55%, 0.9)';
           ctx.beginPath();
-          ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+          ctx.arc(sx, sy, 5, 0, Math.PI * 2);
           ctx.fill();
+          ctx.shadowBlur = 0;
         });
 
-        // Grid lines (3D effect)
-        ctx.strokeStyle = 'hsla(170, 60%, 50%, 0.08)';
+        // Grid lines (3D depth effect)
+        ctx.strokeStyle = 'hsla(170, 60%, 50%, 0.06)';
         ctx.lineWidth = 1;
-        for (let i = -3; i <= 3; i++) {
-          const offset = i * (ry / 3.5);
+        for (let i = -4; i <= 4; i++) {
+          const offset = i * (ry / 4);
           ctx.beginPath();
-          ctx.moveTo(cx - rx, cy + offset);
-          ctx.lineTo(cx + rx, cy + offset);
+          ctx.moveTo(cx - rx * 0.9, cy + offset);
+          ctx.lineTo(cx + rx * 0.9, cy + offset);
           ctx.stroke();
         }
-        for (let i = -3; i <= 3; i++) {
-          const offset = i * (rx / 3.5);
+        for (let i = -4; i <= 4; i++) {
+          const offset = i * (rx / 4);
           ctx.beginPath();
-          ctx.moveTo(cx + offset, cy - ry);
-          ctx.lineTo(cx + offset, cy + ry);
+          ctx.moveTo(cx + offset, cy - ry * 0.9);
+          ctx.lineTo(cx + offset, cy + ry * 0.9);
           ctx.stroke();
         }
-      } else if (!scanComplete) {
-        // Pulsing corners when not scanning
+
+        // *** PARTICLES ***
+        particlesRef.current.forEach((p, idx) => {
+          p.angle += p.speed * 0.02;
+          p.radius += p.drift;
+          p.life++;
+
+          // Respawn dead particles
+          if (p.life > p.maxLife || p.radius < 0.5 || p.radius > 1.5) {
+            particlesRef.current[idx] = createParticle();
+            return;
+          }
+
+          const px = cx + Math.cos(p.angle) * rx * p.radius;
+          const py = cy + Math.sin(p.angle) * ry * p.radius;
+          const fadeIn = Math.min(p.life / 15, 1);
+          const fadeOut = Math.max(1 - (p.life / p.maxLife), 0);
+          const a = p.alpha * fadeIn * fadeOut;
+
+          // Particle glow
+          ctx.shadowColor = `hsla(${p.hue}, 90%, 60%, ${a * 0.5})`;
+          ctx.shadowBlur = 6;
+          ctx.fillStyle = `hsla(${p.hue}, 85%, 65%, ${a})`;
+          ctx.beginPath();
+          ctx.arc(px, py, p.size, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Tail trail
+          const tx = cx + Math.cos(p.angle - p.speed * 0.06) * rx * p.radius;
+          const ty = cy + Math.sin(p.angle - p.speed * 0.06) * ry * p.radius;
+          ctx.strokeStyle = `hsla(${p.hue}, 80%, 60%, ${a * 0.3})`;
+          ctx.lineWidth = p.size * 0.5;
+          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(px, py);
+          ctx.stroke();
+        });
+
+        ctx.shadowBlur = 0;
+      } else if (!isComplete) {
+        // Pulsing corners when idle
         const cornerLen = 24;
-        ctx.strokeStyle = faceDetected ? 'hsla(142, 70%, 50%, 0.8)' : 'hsla(220, 50%, 60%, 0.5)';
+        ctx.strokeStyle = isFaceDetected ? 'hsla(142, 70%, 50%, 0.8)' : 'hsla(220, 50%, 60%, 0.5)';
         ctx.lineWidth = 3;
         const corners = [
           [cx - rx, cy - ry], [cx + rx, cy - ry],
@@ -180,6 +359,20 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
           ctx.lineTo(x, y + dy * cornerLen);
           ctx.stroke();
         });
+
+        // Idle floating particles when face detected
+        if (isFaceDetected) {
+          for (let i = 0; i < 8; i++) {
+            const pAngle = t * 0.3 + (i / 8) * Math.PI * 2;
+            const pRad = 1.05 + Math.sin(t * 2 + i) * 0.05;
+            const px = cx + Math.cos(pAngle) * rx * pRad;
+            const py = cy + Math.sin(pAngle) * ry * pRad;
+            ctx.fillStyle = `hsla(170, 80%, 60%, ${0.3 + Math.sin(t * 3 + i) * 0.15})`;
+            ctx.beginPath();
+            ctx.arc(px, py, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
       }
 
       animFrameRef.current = requestAnimationFrame(draw);
@@ -187,7 +380,7 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
 
     draw();
     return () => { running = false; cancelAnimationFrame(animFrameRef.current); };
-  }, [cameraReady, scanning, progress, faceDetected, scanComplete]);
+  }, [cameraReady]);
 
   // Start 3D scan
   const startScan = useCallback(() => {
@@ -198,8 +391,9 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     descriptorsRef.current = [];
     scanStartRef.current = Date.now();
     setStatusText('Slowly turn your head in a circle...');
+    soundRef.current.playScanStart();
 
-    // Capture primary image immediately
+    // Capture primary image
     if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current;
       canvas.width = videoRef.current.videoWidth;
@@ -211,14 +405,12 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
       }
     }
 
-    // Sample descriptors every ~800ms during the scan
     scanIntervalRef.current = setInterval(async () => {
       if (!videoRef.current) return;
       const elapsed = Date.now() - scanStartRef.current;
       const p = Math.min((elapsed / SCAN_DURATION_MS) * 100, 100);
       setProgress(p);
 
-      // Update guidance text
       if (p < 25) setStatusText('Look straight... now slowly turn left');
       else if (p < 50) setStatusText('Good! Keep turning... now look right');
       else if (p < 75) setStatusText('Great! Now tilt slightly up');
@@ -230,10 +422,10 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
         if (descriptor) {
           descriptorsRef.current.push(descriptor);
           setSamplesCollected(descriptorsRef.current.length);
+          soundRef.current.playSampleBeep();
         }
       } catch {}
 
-      // Scan complete
       if (elapsed >= SCAN_DURATION_MS) {
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
         finishScan();
@@ -246,18 +438,19 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     const descriptors = descriptorsRef.current;
 
     if (descriptors.length < 3) {
+      soundRef.current.playFail();
       setStatusText('Not enough face data captured. Please try again.');
       setProgress(0);
       setSamplesCollected(0);
       return;
     }
 
-    // Average all descriptors for robust 3D face representation
     const averaged = new Float32Array(descriptors[0].length);
     for (let i = 0; i < averaged.length; i++) {
       averaged[i] = descriptors.reduce((sum, d) => sum + d[i], 0) / descriptors.length;
     }
 
+    soundRef.current.playComplete();
     setScanComplete(true);
     setStatusText(`3D scan complete! ${descriptors.length} samples captured.`);
     onComplete(averaged, primaryImage!);
@@ -274,14 +467,12 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     setStatusText('Position your face in the frame');
   };
 
-  // Cleanup
   useEffect(() => {
     return () => { if (scanIntervalRef.current) clearInterval(scanIntervalRef.current); };
   }, []);
 
   return (
     <div className="space-y-4">
-      {/* Camera + 3D overlay */}
       <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3]">
         <video
           ref={videoRef}
@@ -291,8 +482,6 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
           style={{ transform: 'scaleX(-1)' }}
         />
         <canvas ref={canvasRef} className="hidden" />
-
-        {/* 3D scanning overlay */}
         <canvas
           ref={overlayCanvasRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -315,8 +504,11 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
             <div className="mt-2 flex items-center justify-center gap-3">
               <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-green-400 rounded-full"
-                  style={{ width: `${progress}%` }}
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${progress}%`,
+                    background: 'linear-gradient(90deg, hsl(185, 90%, 50%), hsl(142, 80%, 50%))'
+                  }}
                 />
               </div>
               <span className="text-xs text-white/70 tabular-nums w-16 text-right">
@@ -364,19 +556,20 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
                 <img
                   src={primaryImage}
                   alt="Scanned"
-                  className="w-28 h-28 rounded-full object-cover border-3 border-green-400 shadow-lg shadow-green-500/30"
-                  style={{ transform: 'scaleX(-1)' }}
+                  className="w-28 h-28 rounded-full object-cover border-2 shadow-lg"
+                  style={{ transform: 'scaleX(-1)', borderColor: 'hsl(142, 70%, 50%)', boxShadow: '0 0 20px hsla(142, 70%, 50%, 0.3)' }}
                 />
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center"
+                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'hsl(142, 70%, 45%)' }}
                 >
                   <CheckCircle2 className="w-5 h-5 text-white" />
                 </motion.div>
               </div>
-              <p className="text-green-400 font-bold text-lg">3D Scan Complete</p>
+              <p className="font-bold text-lg" style={{ color: 'hsl(142, 70%, 55%)' }}>3D Scan Complete</p>
               <p className="text-white/60 text-xs">{samplesCollected} depth samples averaged</p>
             </motion.div>
           </motion.div>
@@ -388,7 +581,8 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
         <Button
           onClick={startScan}
           disabled={!cameraReady || isModelLoading || scanning || !faceDetected}
-          className="w-full h-12 text-base bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg"
+          className="w-full h-12 text-base shadow-lg"
+          style={{ background: 'linear-gradient(135deg, hsl(185, 80%, 40%), hsl(220, 70%, 50%))' }}
         >
           {scanning ? (
             <>
