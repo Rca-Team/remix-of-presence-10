@@ -309,7 +309,7 @@ const Admin = () => {
   return (
     <PageTransition>
       <PageLayout className="min-h-screen bg-background">
-        <div className="flex h-[calc(100vh-4rem)]">
+        <div className="flex h-[calc(100dvh-4rem)]">
           {/* Desktop Sidebar */}
           {!isMobile &&
           <aside className={cn(
@@ -435,7 +435,7 @@ const Admin = () => {
 
             {/* Content Area */}
             <PullToRefresh onRefresh={handleRefresh} enabled={isMobile} className="flex-1 overflow-auto">
-              <div className="p-3 sm:p-4 md:p-6 pb-24 sm:pb-6">
+              <div className="p-3 sm:p-4 md:p-6 pb-28 sm:pb-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -454,7 +454,7 @@ const Admin = () => {
 
         {/* Mobile Bottom Navigation - Improved */}
         {isMobile &&
-        <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-2xl border-t border-border z-50 pb-safe">
             <div className="flex justify-around py-1">
               {mobileQuickNav.map((item) => {
               const isActive = activeTab === item.id;
