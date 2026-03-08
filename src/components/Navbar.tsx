@@ -70,6 +70,7 @@ const Navbar = () => {
             { text: 'Profile', path: '/profile', show: true },
             { text: 'Register', path: '/register', show: true },
             { text: 'Attendance', path: '/attendance', show: true },
+            { text: 'History', path: '/gate-history', show: true },
             { text: 'Admin', path: '/admin', show: isAdminOrPrincipal || isTeacher },
           ].filter(item => item.show).map((item) => (
             <Link

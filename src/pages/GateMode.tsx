@@ -15,8 +15,9 @@ import GateStatsOverlay from '@/components/gate/GateStatsOverlay';
 import StrangerAlert from '@/components/gate/StrangerAlert';
 import LateEntryForm from '@/components/gate/LateEntryForm';
 import GateModeSetup from '@/components/gate/GateModeSetup';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import Logo from '@/components/Logo';
 
 export interface GateEntry {
   id: string;
@@ -215,7 +216,9 @@ const GateMode = () => {
       {/* Top bar - compact on mobile */}
       <div className="flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-2 bg-card/80 backdrop-blur border-b border-border safe-area-top">
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-          <DoorOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+          <Link to="/" className="flex-shrink-0">
+            <Logo size="sm" />
+          </Link>
           <span className="font-bold text-sm sm:text-lg text-foreground truncate">{gateName}</span>
           <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0 px-1.5 sm:px-2">
             {isOnline ? <Wifi className="h-3 w-3 mr-0.5 text-green-500" /> : <WifiOff className="h-3 w-3 mr-0.5 text-destructive" />}

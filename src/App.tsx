@@ -17,6 +17,7 @@ import NotificationDemo from './pages/NotificationDemo';
 import Profile from './pages/Profile';
 import Features from './pages/Features';
 import GateMode from './pages/GateMode';
+import GateHistory from './pages/GateHistory';
 import SplashAnimation from "./components/SplashAnimation";
 import { AttendanceProvider } from './contexts/AttendanceContext';
 import { AnimatePresence } from 'framer-motion';
@@ -72,6 +73,11 @@ function AnimatedRoutes() {
         <Route path="/gate-mode" element={
           <ProtectedRoute requireAdmin={true}>
             <GateMode />
+          </ProtectedRoute>
+        } />
+        <Route path="/gate-history" element={
+          <ProtectedRoute>
+            <GateHistory />
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />
