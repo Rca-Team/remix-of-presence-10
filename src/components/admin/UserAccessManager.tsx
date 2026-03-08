@@ -30,31 +30,26 @@ import {
   Crown,
   ShieldCheck,
   UserCog,
-  Check,
-  X,
   Edit,
-  Loader2
+  Loader2,
+  Mail
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-import { CLASSES, SECTIONS, getCategoryLabel } from '@/constants/schoolConfig';
+import { CLASSES, SECTIONS } from '@/constants/schoolConfig';
 
 type Role = 'user' | 'moderator' | 'admin';
 
 interface RegisteredUser {
   id: string;
-  user_id: string | null;
+  user_id: string;
   name: string;
-  employee_id: string;
-  category: string;
-  image_url: string;
+  email: string;
+  avatar_url: string;
   role: Role;
   isTeacher: boolean;
   teacherCategories: string[];
 }
-
-const ALL_CLASS_SECTIONS = CLASSES.flatMap(cls => SECTIONS.map(sec => `${cls}-${sec}`));
 
 const ROLE_CONFIG: Record<Role, { label: string; icon: React.ElementType; color: string }> = {
   admin: { label: 'Admin', icon: Crown, color: 'text-yellow-500 bg-yellow-500/10' },
@@ -83,16 +78,14 @@ const UserAccessManager: React.FC = () => {
   useEffect(() => {
     let filtered = users;
     
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(u => 
         u.name.toLowerCase().includes(query) || 
-        u.employee_id.toLowerCase().includes(query)
+        u.email.toLowerCase().includes(query)
       );
     }
     
-    // Role filter
     if (roleFilter !== 'all') {
       filtered = filtered.filter(u => u.role === roleFilter || (roleFilter === 'moderator' && u.isTeacher));
     }
@@ -103,13 +96,12 @@ const UserAccessManager: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Fetch all registered users
-      const { data: records, error } = await supabase
-        .from('attendance_records')
-        .select('id, user_id, device_info, image_url, category')
-        .eq('status', 'registered');
+      // Fetch all profiles (admin can see all)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, user_id, display_name, avatar_url, parent_email, username');
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
       // Fetch user roles
       const { data: roles } = await supabase
@@ -131,27 +123,21 @@ const UserAccessManager: React.FC = () => {
         teacherPermsMap.get(p.user_id)!.push(p.category);
       });
 
-      const processedUsers: RegisteredUser[] = (records || [])
-        .map(record => {
-          const deviceInfo = record.device_info as any;
-          const metadata = deviceInfo?.metadata || {};
-          const userId = record.user_id || record.id;
-          
+      const processedUsers: RegisteredUser[] = (profiles || [])
+        .map(profile => {
+          const userId = profile.user_id;
           return {
-            id: record.id,
-            user_id: record.user_id,
-            name: metadata.name || 'Unknown',
-            employee_id: metadata.employee_id || 'N/A',
-            category: record.category || 'A',
-            image_url: record.image_url || metadata.firebase_image_url || '',
+            id: profile.id,
+            user_id: userId,
+            name: profile.display_name || profile.username || 'Unnamed User',
+            email: profile.parent_email || profile.username || '',
+            avatar_url: profile.avatar_url || '',
             role: (roleMap.get(userId) as Role) || 'user',
-            isTeacher: record.category === 'Teacher' || teacherPermsMap.has(userId),
+            isTeacher: teacherPermsMap.has(userId),
             teacherCategories: teacherPermsMap.get(userId) || [],
           };
         })
-        .filter(u => u.name !== 'Unknown')
         .sort((a, b) => {
-          // Admins first, then moderators, then teachers, then users
           const roleOrder: Record<string, number> = { admin: 0, moderator: 1, user: 2 };
           const aOrder = roleOrder[a.role] ?? 2;
           const bOrder = roleOrder[b.role] ?? 2;
@@ -205,72 +191,39 @@ const UserAccessManager: React.FC = () => {
     
     setIsSaving(true);
     try {
-      const userId = selectedUser.user_id || selectedUser.id;
+      const userId = selectedUser.user_id;
 
-      // Update role in user_roles table
-      if (selectedUser.user_id) {
-        // Delete existing role
-        await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', selectedUser.user_id);
+      // Delete existing role then insert new one
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
 
-        // Insert new role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: selectedUser.user_id,
-            role: newRole,
-          });
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: newRole });
 
-        if (roleError) throw roleError;
-      }
+      if (roleError) throw roleError;
 
       // Handle teacher permissions
-      if (newRole === 'moderator' || selectedCategories.length > 0) {
-        // Delete existing teacher permissions
-        await supabase
+      await supabase
+        .from('teacher_permissions')
+        .delete()
+        .eq('user_id', userId);
+
+      if (selectedCategories.length > 0) {
+        const permissionsToInsert = selectedCategories.map(cat => ({
+          user_id: userId,
+          category: cat,
+          can_take_attendance: true,
+          can_view_reports: true,
+        }));
+
+        const { error: permError } = await supabase
           .from('teacher_permissions')
-          .delete()
-          .eq('user_id', userId);
+          .insert(permissionsToInsert);
 
-        // If promoting to teacher/moderator with categories
-        if (selectedCategories.length > 0) {
-          const permissionsToInsert = selectedCategories.map(cat => ({
-            user_id: userId,
-            category: cat,
-            can_take_attendance: true,
-            can_view_reports: true,
-          }));
-
-          const { error: permError } = await supabase
-            .from('teacher_permissions')
-            .insert(permissionsToInsert);
-
-          if (permError) throw permError;
-        }
-
-        // Update category to Teacher if given permissions
-        if (selectedCategories.length > 0) {
-          await supabase
-            .from('attendance_records')
-            .update({ category: 'Teacher' })
-            .eq('id', selectedUser.id);
-        }
-      } else {
-        // Remove teacher permissions if not a teacher anymore
-        await supabase
-          .from('teacher_permissions')
-          .delete()
-          .eq('user_id', userId);
-          
-        // Revert category if was Teacher
-        if (selectedUser.category === 'Teacher') {
-          await supabase
-            .from('attendance_records')
-            .update({ category: 'A' })
-            .eq('id', selectedUser.id);
-        }
+        if (permError) throw permError;
       }
 
       toast({
@@ -319,7 +272,7 @@ const UserAccessManager: React.FC = () => {
             User Access Management
           </CardTitle>
           <CardDescription>
-            View all registered users and manage their roles and permissions
+            Manage roles for all signed-up users
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -328,7 +281,7 @@ const UserAccessManager: React.FC = () => {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or ID..."
+                placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -385,15 +338,9 @@ const UserAccessManager: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage 
-                          src={user.image_url?.startsWith('data:') 
-                            ? user.image_url 
-                            : user.image_url 
-                              ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/face-images/${user.image_url}` 
-                              : ''
-                          } 
-                          alt={user.name}
-                        />
+                        {user.avatar_url ? (
+                          <AvatarImage src={user.avatar_url} alt={user.name} />
+                        ) : null}
                         <AvatarFallback>
                           <User className="h-5 w-5" />
                         </AvatarFallback>
@@ -413,9 +360,14 @@ const UserAccessManager: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{user.employee_id}</span>
+                          {user.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {user.email}
+                            </span>
+                          )}
                           {user.teacherCategories.length > 0 && (
-                            <span>• Categories: {user.teacherCategories.join(', ')}</span>
+                            <span>• Classes: {user.teacherCategories.join(', ')}</span>
                           )}
                         </div>
                       </div>
@@ -454,22 +406,16 @@ const UserAccessManager: React.FC = () => {
             {/* User Info */}
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
               <Avatar className="h-12 w-12">
-                <AvatarImage 
-                  src={selectedUser?.image_url?.startsWith('data:') 
-                    ? selectedUser?.image_url 
-                    : selectedUser?.image_url 
-                      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/face-images/${selectedUser?.image_url}` 
-                      : ''
-                  } 
-                  alt={selectedUser?.name}
-                />
+                {selectedUser?.avatar_url ? (
+                  <AvatarImage src={selectedUser.avatar_url} alt={selectedUser?.name} />
+                ) : null}
                 <AvatarFallback>
                   <User className="h-6 w-6" />
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold">{selectedUser?.name}</p>
-                <p className="text-sm text-muted-foreground">{selectedUser?.employee_id}</p>
+                <p className="text-sm text-muted-foreground">{selectedUser?.email}</p>
               </div>
             </div>
 
