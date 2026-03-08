@@ -395,17 +395,20 @@ export async function getUsersWithTrainingSamples(): Promise<Array<{
 }
 
 /**
- * Calculate minimum distance using all stored descriptors (for better accuracy)
+ * Calculate minimum distance using all stored descriptors
+ * Uses both individual sample matching AND averaged descriptor
+ * Multi-angle 3D scan data gives much better matching accuracy
  */
 export function calculateBestMatchDistance(
   inputDescriptor: Float32Array,
   userDescriptors: Float32Array[],
   averagedDescriptor: Float32Array
 ): number {
-  // First compare against averaged descriptor
+  // Compare against averaged descriptor (good for general match)
   let bestDistance = calculateDistance(inputDescriptor, averagedDescriptor);
   
-  // Then compare against individual samples for potentially better match
+  // Compare against individual samples - especially useful with 3D scan data
+  // because the input face angle may closely match one of the registered angles
   for (const descriptor of userDescriptors) {
     const distance = calculateDistance(inputDescriptor, descriptor);
     if (distance < bestDistance) {
@@ -413,7 +416,11 @@ export function calculateBestMatchDistance(
     }
   }
   
-  return bestDistance;
+  // Also compute cosine similarity for additional confidence
+  const cosineDist = cosineDistance(inputDescriptor, averagedDescriptor);
+  
+  // Use the better of euclidean and cosine distance
+  return Math.min(bestDistance, cosineDist);
 }
 
 function calculateDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
@@ -428,4 +435,17 @@ function calculateDistance(descriptor1: Float32Array, descriptor2: Float32Array)
   }
   
   return Math.sqrt(sum);
+}
+
+function cosineDistance(a: Float32Array, b: Float32Array): number {
+  if (a.length !== b.length) return Infinity;
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  const similarity = dot / (Math.sqrt(magA) * Math.sqrt(magB));
+  // Convert cosine similarity (1=same, 0=different) to distance-like metric
+  return Math.sqrt(2 * (1 - similarity));
 }

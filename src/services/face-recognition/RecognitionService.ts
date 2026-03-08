@@ -45,7 +45,9 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
     const trainedDescriptors = await getAllTrainedDescriptors();
     
     let bestMatch: { userId: string; userName: string; distance: number; sampleCount: number } | null = null;
-    let bestDistance = 0.50; // Tighter threshold for trained descriptors
+    // With 3D multi-angle samples, we can use a tighter threshold
+    // More samples = more confidence in match
+    let bestDistance = 0.50;
     
     for (const [userId, data] of trainedDescriptors) {
       const distance = calculateBestMatchDistance(
