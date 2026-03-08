@@ -73,7 +73,7 @@ const UserAccessManager: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<RegisteredUser | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newRole, setNewRole] = useState<Role>('user');
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
