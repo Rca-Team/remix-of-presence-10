@@ -196,7 +196,7 @@ const Admin = () => {
 
   const navItems: NavItem[] = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', group: 'Overview' },
-    { id: 'sections', icon: FolderKanban, label: 'Sections', group: 'Overview' },
+    { id: 'sections', icon: FolderKanban, label: 'Class', group: 'Overview' },
     { id: 'students', icon: Users, label: 'Students', group: 'Overview', badge: attendanceUpdated ? 'new' : undefined },
     { id: 'calendar', icon: Calendar, label: 'Calendar', group: 'Overview' },
     { id: 'register', icon: UserPlus, label: 'Register', group: 'Registration' },
