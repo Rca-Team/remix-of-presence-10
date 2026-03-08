@@ -281,8 +281,10 @@ const Admin = () => {
     { id: 'students', icon: Users, label: 'Students' },
     { id: 'register', icon: UserPlus, label: 'Register' },
     { id: 'reports', icon: BarChart3, label: 'Reports' },
-    { id: 'settings', icon: Settings, label: 'More' },
   ];
+
+  const mobileQuickIds = mobileQuickNav.map(n => n.id);
+  const moreNavItems = navItems.filter(n => !mobileQuickIds.includes(n.id));
 
   return (
     <PageTransition>
