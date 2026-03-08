@@ -123,14 +123,14 @@ const Index = () => {
                   </span>
                 </motion.div>
 
-                <motion.h1 variants={itemVariants} className="text-[28px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.15] sm:leading-tight px-2 sm:px-0">
+                <motion.h1 variants={itemVariants} className="text-[32px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.15] sm:leading-tight px-2 sm:px-0">
                   <span className="block">Your School,</span>
                   <span className="block bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                     Fully Automated
                   </span>
                 </motion.h1>
 
-                <motion.p variants={itemVariants} className="text-sm sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed px-3 sm:px-0">
+                <motion.p variants={itemVariants} className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed px-3 sm:px-0">
                   Face-recognition attendance, timetable, gate security, parent portal & AI analytics — one platform.
                 </motion.p>
 
@@ -156,7 +156,7 @@ const Index = () => {
 
                 <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-5 pt-1 sm:pt-4 px-2 sm:px-0">
                   {["AI Powered", "Real-time", "Parent Portal", "Secure"].map((badge, i) => (
-                    <div key={i} className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <div key={i} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                       <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                       {badge}
                     </div>
@@ -229,10 +229,10 @@ const Index = () => {
                 className="text-center p-3 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-sm sm:shadow-lg"
               >
                 <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
-                  className="text-lg sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
+                  className="text-xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                   {stat.value}
                 </motion.div>
-                <div className="mt-1 sm:mt-3 text-[10px] sm:text-sm font-medium text-muted-foreground">{stat.label}</div>
+                <div className="mt-1 sm:mt-3 text-xs sm:text-sm font-medium text-muted-foreground">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -247,7 +247,7 @@ const Index = () => {
                 <div className={`inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br ${cat.gradient} shadow-lg`}>
                   <cat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">{cat.category}</h2>
+                <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">{cat.category}</h2>
               </motion.div>
 
               {/* Feature Cards - 2 columns on mobile, 4 on desktop */}
@@ -264,8 +264,8 @@ const Index = () => {
                       <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     
-                    <h3 className="relative text-xs sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight">{feature.title}</h3>
-                    <p className="relative text-[10px] sm:text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.desc}</p>
+                    <h3 className="relative text-sm sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight">{feature.title}</h3>
+                    <p className="relative text-xs sm:text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.desc}</p>
                   </motion.div>
                 ))}
               </div>
@@ -281,8 +281,8 @@ const Index = () => {
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Why Choose Presence
               </span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-2">One Platform, Complete Automation</h2>
-              <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+              <h2 className="text-[26px] sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-2">One Platform, Complete Automation</h2>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                 Replace 10+ separate tools with one intelligent system.
               </p>
             </motion.div>
@@ -299,8 +299,8 @@ const Index = () => {
                   <div className={`inline-flex p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${item.gradient} mb-3 sm:mb-5 shadow-lg`}>
                     <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <h3 className="text-base sm:text-xl font-bold mb-2 sm:mb-3">{item.title}</h3>
-                  <p className="text-xs sm:text-base text-muted-foreground">{item.desc}</p>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
