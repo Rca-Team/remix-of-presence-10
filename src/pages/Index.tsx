@@ -343,13 +343,13 @@ const Index = () => {
               
               <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4">
                 <Link to="/register">
-                  <Button size="lg" className="h-14 px-8 text-base bg-white text-blue-600 hover:bg-white/90 shadow-lg">
+                  <Button size="lg" className="h-14 px-8 text-base bg-background text-foreground hover:bg-background/90 shadow-lg">
                     Register Now — It's Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link to="/contact">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-white/30 text-white hover:bg-white/10">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
                     Contact Sales
                   </Button>
                 </Link>
