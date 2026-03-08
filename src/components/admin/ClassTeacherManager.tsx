@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import {
   GraduationCap, Plus, Trash2, Clock, BookOpen, Save, Loader2, CalendarClock,
-  UserCheck, AlertTriangle, ChevronLeft, RefreshCw,
+  UserCheck, AlertTriangle, ChevronLeft, RefreshCw, Printer,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
