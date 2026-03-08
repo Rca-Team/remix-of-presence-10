@@ -103,10 +103,20 @@ const Register = () => {
         formData.department // category = class-section
       );
       if (registrationData) {
-        toast({ title: "Registration Successful! 🎉", description: "Face registered with 3D scan accuracy." });
+        // Store ALL 3D scan samples in face_descriptors for multi-angle matching
+        if (allDescriptors.length > 0) {
+          console.log(`Storing ${allDescriptors.length} 3D scan samples for user ${userId}`);
+          for (const descriptor of allDescriptors) {
+            await storeFaceSample(userId, descriptor, null, formData.name, 1.0);
+          }
+          console.log('All 3D scan samples stored successfully');
+        }
+        
+        toast({ title: "Registration Successful! 🎉", description: `Face registered with ${allDescriptors.length} 3D scan samples.` });
         setFormData({ name: '', email: '', phone: '', parentName: '', parentEmail: '', parentPhone: '', employeeId: '', department: '', position: '', rollNumber: '', bloodGroup: '', medicalInfo: '', transportMode: '' });
         setFaceImage(null);
         setFaceDescriptor(null);
+        setAllDescriptors([]);
         setFaceCaptured(false);
         setRegistrationStep(1);
       } else throw new Error("Registration failed");
