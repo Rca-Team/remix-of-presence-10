@@ -241,7 +241,17 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           if (isRecognized && studentId && !attendanceMarkedRef.current.has(studentId)) {
             attendanceMarkedRef.current.add(studentId);
             try {
-              await recordAttendance(studentId, 'present', detection.detection.score);
+              // Capture the video frame for the notification email
+              let capturedImageDataUrl: string | undefined;
+              if (videoRef.current) {
+                const capCanvas = document.createElement('canvas');
+                capCanvas.width = videoRef.current.videoWidth;
+                capCanvas.height = videoRef.current.videoHeight;
+                const capCtx = capCanvas.getContext('2d');
+                capCtx?.drawImage(videoRef.current, 0, 0);
+                capturedImageDataUrl = capCanvas.toDataURL('image/jpeg', 0.85);
+              }
+              await recordAttendance(studentId, 'present', detection.detection.score, undefined, capturedImageDataUrl);
               
               // Send automatic email notification to parent
               const { data: profile } = await supabase
