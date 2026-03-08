@@ -165,35 +165,59 @@ const Index = () => {
                 </motion.div>
               </div>
 
-              {/* Hero Visual - Hidden on mobile */}
-              <motion.div variants={itemVariants} className="relative hidden lg:block">
+              {/* Hero Visual */}
+              <motion.div variants={itemVariants} className="relative flex justify-center lg:block">
                 <div className="relative group">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 via-primary/30 to-accent/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative bg-gradient-to-br from-background via-background to-muted border border-primary/20 rounded-3xl p-6 md:p-8 shadow-2xl">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-t-3xl" />
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      {[
-                        { icon: Scan, label: "Attendance", color: "text-ios-blue" },
-                        { icon: BookOpen, label: "Timetable", color: "text-ios-green" },
-                        { icon: Shield, label: "Security", color: "text-ios-red" },
-                        { icon: Bell, label: "Alerts", color: "text-ios-orange" },
-                        { icon: BarChart3, label: "Analytics", color: "text-ios-purple" },
-                        { icon: Bus, label: "Transport", color: "text-ios-mint" },
-                      ].map((mod, i) => (
-                        <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 + i * 0.1, type: "spring" }}
-                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm">
-                          <mod.icon className={`w-6 h-6 ${mod.color}`} />
-                          <span className="text-xs font-medium text-muted-foreground">{mod.label}</span>
+                  {/* Mascot on mobile - compact */}
+                  <div className="lg:hidden flex justify-center">
+                    <motion.img
+                      src={brandMascot}
+                      alt="Presence mascot"
+                      className="w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-2xl"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  </div>
+
+                  {/* Desktop card with mascot */}
+                  <div className="hidden lg:block">
+                    <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 via-primary/30 to-accent/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative bg-gradient-to-br from-background via-background to-muted border border-primary/20 rounded-3xl p-6 md:p-8 shadow-2xl">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-t-3xl" />
+                      
+                      {/* Mascot floating over the card */}
+                      <motion.img
+                        src={brandMascot}
+                        alt="Presence brand ambassador"
+                        className="absolute -top-16 -right-8 w-36 h-36 object-contain drop-shadow-2xl z-10"
+                        animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                      />
+
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        {[
+                          { icon: Scan, label: "Attendance", color: "text-ios-blue" },
+                          { icon: BookOpen, label: "Timetable", color: "text-ios-green" },
+                          { icon: Shield, label: "Security", color: "text-ios-red" },
+                          { icon: Bell, label: "Alerts", color: "text-ios-orange" },
+                          { icon: BarChart3, label: "Analytics", color: "text-ios-purple" },
+                          { icon: Bus, label: "Transport", color: "text-ios-mint" },
+                        ].map((mod, i) => (
+                          <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 + i * 0.1, type: "spring" }}
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                            <mod.icon className={`w-6 h-6 ${mod.color}`} />
+                            <span className="text-xs font-medium text-muted-foreground">{mod.label}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className="text-center space-y-2">
+                        <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          All Systems Active
                         </motion.div>
-                      ))}
-                    </div>
-                    <div className="text-center space-y-2">
-                      <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        All Systems Active
-                      </motion.div>
-                      <p className="text-sm text-muted-foreground">6 modules • Real-time sync</p>
+                        <p className="text-sm text-muted-foreground">6 modules • Real-time sync</p>
+                      </div>
                     </div>
                   </div>
                 </div>
