@@ -154,7 +154,7 @@ const Login = () => {
 
               <div className="flex items-center space-x-2">
                 <Checkbox id="remember" />
-                <label htmlFor="remember" className="text-xs sm:text-sm text-muted-foreground cursor-pointer">
+                <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
                   Remember me
                 </label>
               </div>
