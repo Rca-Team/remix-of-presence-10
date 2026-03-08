@@ -28,10 +28,10 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 69% 58%;
+    --success: 152 76% 44%;
     --success-foreground: 210 40% 98%;
 
-    --warning: 48 96% 53%;
+    --warning: 38 96% 54%;
     --warning-foreground: 220 25% 10%;
 
     --border: 220 15% 90%;
@@ -52,25 +52,35 @@
     --sidebar-border: 220 15% 90%;
     --sidebar-ring: 212 100% 47%;
 
+    /* Multi-color palette */
+    --cyan: 189 94% 43%;
+    --violet: 271 81% 56%;
+    --rose: 346 77% 50%;
+    --amber: 38 92% 50%;
+    --emerald: 160 84% 39%;
+    --indigo: 239 84% 67%;
+    --teal: 172 66% 50%;
+    --fuchsia: 292 84% 61%;
+
     /* School theme colors */
     --school-blue: 212 100% 47%;
-    --school-green: 142 69% 58%;
-    --school-yellow: 48 96% 67%;
+    --school-green: 152 76% 44%;
+    --school-yellow: 38 96% 54%;
     --school-red: 0 84% 60%;
-    --school-purple: 269 56% 45%;
+    --school-purple: 271 81% 56%;
 
     /* Animation properties */
     --animation-timing: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 224 50% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
+    --card: 224 50% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 11%;
+    --popover: 224 50% 9%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 217 91% 60%;
@@ -79,8 +89,8 @@
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 224 50% 13%;
+    --muted-foreground: 215 20% 55%;
 
     --accent: 216 34% 17%;
     --accent-foreground: 210 40% 98%;
@@ -88,26 +98,26 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 69% 58%;
+    --success: 152 76% 50%;
     --success-foreground: 222 47% 11%;
 
-    --warning: 48 96% 67%;
+    --warning: 38 96% 64%;
     --warning-foreground: 222 47% 11%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
+    --border: 224 30% 16%;
+    --input: 224 30% 16%;
     --ring: 224 76% 48%;
 
-    --gradient-start: rgba(15, 23, 42, 0.95);
-    --gradient-end: rgba(30, 41, 59, 0.95);
+    --gradient-start: rgba(8, 12, 22, 0.95);
+    --gradient-end: rgba(15, 23, 42, 0.95);
 
-    --sidebar-background: 222 47% 11%;
+    --sidebar-background: 224 50% 6%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 222 47% 11%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-border: 224 30% 16%;
     --sidebar-ring: 224 76% 48%;
 
     /* Neon accents for dark mode */
@@ -115,6 +125,16 @@
     --neon-purple: 271 91% 65%;
     --neon-blue: 217 91% 60%;
     --neon-pink: 316 73% 69%;
+
+    /* Multi-color palette dark */
+    --cyan: 189 94% 63%;
+    --violet: 271 81% 70%;
+    --rose: 346 77% 60%;
+    --amber: 38 92% 60%;
+    --emerald: 160 84% 50%;
+    --indigo: 239 84% 74%;
+    --teal: 172 66% 60%;
+    --fuchsia: 292 84% 70%;
   }
 }
 
