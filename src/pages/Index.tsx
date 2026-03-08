@@ -148,6 +148,12 @@ const Index = () => {
                       <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
+                  <Link to="/parent-portal" className="w-full sm:w-auto">
+                    <Button size="lg" variant="outline" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 border-accent/30 bg-accent/5 hover:bg-accent/10 text-accent-foreground shadow-md hover:shadow-lg transition-all duration-300 touch-target">
+                      <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      Parent Portal
+                    </Button>
+                  </Link>
                   <Link to="/dashboard" className="w-full sm:w-auto">
                     <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 border-primary/20 hover:bg-primary/5 touch-target">
                       View Demo
