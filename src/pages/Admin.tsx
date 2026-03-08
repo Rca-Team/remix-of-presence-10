@@ -216,6 +216,7 @@ const Admin = () => {
   { id: 'notifications', icon: Bell, label: 'Notifications', group: 'Management', count: notificationCount },
   { id: 'notif-log', icon: MessageSquareText, label: 'Delivery Log', group: 'Management' },
   { id: 'inbox', icon: Mail, label: 'Inbox', group: 'Management' },
+  { id: 'emergency', icon: Siren, label: 'Emergency', group: 'Management' },
   { id: 'settings', icon: Settings, label: 'Settings', group: 'Management' }];
 
 
