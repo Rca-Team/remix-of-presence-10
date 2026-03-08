@@ -1,128 +1,60 @@
 
 
-# School Deployment Plan — Full Setup Guide
+## Plan: Parent Portal Page at `/parent`
 
-This is a step-by-step plan to deploy the face attendance system in a large school (1000+ students) using dedicated cameras and teacher phones.
+A dedicated, standalone page where parents log in and see their child's attendance — designed as a separate experience from the admin/teacher interface.
 
----
+### What Gets Built
 
-## Phase 1: Publish & Go Live
+1. **New page: `src/pages/ParentPortal.tsx`**
+   - Self-contained page with its own login flow (parents use the same auth system)
+   - After login, fetches children linked via `profiles.parent_phone` or `profiles.parent_email` matching the logged-in user's profile
+   - Three main sections:
+     - **Today's Status** — big card showing Present/Late/Absent with check-in time
+     - **Monthly Attendance History** — calendar-style grid with color-coded days (green/yellow/red)
+     - **Trends Card** — attendance rate %, late count, streak info, line chart of last 30 days
+   - Clean, mobile-first design (parents will use phones)
+   - School branding header with Logo component
+   - Logout button
 
-1. **Publish the app** so it's accessible on a public URL (e.g., `yourschool.lovable.app` or a custom domain).
-2. Share the URL with school staff — works on any device with a browser (phones, tablets, laptops connected to cameras).
+2. **Route in `src/App.tsx`**
+   - Add `/parent` route wrapped in `ProtectedRoute` (no admin requirement)
 
----
+3. **Data flow**
+   - On mount: get logged-in user → fetch their profile → use `parent_phone`/`parent_email` to find linked students in `attendance_records` where `device_info->metadata->parent_phone` matches
+   - Fetch attendance records for matched students for current month
+   - No new database tables needed — uses existing `attendance_records`, `profiles`
 
-## Phase 2: Admin & Staff Account Setup
+4. **Navigation**
+   - Add "Parent Portal" link on the landing page and login page
+   - Parents navigate directly to `/parent` or get redirected there based on context
 
-1. **Primary admin** (`gauravraj10226@gmail.com`) is already configured.
-2. **Create principal account**: Sign up via the app → admin promotes to `moderator` (principal) role via Admin → Access tab.
-3. **Create teacher accounts**: Each teacher signs up → admin assigns teacher permissions with their class/section via Admin → Access tab.
+### Technical Details
 
-**Recommended structure:**
+- Reuses existing `supabase` client, `ProtectedRoute`, `Logo`, UI components
+- Uses `recharts` LineChart for trend visualization
+- Uses `date-fns` for date calculations (working days, weekends)
+- Mobile-responsive with Tailwind — card layout stacks vertically on small screens
+- No new database migrations required
+
+### Layout (mobile-first)
 ```text
-Admin (you)
-├── Principal (moderator role — full dashboard access)
-└── Teachers (teacher permissions — class-specific attendance only)
+┌─────────────────────────┐
+│ Logo    Parent Portal  ⏻│
+├─────────────────────────┤
+│ [Child 1] [Child 2]     │
+├─────────────────────────┤
+│ TODAY'S STATUS           │
+│ ✅ Present at 8:12 AM   │
+│ Class 7-A               │
+├─────────────────────────┤
+│ THIS MONTH (March 2026) │
+│ 🟢🟢🟡🔴🟢🟢🟢...     │
+│ 92% attendance          │
+├─────────────────────────┤
+│ TRENDS (30 days)        │
+│ ~~~line chart~~~        │
+│ Late: 3  Absent: 2      │
+└─────────────────────────┘
 ```
-
----
-
-## Phase 3: Bulk Student Registration (1000+ students)
-
-For a large school, use these methods in order of efficiency:
-
-1. **PDF Import** (Admin → PDF Import): Upload a class-wise PDF list with student names, IDs, sections, and classes. The system extracts and creates records automatically.
-
-2. **ID Card Batch Extract** (Admin → ID Extract): Upload scanned ID card images. AI extracts name, photo, ID number, and class from each card.
-
-3. **Bulk Image Registration** (Admin → Bulk Register): Upload a folder of student photos with names. System registers face descriptors in batch.
-
-4. **Quick Registration** (Admin → Register): For individual students — capture face via webcam with name, ID, class, and section.
-
-**Data needed per student:**
-- Full name
-- Employee/Student ID
-- Class (1-12) and Section (A, B, C, D)
-- At least 1 clear face photo (3 angles recommended for accuracy)
-- Parent phone number (for WhatsApp notifications)
-
----
-
-## Phase 4: Device Setup
-
-### Dedicated Cameras (Gate Mode)
-1. Connect a webcam or IP camera to a laptop at each school entrance.
-2. Open the app → navigate to **Gate Mode** (`/gate-mode`).
-3. Select the gate name and start the session.
-4. The system runs continuous face scanning — auto-marks attendance as students enter.
-5. Unrecognized faces trigger a **Stranger Alert**.
-
-### Teacher Phones (Classroom Mode)
-1. Teachers open the app on their phone browser.
-2. Navigate to **Attendance** → use the camera to scan the classroom.
-3. The multi-face scanner detects and marks all visible students simultaneously.
-4. Works offline — syncs when connectivity returns.
-
-**Tip:** Install the PWA (the app will prompt "Add to Home Screen") for a native app-like experience on phones.
-
----
-
-## Phase 5: Configure Notifications
-
-Already set up:
-- **WhatsApp** (via Meta Business API — secrets configured)
-- **Email** (via Resend — secret configured)
-
-**Action needed:**
-- Ensure each student's profile has `parent_phone` filled (with country code, e.g., `+91XXXXXXXXXX`).
-- Set the **attendance cutoff time** in Admin → Settings (e.g., 8:30 AM — arrivals after this are marked "late").
-- Enable **auto-notifications** in Admin → Settings so parents receive instant WhatsApp messages when their child is marked present/late/absent.
-
----
-
-## Phase 6: Daily Operations Workflow
-
-```text
-Morning:
-  Gate cameras auto-scan → attendance marked → parents notified via WhatsApp
-
-During school:
-  Teachers can take classroom attendance via phone camera
-  Late entries logged automatically
-
-End of day:
-  Admin reviews dashboard → export reports → identify absentees
-  Auto-notifications sent for absent students
-```
-
----
-
-## Phase 7: Ongoing Management
-
-| Task | Where |
-|------|-------|
-| View real-time attendance | Admin → Dashboard |
-| Check class-wise breakdown | Admin → Sections |
-| Generate reports | Admin → Reports |
-| Export attendance data | Admin → Export (sidebar) |
-| View notification delivery | Admin → Delivery Log |
-| Manage holidays | Features → Holiday Calendar |
-| Handle visitors | Features → Visitor Management |
-
----
-
-## Implementation Steps (Technical)
-
-No code changes are needed — the system is fully built. The steps are:
-
-1. **Publish the app** (I can do this now)
-2. **Set up admin accounts** (sign up + role promotion)
-3. **Bulk register students** (PDF import or ID card batch extract)
-4. **Add parent phone numbers** to student profiles
-5. **Configure cutoff time and auto-notifications**
-6. **Set up gate mode on entrance devices**
-7. **Train teachers** on using the phone-based attendance
-
-Would you like me to start with publishing the app, or help with any specific phase first?
 
