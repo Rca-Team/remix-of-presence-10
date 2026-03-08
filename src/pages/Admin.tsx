@@ -117,9 +117,14 @@ const Admin = () => {
         todayData.forEach((record) => {
           const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
           if (userId) {
-            uniqueTotal.add(String(userId));
-            if (record.status === 'present') uniquePresent.add(String(userId));else
-            if (record.status === 'late') uniqueLate.add(String(userId));
+            const uid = String(userId);
+            uniqueTotal.add(uid);
+            if (record.status === 'present') {
+              uniquePresent.add(uid);
+              uniqueLate.delete(uid); // present overrides late
+            } else if (record.status === 'late' && !uniquePresent.has(uid)) {
+              uniqueLate.add(uid);
+            }
           }
         });
         setStats((prev) => ({
