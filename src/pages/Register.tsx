@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import PageTransition from '@/components/PageTransition';
-import MultiAngleCapture from '@/components/register/MultiAngleCapture';
+import Scan3DCapture from '@/components/register/Scan3DCapture';
 import { 
   User, Mail, Phone, Building2, GraduationCap, Camera, CheckCircle2,
   ArrowRight, ArrowLeft, Sparkles, Shield, Users, Scan, Heart, Bus
@@ -74,7 +74,7 @@ const Register = () => {
     setFaceDescriptor(averaged);
     setFaceImage(primaryImage);
     setFaceCaptured(true);
-    toast({ title: "All Angles Captured! 🎉", description: "4-angle face scan complete for maximum accuracy." });
+    toast({ title: "3D Scan Complete! 🎉", description: "3D face map captured for maximum accuracy." });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,7 +100,7 @@ const Register = () => {
         formData.department // category = class-section
       );
       if (registrationData) {
-        toast({ title: "Registration Successful! 🎉", description: "Face registered with 4-angle accuracy." });
+        toast({ title: "Registration Successful! 🎉", description: "Face registered with 3D scan accuracy." });
         setFormData({ name: '', email: '', phone: '', parentName: '', parentEmail: '', parentPhone: '', employeeId: '', department: '', position: '', rollNumber: '', bloodGroup: '', medicalInfo: '', transportMode: '' });
         setFaceImage(null);
         setFaceDescriptor(null);
@@ -125,7 +125,7 @@ const Register = () => {
 
   const steps = [
     { number: 1, title: "Student Info", icon: User },
-    { number: 2, title: "4-Angle Scan", icon: Camera }
+    { number: 2, title: "3D Face Scan", icon: Camera }
   ];
 
   return (
@@ -153,12 +153,12 @@ const Register = () => {
                   <span className="text-cyan-200">Smart Attendance</span>
                 </h1>
                 <p className="mt-4 text-lg text-white/80 max-w-md">
-                  Register with a guided 4-angle face scan for maximum recognition accuracy.
+                  Register with a guided 3D face scan for maximum recognition accuracy.
                 </p>
               </div>
               <div className="space-y-4">
                 {[
-                  { icon: Sparkles, text: "4-angle face scan for 99%+ accuracy" },
+                  { icon: Sparkles, text: "3D face scan for 99%+ accuracy" },
                   { icon: Shield, text: "Bank-grade security & privacy" },
                   { icon: Users, text: "Instant attendance via face recognition" }
                 ].map((item, i) => (
@@ -189,7 +189,7 @@ const Register = () => {
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Face Registration</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold">Create your profile</h2>
-                <p className="mt-2 text-muted-foreground">Register with a guided 4-angle face scan</p>
+                <p className="mt-2 text-muted-foreground">Register with a guided 3D face scan</p>
               </motion.div>
 
               {/* Progress Steps */}
@@ -331,8 +331,8 @@ const Register = () => {
                                 <Camera className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <h3 className="font-semibold text-white">4-Angle Face Scanner</h3>
-                                <p className="text-sm text-blue-100">Capture front, left, right & up views</p>
+                                <h3 className="font-semibold text-white">3D Face Scanner</h3>
+                                <p className="text-sm text-blue-100">Continuous 3D depth scan of your face</p>
                               </div>
                             </div>
                           </div>
@@ -347,15 +347,15 @@ const Register = () => {
                                   </motion.div>
                                 </div>
                                 <div>
-                                  <p className="font-semibold text-lg text-green-600 dark:text-green-400">4-Angle Scan Complete!</p>
-                                  <p className="text-sm text-muted-foreground">Averaged descriptor from 4 angles for max accuracy</p>
+                                  <p className="font-semibold text-lg text-green-600 dark:text-green-400">3D Scan Complete!</p>
+                                  <p className="text-sm text-muted-foreground">Multi-sample 3D face map for max accuracy</p>
                                 </div>
                                 <Button type="button" variant="outline" onClick={() => { setFaceCaptured(false); setFaceImage(null); setFaceDescriptor(null); }}>
                                   <Camera className="w-4 h-4 mr-2" />Retake Scan
                                 </Button>
                               </motion.div>
                             ) : (
-                              <MultiAngleCapture onComplete={handleMultiAngleComplete} isModelLoading={isModelLoading} />
+                              <Scan3DCapture onComplete={handleMultiAngleComplete} isModelLoading={isModelLoading} />
                             )}
                           </div>
                         </div>
