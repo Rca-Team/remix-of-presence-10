@@ -221,8 +221,7 @@ const Admin = () => {
 
   const statsCards = [
   { label: 'Registered', value: stats.totalFaces, icon: Users, color: 'text-primary' },
-  { label: 'Today Total', value: stats.todayAttendance, icon: Activity, color: 'text-green-600 dark:text-green-400' },
-  { label: 'Present', value: stats.presentToday, icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400' },
+  { label: 'Present', value: stats.presentToday, icon: TrendingUp, color: 'text-green-600 dark:text-green-400' },
   { label: 'Late', value: stats.lateToday, icon: Clock, color: 'text-orange-600 dark:text-orange-400' }];
 
 
