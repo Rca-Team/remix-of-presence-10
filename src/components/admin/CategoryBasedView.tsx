@@ -53,6 +53,7 @@ const CategoryBasedView: React.FC = () => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [sendingNotification, setSendingNotification] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [showTeacherManager, setShowTeacherManager] = useState(false);
 
   useEffect(() => { fetchUsers(); }, []);
 
