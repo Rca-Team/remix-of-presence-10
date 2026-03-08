@@ -99,9 +99,8 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
 
     try {
       const detections = await faceapi
-        .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions({
-          inputSize: 512,
-          scoreThreshold: 0.4
+        .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options({
+          minConfidence: 0.4
         }))
         .withFaceLandmarks()
         .withFaceDescriptors();
