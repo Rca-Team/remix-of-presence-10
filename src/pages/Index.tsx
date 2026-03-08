@@ -281,8 +281,8 @@ const Index = () => {
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Why Choose Presence
               </span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-2">One Platform, Complete Automation</h2>
-              <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+              <h2 className="text-[26px] sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-2">One Platform, Complete Automation</h2>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                 Replace 10+ separate tools with one intelligent system.
               </p>
             </motion.div>
