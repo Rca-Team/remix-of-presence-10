@@ -487,6 +487,21 @@ const Profile = () => {
                     </motion.div>
                   </TabsContent>
 
+                  <TabsContent value="face">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                    >
+                      {user && (
+                        <FaceReRegistration 
+                          userId={user.id} 
+                          userName={profile?.display_name || user.email || 'User'} 
+                        />
+                      )}
+                    </motion.div>
+                  </TabsContent>
+
                   <TabsContent value="insights">
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
