@@ -262,7 +262,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'School Attendance <noreply@electronicgaurav.me>',
+            from: 'School Attendance <noreply@presences.dev>',
             to: [recipient.email],
             subject: message.subject,
             html: htmlContent,
