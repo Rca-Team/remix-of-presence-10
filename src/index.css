@@ -133,20 +133,30 @@
     --sidebar-ring: 224 76% 48%;
 
     /* Neon accents for dark mode */
-    --neon-cyan: 189 97% 75%;
-    --neon-purple: 271 91% 65%;
-    --neon-blue: 217 91% 60%;
-    --neon-pink: 316 73% 69%;
+    --neon-cyan: 195 100% 70%;
+    --neon-purple: 280 100% 75%;
+    --neon-blue: 211 100% 65%;
+    --neon-pink: 340 100% 70%;
 
-    /* Multi-color palette dark */
-    --cyan: 189 94% 63%;
-    --violet: 271 81% 70%;
-    --rose: 346 77% 60%;
-    --amber: 38 92% 60%;
-    --emerald: 160 84% 50%;
-    --indigo: 239 84% 74%;
-    --teal: 172 66% 60%;
-    --fuchsia: 292 84% 70%;
+    /* iOS-inspired vibrant palette dark */
+    --cyan: 195 100% 60%;
+    --violet: 280 100% 70%;
+    --rose: 350 100% 65%;
+    --amber: 35 100% 60%;
+    --emerald: 155 100% 55%;
+    --indigo: 240 100% 75%;
+    --teal: 175 80% 55%;
+    --fuchsia: 295 90% 70%;
+    
+    /* iOS accent colors dark */
+    --ios-blue: 211 100% 60%;
+    --ios-green: 142 76% 55%;
+    --ios-orange: 28 100% 60%;
+    --ios-pink: 340 100% 70%;
+    --ios-purple: 280 100% 70%;
+    --ios-red: 0 100% 65%;
+    --ios-yellow: 45 100% 60%;
+    --ios-mint: 168 76% 60%;
   }
 }
 
