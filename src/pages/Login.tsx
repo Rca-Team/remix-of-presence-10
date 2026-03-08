@@ -149,7 +149,7 @@ const Login = () => {
                 </div>
                 <PasswordInput id="password" placeholder="••••••••" value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  className="h-12 text-base" required />
               </div>
 
               <div className="flex items-center space-x-2">
