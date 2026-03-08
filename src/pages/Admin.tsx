@@ -21,6 +21,7 @@ import StudentIDCardGenerator from '@/components/admin/StudentIDCardGenerator';
 import AttendanceReportGenerator from '@/components/admin/AttendanceReportGenerator';
 import PDFBulkRegistration from '@/components/admin/PDFBulkRegistration';
 import NotificationLog from '@/components/admin/NotificationLog';
+import AdminInbox from '@/components/admin/AdminInbox';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
