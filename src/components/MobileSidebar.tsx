@@ -48,6 +48,7 @@ const MobileSidebar = () => {
   const [profile, setProfile] = useState<any>(null);
   const { isAdminOrPrincipal, isTeacher } = useUserRole();
   const { toast } = useToast();
+  const haptic = useHapticFeedback();
 
   useEffect(() => {
     setOpen(false);
