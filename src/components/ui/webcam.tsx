@@ -195,7 +195,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
         window.clearInterval(enhancementIntervalRef.current);
       }
     };
-  }, [isActive, cameraFacing]);
+  }, [isActive, currentFacing]);
 
   // Video enhancement loop - optimized for performance
   useEffect(() => {
