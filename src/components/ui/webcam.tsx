@@ -33,6 +33,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
   const [error, setError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [currentFacing, setCurrentFacing] = useState<'user' | 'environment'>(cameraFacing);
   const retryTimeoutRef = useRef<number | null>(null);
   const attemptCountRef = useRef(0);
   const enhancementIntervalRef = useRef<number | null>(null);
@@ -76,7 +77,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
       // Try with ideal constraints first
       const constraints = {
         video: { 
-          facingMode: cameraFacing,
+          facingMode: currentFacing,
           width: { ideal: 1280 },
           height: { ideal: 720 } 
         }
@@ -130,7 +131,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
           
           try {
             const minimalStream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: cameraFacing }
+              video: { facingMode: currentFacing }
             });
             
             if (localVideoRef.current) {
@@ -194,7 +195,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
         window.clearInterval(enhancementIntervalRef.current);
       }
     };
-  }, [isActive, cameraFacing]);
+  }, [isActive, currentFacing]);
 
   // Video enhancement loop - optimized for performance
   useEffect(() => {
@@ -282,6 +283,15 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
     setIsActive(prev => !prev);
   };
 
+  const flipCamera = () => {
+    attemptCountRef.current = 0;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setCurrentFacing(prev => prev === 'user' ? 'environment' : 'user');
+  };
+
   return (
     <div className={cn(
       "relative overflow-hidden bg-muted rounded-xl",
@@ -330,7 +340,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
           isActive && !isLoading && !error ? "opacity-100" : "opacity-0",
           enhancementEnabled && "hidden"
         )}
-        style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
+      style={{ transform: currentFacing === 'user' ? 'scaleX(-1)' : 'none' }}
       />
 
       {/* Enhanced video canvas (shown when enhancement is active) */}
@@ -341,7 +351,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
             "w-full h-full object-cover transition-opacity duration-300",
             isActive && !isLoading && !error ? "opacity-100" : "opacity-0"
           )}
-          style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
+          style={{ transform: currentFacing === 'user' ? 'scaleX(-1)' : 'none' }}
         />
       )}
 
@@ -385,6 +395,30 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
                 </svg>
               </Button>
               
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                onClick={flipCamera}
+                title={currentFacing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                >
+                  <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+                  <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" />
+                  <path d="m14 3 2 2-2 2" />
+                  <path d="m10 17-2 2 2 2" />
+                </svg>
+              </Button>
+
               <Button 
                 variant="outline" 
                 size="icon" 

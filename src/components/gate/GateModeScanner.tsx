@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert, SwitchCamera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GateEntry } from '@/pages/GateMode';
 import { loadModels, areModelsLoaded } from '@/services/face-recognition/ModelService';
@@ -27,6 +27,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
   const [fps, setFps] = useState(0);
   const [facesInFrame, setFacesInFrame] = useState(0);
   const [liveMatches, setLiveMatches] = useState<LiveConfidence[]>([]);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const processingRef = useRef(false);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -55,7 +56,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           video: {
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            facingMode: { ideal: 'environment' },
+            facingMode: { ideal: facingMode },
             frameRate: { ideal: 30 }
           }
         }).catch(() =>
@@ -89,7 +90,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       }
     };
-  }, [isActive]);
+  }, [isActive, facingMode]);
 
   // Continuous detection loop
   const detectLoop = useCallback(async () => {
@@ -298,7 +299,8 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
 
   return (
     <div className="relative h-full w-full bg-black touch-manipulation">
-      <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
+      <video ref={videoRef} className="h-full w-full object-cover" muted playsInline 
+        style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }} />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
       {isLoading && (
@@ -330,6 +332,21 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
               <span className="text-[10px] sm:text-xs font-medium text-foreground">{fps} FPS</span>
             </div>
           </div>
+
+          {/* Camera flip button */}
+          <button
+            onClick={() => {
+              if (videoRef.current?.srcObject) {
+                (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+              }
+              setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+              setIsLoading(true);
+            }}
+            className="bg-card/80 backdrop-blur rounded-full p-2 sm:p-2.5 hover:bg-card transition-colors"
+            title={facingMode === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+          >
+            <SwitchCamera className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
+          </button>
         </div>
       )}
 
