@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import PageLayout from '@/components/layouts/PageLayout';
 import PageTransition from '@/components/PageTransition';
 import AdminFacesList from '@/components/admin/AdminFacesList';
@@ -61,6 +62,7 @@ const Admin = () => {
   const [nameFilter, setNameFilter] = useState<string>('all');
   const [availableFaces, setAvailableFaces] = useState<{id: string, name: string, employee_id: string}[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [stats, setStats] = useState({
     totalFaces: 0,
@@ -279,8 +281,10 @@ const Admin = () => {
     { id: 'students', icon: Users, label: 'Students' },
     { id: 'register', icon: UserPlus, label: 'Register' },
     { id: 'reports', icon: BarChart3, label: 'Reports' },
-    { id: 'settings', icon: Settings, label: 'More' },
   ];
+
+  const mobileQuickIds = mobileQuickNav.map(n => n.id);
+  const moreNavItems = navItems.filter(n => !mobileQuickIds.includes(n.id));
 
   return (
     <PageTransition>
@@ -449,6 +453,57 @@ const Admin = () => {
                   </button>
                 );
               })}
+
+              {/* More button with sheet */}
+              <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors",
+                      moreNavItems.some(n => n.id === activeTab) ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">More</span>
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[70vh]">
+                  <div className="pt-2 pb-4">
+                    <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4" />
+                    <h3 className="text-sm font-semibold text-foreground mb-3 px-1">All Features</h3>
+                    <ScrollArea className="max-h-[50vh]">
+                      {groups.map(group => (
+                        <div key={group} className="mb-3">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">{group}</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {navItems.filter(n => n.group === group).map(item => {
+                              const isActive = activeTab === item.id;
+                              return (
+                                <button
+                                  key={item.id}
+                                  onClick={() => { handleTabChange(item.id); setMoreOpen(false); }}
+                                  className={cn(
+                                    "flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors relative",
+                                    isActive ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                                  )}
+                                >
+                                  <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
+                                  <span className="text-[10px] font-medium leading-tight text-center">{item.label}</span>
+                                  {item.count !== undefined && item.count > 0 && (
+                                    <Badge variant="destructive" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-3.5 min-w-[14px]">
+                                      {item.count}
+                                    </Badge>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         )}
