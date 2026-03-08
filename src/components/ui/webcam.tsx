@@ -340,7 +340,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
           isActive && !isLoading && !error ? "opacity-100" : "opacity-0",
           enhancementEnabled && "hidden"
         )}
-        style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
+      style={{ transform: currentFacing === 'user' ? 'scaleX(-1)' : 'none' }}
       />
 
       {/* Enhanced video canvas (shown when enhancement is active) */}
@@ -351,7 +351,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
             "w-full h-full object-cover transition-opacity duration-300",
             isActive && !isLoading && !error ? "opacity-100" : "opacity-0"
           )}
-          style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
+          style={{ transform: currentFacing === 'user' ? 'scaleX(-1)' : 'none' }}
         />
       )}
 
