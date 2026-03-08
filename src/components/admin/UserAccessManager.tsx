@@ -507,27 +507,48 @@ const UserAccessManager: React.FC = () => {
             <div className="space-y-3">
               <p className="text-sm font-medium">Teacher Permissions (Optional):</p>
               <p className="text-xs text-muted-foreground">
-                Assign categories this user can manage as a teacher
+                Assign class-sections this user can manage as a teacher
               </p>
-              {CATEGORIES.map(cat => (
-                <label 
-                  key={cat} 
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedCategories.includes(cat) 
-                      ? 'bg-primary/5 border-primary' 
-                      : 'hover:bg-muted/50'
-                  }`}
-                >
-                  <Checkbox
-                    checked={selectedCategories.includes(cat)}
-                    onCheckedChange={() => toggleCategory(cat)}
-                  />
-                  <span className="flex-1">Category {cat}</span>
-                  {selectedCategories.includes(cat) && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
-                </label>
-              ))}
+              <div className="max-h-[250px] overflow-y-auto space-y-2">
+                {CLASSES.map(cls => {
+                  const classCats = SECTIONS.map(s => `${cls}-${s}`);
+                  const selectedInClass = classCats.filter(c => selectedCategories.includes(c)).length;
+                  return (
+                    <div key={cls} className="border rounded-lg p-2 space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleAllForClass(cls)}
+                        className="flex items-center justify-between w-full text-sm font-medium px-1 hover:text-primary"
+                      >
+                        <span>Class {cls}</span>
+                        {selectedInClass > 0 && (
+                          <span className="text-xs text-primary">{selectedInClass}/{SECTIONS.length}</span>
+                        )}
+                      </button>
+                      <div className="grid grid-cols-4 gap-1">
+                        {SECTIONS.map(sec => {
+                          const cat = `${cls}-${sec}`;
+                          const isSelected = selectedCategories.includes(cat);
+                          return (
+                            <label
+                              key={cat}
+                              className={`flex items-center gap-1.5 p-1.5 rounded text-xs cursor-pointer transition-colors ${
+                                isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                              }`}
+                            >
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleCategory(cat)}
+                              />
+                              <span>{sec}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
