@@ -118,8 +118,8 @@ const Login = () => {
 
           {/* Header */}
           <div className="text-center lg:text-left space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-bold">Welcome back</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <h1 className="text-3xl sm:text-3xl font-bold">Welcome back</h1>
+            <p className="text-base sm:text-base text-muted-foreground">
               Sign in to your Smart School dashboard
             </p>
           </div>
