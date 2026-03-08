@@ -77,7 +77,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
       // Try with ideal constraints first
       const constraints = {
         video: { 
-          facingMode: cameraFacing,
+          facingMode: currentFacing,
           width: { ideal: 1280 },
           height: { ideal: 720 } 
         }
