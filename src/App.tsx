@@ -75,6 +75,11 @@ function AnimatedRoutes() {
             <GateMode />
           </ProtectedRoute>
         } />
+        <Route path="/gate-history" element={
+          <ProtectedRoute>
+            <GateHistory />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
