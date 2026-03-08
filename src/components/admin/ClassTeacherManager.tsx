@@ -291,6 +291,28 @@ const ClassTeacherManager: React.FC<Props> = ({ category, onBack }) => {
             auto_assigned: true,
             status: 'assigned',
           });
+
+          // Send in-app notification to substitute teacher
+          const periodInfo = periodTimings.find(p => p.period_number === entry.period_number);
+          const timeStr = periodInfo ? `${periodInfo.start_time}–${periodInfo.end_time}` : `Period ${entry.period_number}`;
+          const subjectName = subjects.find(s => s.id === entry.subject_id)?.name || 'Class';
+
+          // Find substitute teacher's user_id from face_descriptors (teacher_record_id maps to face descriptor id)
+          const { data: subTeacherProfile } = await supabase
+            .from('face_descriptors')
+            .select('user_id')
+            .eq('id', freeTeacher.id)
+            .maybeSingle();
+
+          if (subTeacherProfile?.user_id) {
+            await supabase.from('notifications').insert({
+              user_id: subTeacherProfile.user_id,
+              title: `📋 Substitution Assignment`,
+              message: `You have been assigned to cover ${subjectName} for ${getCategoryLabel(category)} during ${timeStr} (replacing ${entry.teacher_name}).`,
+              type: 'substitution',
+            });
+          }
+
           // Mark this teacher as busy for this period
           busyThisPeriod.add(freeTeacher.id);
           busyByPeriod.set(entry.period_number, busyThisPeriod);
