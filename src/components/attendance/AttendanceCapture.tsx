@@ -315,12 +315,12 @@ const AttendanceCapture = () => {
       canvas.height = webcamRef.current.videoHeight;
       ctx.drawImage(webcamRef.current, 0, 0);
       
-      // Apply video enhancement if enabled
+      // Apply video enhancement if enabled (legacy)
       let imageToProcess = canvas;
       if (enhancementEnabled && videoEnhancementService.isEnhancementAvailable()) {
         setIsEnhancing(true);
         try {
-          console.log('Enhancing captured image...');
+          console.log('Enhancing captured image (legacy)...');
           const enhancedCanvas = await videoEnhancementService.enhanceVideoFrame(webcamRef.current);
           imageToProcess = enhancedCanvas;
         } catch (enhanceError) {
@@ -330,7 +330,10 @@ const AttendanceCapture = () => {
         }
       }
       
-      const imageDataUrl = imageToProcess.toDataURL('image/jpeg', 0.95);
+      let imageDataUrl = imageToProcess.toDataURL('image/jpeg', 0.95);
+      
+      // AI auto-enhance for low-quality images
+      imageDataUrl = await autoEnhance(imageDataUrl, imageToProcess);
       
       // Add to photos array (max 3 photos)
       setCapturedPhotos(prev => {
