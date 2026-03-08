@@ -264,8 +264,8 @@ const Index = () => {
                       <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     
-                    <h3 className="relative text-xs sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight">{feature.title}</h3>
-                    <p className="relative text-[10px] sm:text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.desc}</p>
+                    <h3 className="relative text-sm sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight">{feature.title}</h3>
+                    <p className="relative text-xs sm:text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.desc}</p>
                   </motion.div>
                 ))}
               </div>
