@@ -37,6 +37,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
   const attendanceMarkedRef = useRef<Set<string>>(new Set());
   // Store per-face labels for canvas overlay
   const faceLabelsRef = useRef<Map<string, { name: string; confidence: number; recognized: boolean }>>(new Map());
+  const { isEnhancing: isAIEnhancing, autoEnhance } = usePhotoEnhancer();
 
   // Clear stale live matches
   useEffect(() => {
