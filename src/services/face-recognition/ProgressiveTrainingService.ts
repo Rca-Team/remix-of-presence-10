@@ -26,8 +26,8 @@ export async function storeFaceSample(
   confidence: number
 ): Promise<boolean> {
   try {
-    // Only store samples with high confidence
-    if (confidence < MIN_CONFIDENCE_FOR_TRAINING) {
+    // Only store samples with high confidence (skip check if confidence is 1.0 = registration)
+    if (confidence < MIN_CONFIDENCE_FOR_TRAINING && confidence !== 1.0) {
       console.log(`Skipping training sample - confidence ${confidence} below threshold ${MIN_CONFIDENCE_FOR_TRAINING}`);
       return false;
     }
