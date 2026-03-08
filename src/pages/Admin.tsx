@@ -265,6 +265,8 @@ const Admin = () => {
         return <AdminNotificationSender availableFaces={availableFaces} />;
       case 'notif-log':
         return <NotificationLog />;
+      case 'inbox':
+        return <AdminInbox />;
       case 'settings':
         return (
           <div className="space-y-6">
