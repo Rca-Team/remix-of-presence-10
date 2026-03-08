@@ -111,7 +111,7 @@ const LiveAttendanceFeed: React.FC = () => {
             Live
           </Badge>
         </div>
-        <span className="text-xs text-muted-foreground">{records.length} today</span>
+        <span className="text-xs text-muted-foreground">{records.filter(r => r.status === 'present').length} present today</span>
       </div>
 
       <ScrollArea className="flex-1">
