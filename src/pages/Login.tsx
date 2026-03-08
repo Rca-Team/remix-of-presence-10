@@ -118,8 +118,8 @@ const Login = () => {
 
           {/* Header */}
           <div className="text-center lg:text-left space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-bold">Welcome back</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <h1 className="text-3xl sm:text-3xl font-bold">Welcome back</h1>
+            <p className="text-base sm:text-base text-muted-foreground">
               Sign in to your Smart School dashboard
             </p>
           </div>
@@ -134,7 +134,7 @@ const Login = () => {
                 </Label>
                 <Input id="email" type="email" placeholder="name@school.com" value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  className="h-12 text-base" required />
               </div>
 
               <div className="space-y-1.5">
@@ -149,17 +149,17 @@ const Login = () => {
                 </div>
                 <PasswordInput id="password" placeholder="••••••••" value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  className="h-12 text-base" required />
               </div>
 
               <div className="flex items-center space-x-2">
                 <Checkbox id="remember" />
-                <label htmlFor="remember" className="text-xs sm:text-sm text-muted-foreground cursor-pointer">
+                <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
                   Remember me
                 </label>
               </div>
 
-              <Button type="submit" variant="ios" className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold" disabled={isLoading}>
+              <Button type="submit" variant="ios" className="w-full h-12 text-base font-semibold" disabled={isLoading}>
                 {isLoading ? (
                   <><span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-r-transparent animate-spin" />Signing in...</>
                 ) : "Sign In"}
@@ -175,7 +175,7 @@ const Login = () => {
             </div>
 
             {/* Google */}
-            <Button type="button" variant="outline" className="w-full h-11 sm:h-12 text-sm" onClick={handleGoogleSignIn}>
+            <Button type="button" variant="outline" className="w-full h-12 text-base" onClick={handleGoogleSignIn}>
               <svg className="mr-2 h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>

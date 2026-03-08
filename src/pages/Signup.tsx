@@ -127,8 +127,8 @@ const Signup = () => {
           </div>
 
           <div className="text-center lg:text-left space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-bold">Create account</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <h1 className="text-3xl font-bold">Create account</h1>
+            <p className="text-base text-muted-foreground">
               Get started with Presence Smart School
             </p>
           </div>
@@ -141,7 +141,7 @@ const Signup = () => {
                   Full Name
                 </Label>
                 <Input id="name" name="name" type="text" placeholder="Your name" value={formData.name}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  onChange={handleInputChange} className="h-12 text-base" required />
               </div>
 
               <div className="space-y-1.5">
@@ -150,7 +150,7 @@ const Signup = () => {
                   Email
                 </Label>
                 <Input id="email" name="email" type="email" placeholder="name@school.com" value={formData.email}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  onChange={handleInputChange} className="h-12 text-base" required />
               </div>
 
               <div className="space-y-1.5">
@@ -159,8 +159,8 @@ const Signup = () => {
                   Password
                 </Label>
                 <PasswordInput id="password" name="password" placeholder="••••••••" value={formData.password}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
-                <p className="text-[10px] sm:text-xs text-muted-foreground">Minimum 6 characters</p>
+                  onChange={handleInputChange} className="h-12 text-base" required />
+                <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
               </div>
 
               <div className="space-y-1.5">
@@ -169,10 +169,10 @@ const Signup = () => {
                   Confirm Password
                 </Label>
                 <PasswordInput id="confirmPassword" name="confirmPassword" placeholder="••••••••" value={formData.confirmPassword}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  onChange={handleInputChange} className="h-12 text-base" required />
               </div>
 
-              <Button type="submit" variant="ios" className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold" disabled={isLoading}>
+              <Button type="submit" variant="ios" className="w-full h-12 text-base font-semibold" disabled={isLoading}>
                 {isLoading ? (
                   <><span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-r-transparent animate-spin" />Creating...</>
                 ) : "Create Account"}
@@ -186,7 +186,7 @@ const Signup = () => {
               </div>
             </div>
 
-            <Button type="button" variant="outline" className="w-full h-11 sm:h-12 text-sm" onClick={handleGoogleSignUp}>
+            <Button type="button" variant="outline" className="w-full h-12 text-base" onClick={handleGoogleSignUp}>
               <svg className="mr-2 h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
