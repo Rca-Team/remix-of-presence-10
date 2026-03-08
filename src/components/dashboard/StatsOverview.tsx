@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { GradientCard } from '@/components/ui/gradient-card';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -110,55 +111,133 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ isLoading, data, refetch 
     };
   }, [refetch, refetchStats]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.9 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 24
+      }
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-slide-in-up">
+    <motion.div 
+      className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {isLoading ? (
         <>
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-36 w-full rounded-3xl shimmer-loading" />
+          <Skeleton className="h-36 w-full rounded-3xl shimmer-loading" />
+          <Skeleton className="h-36 w-full rounded-3xl shimmer-loading" />
         </>
       ) : (
         <>
-          <GradientCard
-            title="Total Users"
-            value={attendanceStats?.totalUsers || 0}
-            icon={Users}
-            gradient="cyan"
-            trend={{ value: 12, positive: true }}
-          />
+          <motion.div variants={itemVariants}>
+            <GradientCard
+              title="Total Users"
+              value={attendanceStats?.totalUsers || 0}
+              icon={Users}
+              gradient="ios-blue"
+              trend={{ value: 12, positive: true }}
+              className="h-full"
+            />
+          </motion.div>
           
           {/* Present Today with ProgressRing */}
-          <div className="relative overflow-hidden rounded-xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl from-green-500/20 via-green-400/10 to-transparent border-green-500/30">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent opacity-50" />
-            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-30 bg-green-400" />
+          <motion.div 
+            variants={itemVariants}
+            whileHover={{ y: -8, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="relative overflow-hidden rounded-3xl border bg-card p-6 cursor-pointer"
+            style={{
+              borderColor: 'hsl(var(--ios-green) / 0.3)',
+              transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+          >
+            {/* Animated gradient background */}
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-br from-ios-green/20 via-ios-mint/10 to-transparent"
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            
+            {/* Floating orb */}
+            <motion.div 
+              className="absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl bg-ios-green/40"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3]
+              }}
+              transition={{ duration: 4, repeat: Infinity }}
+            />
+            
             <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Present Today</p>
-                <p className="mt-2 text-3xl font-bold tracking-tight">{attendanceStats?.presentToday || 0}</p>
-                <p className="text-xs text-muted-foreground mt-1">{attendanceStats?.presentPercentage || 0}% attendance</p>
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Present Today</p>
+                <motion.p 
+                  className="mt-3 text-4xl font-bold tracking-tight"
+                  key={attendanceStats?.presentToday}
+                  initial={{ scale: 1.2, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                >
+                  {attendanceStats?.presentToday || 0}
+                </motion.p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm font-semibold px-2.5 py-1 rounded-full bg-ios-green/15 text-ios-green">
+                    {attendanceStats?.presentPercentage || 0}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">attendance</span>
+                </div>
               </div>
-              <ProgressRing 
-                value={attendanceStats?.presentPercentage || 0} 
-                size="lg" 
-                color={attendanceStats?.presentPercentage! >= 80 ? 'success' : attendanceStats?.presentPercentage! >= 60 ? 'warning' : 'destructive'}
-                showValue={false}
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
               >
-                <UserCheck className="h-5 w-5 text-green-500" />
-              </ProgressRing>
+                <ProgressRing 
+                  value={attendanceStats?.presentPercentage || 0} 
+                  size="lg" 
+                  color={attendanceStats?.presentPercentage! >= 80 ? 'success' : attendanceStats?.presentPercentage! >= 60 ? 'warning' : 'destructive'}
+                  showValue={false}
+                >
+                  <UserCheck className="h-6 w-6 text-ios-green" />
+                </ProgressRing>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
           
-          <GradientCard
-            title="Average Weekly"
-            value={`${data?.weeklyAverage || 0}%`}
-            icon={TrendingUp}
-            gradient="purple"
-            trend={{ value: 5, positive: true }}
-          />
+          <motion.div variants={itemVariants}>
+            <GradientCard
+              title="Average Weekly"
+              value={`${data?.weeklyAverage || 0}%`}
+              icon={TrendingUp}
+              gradient="ios-purple"
+              trend={{ value: 5, positive: true }}
+              className="h-full"
+            />
+          </motion.div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 };
 

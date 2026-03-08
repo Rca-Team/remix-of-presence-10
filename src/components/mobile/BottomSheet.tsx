@@ -2,6 +2,7 @@ import React, { ReactNode, useEffect } from 'react';
 import { motion, AnimatePresence, useDragControls, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 }) => {
   const controls = useDragControls();
   const [currentSnap, setCurrentSnap] = React.useState(initialSnap);
+  const { trigger } = useHapticFeedback();
 
   // Prevent body scroll when sheet is open
   useEffect(() => {
@@ -46,10 +48,13 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     const offset = info.offset.y;
 
     if (velocity > 500 || offset > 200) {
+      trigger('light');
       onClose();
     } else if (velocity < -500 && currentSnap < snapPoints.length - 1) {
+      trigger('light');
       setCurrentSnap(currentSnap + 1);
     } else if (velocity > 200 && currentSnap > 0) {
+      trigger('light');
       setCurrentSnap(currentSnap - 1);
     }
   };
@@ -60,21 +65,30 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop with blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50"
           />
 
           {/* Sheet */}
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0, height: sheetHeight }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            initial={{ y: '100%', scale: 0.95 }}
+            animate={{ 
+              y: 0, 
+              scale: 1,
+              height: sheetHeight,
+              transition: { type: 'spring', stiffness: 300, damping: 30 }
+            }}
+            exit={{ 
+              y: '100%', 
+              scale: 0.95,
+              transition: { duration: 0.3 }
+            }}
             drag="y"
             dragControls={controls}
             dragConstraints={{ top: 0, bottom: 0 }}
@@ -82,42 +96,77 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             onDragEnd={handleDragEnd}
             className={cn(
               "fixed bottom-0 left-0 right-0 z-50",
-              "bg-background rounded-t-3xl shadow-2xl",
+              "bg-background/95 backdrop-blur-2xl rounded-t-[2rem]",
+              "border-t border-white/20 dark:border-white/10",
               "flex flex-col",
               "touch-pan-y",
               className
             )}
+            style={{
+              boxShadow: '0 -20px 60px rgba(0, 0, 0, 0.2), 0 -5px 20px rgba(0, 0, 0, 0.1)'
+            }}
           >
-            {/* Handle */}
+            {/* Handle with glow effect */}
             {showHandle && (
-              <div 
-                className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+              <motion.div 
+                className="flex justify-center pt-4 pb-2 cursor-grab active:cursor-grabbing"
                 onPointerDown={(e) => controls.start(e)}
+                whileTap={{ scale: 0.95 }}
               >
-                <div className="w-12 h-1.5 rounded-full bg-muted-foreground/20" />
-              </div>
+                <motion.div 
+                  className="w-14 h-1.5 rounded-full bg-muted-foreground/30"
+                  whileHover={{ 
+                    scaleX: 1.2,
+                    backgroundColor: 'hsl(var(--ios-blue) / 0.5)'
+                  }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                />
+              </motion.div>
             )}
 
             {/* Header */}
             {(title || subtitle) && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, type: 'spring' }}
+                className="flex items-center justify-between px-6 py-4 border-b border-border/50"
+              >
                 <div>
-                  {title && <h2 className="text-lg font-semibold">{title}</h2>}
-                  {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+                  {title && (
+                    <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
+                      {title}
+                    </h2>
+                  )}
+                  {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
                 </div>
-                <button
-                  onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                <motion.button
+                  onClick={() => {
+                    trigger('light');
+                    onClose();
+                  }}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                  className="w-10 h-10 rounded-full bg-muted/50 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors"
                 >
                   <X className="w-5 h-5" />
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4">
+            {/* Content with stagger animation */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 momentum-scroll"
+            >
               {children}
-            </div>
+            </motion.div>
+            
+            {/* Safe area padding */}
+            <div className="safe-area-bottom" />
           </motion.div>
         </>
       )}

@@ -1,16 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Home, BarChart2, UserPlus, Clock, User, Settings } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, BarChart2, UserPlus, Clock, User, Settings, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 const navItems = [
-  { path: '/', icon: Home, label: 'Home' },
-  { path: '/register', icon: UserPlus, label: 'Register' },
-  { path: '/attendance', icon: Clock, label: 'Attend' },
-  { path: '/profile', icon: User, label: 'Profile' }
+  { path: '/', icon: Home, label: 'Home', color: 'ios-blue' },
+  { path: '/register', icon: UserPlus, label: 'Register', color: 'ios-green' },
+  { path: '/attendance', icon: Clock, label: 'Attend', color: 'ios-purple' },
+  { path: '/profile', icon: User, label: 'Profile', color: 'ios-pink' }
 ];
 
 const MobileNavBar: React.FC = () => {
@@ -24,18 +24,22 @@ const MobileNavBar: React.FC = () => {
 
   return (
     <motion.nav
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.2 }}
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50",
-        "bg-background/95 backdrop-blur-xl",
-        "border-t border-border/50",
-        "safe-area-bottom",
+        "bg-background/80 backdrop-blur-2xl",
+        "border-t border-white/20 dark:border-white/10",
+        "safe-area-bottom shadow-2xl",
         "md:hidden"
       )}
+      style={{
+        boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.1), 0 -2px 10px rgba(0, 0, 0, 0.05)'
+      }}
     >
-      <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
+      <div className="flex items-center justify-around px-3 py-2">
+        {navItems.map((item, index) => {
           const active = isActive(item.path);
           
           return (
@@ -45,29 +49,76 @@ const MobileNavBar: React.FC = () => {
               onClick={() => trigger('light')}
               className={cn(
                 "relative flex flex-col items-center justify-center",
-                "min-w-[64px] min-h-[56px] rounded-xl",
-                "transition-all duration-200",
-                active 
-                  ? "text-primary" 
-                  : "text-muted-foreground hover:text-foreground"
+                "min-w-[70px] min-h-[60px] rounded-2xl",
+                "transition-colors duration-300"
               )}
             >
-              {active && (
-                <motion.div
-                  layoutId="navIndicator"
-                  className="absolute inset-0 bg-primary/10 rounded-xl"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
+              <AnimatePresence mode="wait">
+                {active && (
+                  <motion.div
+                    layoutId="navIndicator"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    className={cn(
+                      "absolute inset-1 rounded-2xl",
+                      `bg-${item.color}/15`
+                    )}
+                    style={{
+                      background: `linear-gradient(145deg, hsl(var(--${item.color}) / 0.2), hsl(var(--${item.color}) / 0.05))`,
+                      boxShadow: `0 4px 15px hsl(var(--${item.color}) / 0.2)`
+                    }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+              </AnimatePresence>
+              
               <motion.div
-                whileTap={{ scale: 0.85 }}
+                initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, type: 'spring', stiffness: 400 }}
+                whileTap={{ scale: 0.75 }}
                 className="relative z-10 flex flex-col items-center gap-1"
               >
-                <item.icon className={cn(
-                  "w-5 h-5 transition-transform",
-                  active && "scale-110"
-                )} />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <motion.div
+                  animate={active ? { 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, -5, 5, 0]
+                  } : {}}
+                  transition={{ duration: 0.4 }}
+                >
+                  <item.icon 
+                    className={cn(
+                      "w-6 h-6 transition-all duration-300",
+                      active 
+                        ? `text-${item.color}` 
+                        : "text-muted-foreground"
+                    )}
+                    style={active ? { color: `hsl(var(--${item.color}))` } : {}}
+                  />
+                </motion.div>
+                <motion.span 
+                  className={cn(
+                    "text-[11px] font-semibold transition-colors duration-300",
+                    active ? `text-${item.color}` : "text-muted-foreground"
+                  )}
+                  style={active ? { color: `hsl(var(--${item.color}))` } : {}}
+                >
+                  {item.label}
+                </motion.span>
+                
+                {/* Active dot indicator */}
+                <AnimatePresence>
+                  {active && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute -bottom-1 w-1.5 h-1.5 rounded-full"
+                      style={{ background: `hsl(var(--${item.color}))` }}
+                    />
+                  )}
+                </AnimatePresence>
               </motion.div>
             </Link>
           );
