@@ -112,7 +112,7 @@ const MobileSidebar = () => {
   if (!isMobile) return null;
 
   const isActive = (path: string) => location.pathname === path;
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => { haptic.onSelection(); setTheme(theme === 'dark' ? 'light' : 'dark'); };
   const displayName =
     profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
