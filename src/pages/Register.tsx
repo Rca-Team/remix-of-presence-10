@@ -153,7 +153,7 @@ const Register = () => {
                   <span className="text-cyan-200">Smart Attendance</span>
                 </h1>
                 <p className="mt-4 text-lg text-white/80 max-w-md">
-                  Register with a guided 4-angle face scan for maximum recognition accuracy.
+                  Register with a guided 3D face scan for maximum recognition accuracy.
                 </p>
               </div>
               <div className="space-y-4">
