@@ -249,7 +249,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
     setScanResult(null);
     setRecognizedFaces([]);
 
-    // Overall scan timeout - 15 seconds max
+    // Overall scan timeout - 25 seconds max (first scan may need model loading)
     const scanTimeout = setTimeout(() => {
       console.warn('Scan timeout - forcing completion');
       setIsScanning(false);
@@ -260,7 +260,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
         description: "The scan took too long. Please try again.",
         variant: "destructive"
       });
-    }, 15000);
+    }, 25000);
 
     try {
       const video = webcamRef.current.video;
