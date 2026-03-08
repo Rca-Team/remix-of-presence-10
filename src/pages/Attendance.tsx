@@ -282,13 +282,6 @@ const Attendance = () => {
                     
                     <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
                       {/* Presence Tracker */}
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15 }}
-                      >
-                        <PresenceTracker showDetailed={false} />
-                      </motion.div>
 
                       <motion.div
                         initial={{ opacity: 0, x: 20 }}
