@@ -219,37 +219,37 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
   }
 
   return (
-    <div className="relative h-full w-full bg-black">
+    <div className="relative h-full w-full bg-black touch-manipulation">
       <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-foreground font-medium">Loading face detection models...</p>
-            <p className="text-sm text-muted-foreground mt-1">This may take a few seconds</p>
+          <div className="text-center px-4">
+            <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-primary mx-auto mb-3 sm:mb-4" />
+            <p className="text-foreground font-medium text-sm sm:text-base">Loading face detection models...</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">This may take a few seconds</p>
           </div>
         </div>
       )}
 
-      {/* Status bar */}
+      {/* Status bar - mobile friendly */}
       {!isLoading && (
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 bg-card/80 backdrop-blur rounded-full px-3 py-1.5">
+        <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-card/80 backdrop-blur rounded-full px-2 sm:px-3 py-1 sm:py-1.5">
             <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs font-medium text-foreground">Live Scanning</span>
+            <span className="text-[10px] sm:text-xs font-medium text-foreground">Live</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {facesInFrame > 0 && (
-              <div className="bg-primary/80 backdrop-blur rounded-full px-3 py-1.5 flex items-center gap-1.5">
+              <div className="bg-primary/80 backdrop-blur rounded-full px-2 sm:px-3 py-1 sm:py-1.5 flex items-center gap-1">
                 <Scan className="h-3 w-3 text-primary-foreground" />
-                <span className="text-xs font-bold text-primary-foreground">{facesInFrame} face{facesInFrame > 1 ? 's' : ''}</span>
+                <span className="text-[10px] sm:text-xs font-bold text-primary-foreground">{facesInFrame}</span>
               </div>
             )}
-            <div className="bg-card/80 backdrop-blur rounded-full px-3 py-1.5 flex items-center gap-1.5">
+            <div className="bg-card/80 backdrop-blur rounded-full px-2 sm:px-3 py-1 sm:py-1.5 flex items-center gap-1">
               <Zap className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs font-medium text-foreground">{fps} FPS</span>
+              <span className="text-[10px] sm:text-xs font-medium text-foreground">{fps} FPS</span>
             </div>
           </div>
         </div>

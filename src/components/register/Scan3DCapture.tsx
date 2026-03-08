@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { getFaceDescriptorFromImage, detectFaceInVideo } from '@/services/face-recognition/OptimizedRegistrationService';
 
 interface Scan3DCaptureProps {
-  onComplete: (averagedDescriptor: Float32Array, primaryImage: string) => void;
+  onComplete: (averagedDescriptor: Float32Array, primaryImage: string, allDescriptors: Float32Array[]) => void;
   isModelLoading: boolean;
 }
 
@@ -453,7 +453,7 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     soundRef.current.playComplete();
     setScanComplete(true);
     setStatusText(`3D scan complete! ${descriptors.length} samples captured.`);
-    onComplete(averaged, primaryImage!);
+    onComplete(averaged, primaryImage!, descriptors);
   }, [onComplete, primaryImage]);
 
   const resetScan = () => {
@@ -472,8 +472,8 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
   }, []);
 
   return (
-    <div className="space-y-4">
-      <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3]">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="relative rounded-xl overflow-hidden bg-black aspect-[3/4] sm:aspect-[4/3]">
         <video
           ref={videoRef}
           muted
@@ -488,20 +488,20 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
         />
 
         {/* Status text */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 sm:p-4 pt-10 sm:pt-12">
           <AnimatePresence mode="wait">
             <motion.p
               key={statusText}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="text-center text-white font-medium text-sm"
+              className="text-center text-white font-medium text-xs sm:text-sm"
             >
               {statusText}
             </motion.p>
           </AnimatePresence>
           {scanning && (
-            <div className="mt-2 flex items-center justify-center gap-3">
+            <div className="mt-2 flex items-center justify-center gap-2 sm:gap-3">
               <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
@@ -511,8 +511,8 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
                   }}
                 />
               </div>
-              <span className="text-xs text-white/70 tabular-nums w-16 text-right">
-                {samplesCollected} samples
+              <span className="text-xs text-white/70 tabular-nums w-14 sm:w-16 text-right">
+                {samplesCollected} pts
               </span>
             </div>
           )}
@@ -520,13 +520,13 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
 
         {/* Face detected indicator */}
         {!scanning && !scanComplete && cameraReady && (
-          <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+          <div className={`absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
             faceDetected
               ? 'bg-green-500/20 text-green-300 border border-green-500/30'
               : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
           }`}>
             <span className={`h-1.5 w-1.5 rounded-full ${faceDetected ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`} />
-            {faceDetected ? 'Face detected' : 'No face detected'}
+            {faceDetected ? 'Face detected' : 'No face'}
           </div>
         )}
 
@@ -556,38 +556,38 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
                 <img
                   src={primaryImage}
                   alt="Scanned"
-                  className="w-28 h-28 rounded-full object-cover border-2 shadow-lg"
+                  className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 shadow-lg"
                   style={{ transform: 'scaleX(-1)', borderColor: 'hsl(142, 70%, 50%)', boxShadow: '0 0 20px hsla(142, 70%, 50%, 0.3)' }}
                 />
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
+                  className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center"
                   style={{ background: 'hsl(142, 70%, 45%)' }}
                 >
-                  <CheckCircle2 className="w-5 h-5 text-white" />
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </motion.div>
               </div>
-              <p className="font-bold text-lg" style={{ color: 'hsl(142, 70%, 55%)' }}>3D Scan Complete</p>
+              <p className="font-bold text-base sm:text-lg" style={{ color: 'hsl(142, 70%, 55%)' }}>3D Scan Complete</p>
               <p className="text-white/60 text-xs">{samplesCollected} depth samples averaged</p>
             </motion.div>
           </motion.div>
         )}
       </div>
 
-      {/* Action button */}
+      {/* Action button - larger touch target on mobile */}
       {!scanComplete ? (
         <Button
           onClick={startScan}
           disabled={!cameraReady || isModelLoading || scanning || !faceDetected}
-          className="w-full h-12 text-base shadow-lg"
+          className="w-full h-14 sm:h-12 text-base shadow-lg active:scale-[0.98] transition-transform touch-manipulation"
           style={{ background: 'linear-gradient(135deg, hsl(185, 80%, 40%), hsl(220, 70%, 50%))' }}
         >
           {scanning ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Scanning 3D Face Map... {Math.round(progress)}%
+              Scanning... {Math.round(progress)}%
             </>
           ) : (
             <>
@@ -600,7 +600,7 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
         <Button
           onClick={resetScan}
           variant="outline"
-          className="w-full h-11"
+          className="w-full h-14 sm:h-11 active:scale-[0.98] transition-transform touch-manipulation"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Rescan

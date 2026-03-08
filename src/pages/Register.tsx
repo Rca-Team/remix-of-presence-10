@@ -7,6 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { registerFace } from '@/services/FaceRecognitionService';
+import { storeFaceSample } from '@/services/face-recognition/ProgressiveTrainingService';
 import { loadRegistrationModels } from '@/services/face-recognition/OptimizedRegistrationService';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,6 +42,7 @@ const Register = () => {
   });
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [faceDescriptor, setFaceDescriptor] = useState<Float32Array | null>(null);
+  const [allDescriptors, setAllDescriptors] = useState<Float32Array[]>([]);
   const [registrationStep, setRegistrationStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
@@ -70,11 +72,12 @@ const Register = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleMultiAngleComplete = (averaged: Float32Array, primaryImage: string) => {
+  const handleMultiAngleComplete = (averaged: Float32Array, primaryImage: string, rawDescriptors: Float32Array[]) => {
     setFaceDescriptor(averaged);
     setFaceImage(primaryImage);
+    setAllDescriptors(rawDescriptors);
     setFaceCaptured(true);
-    toast({ title: "3D Scan Complete! 🎉", description: "3D face map captured for maximum accuracy." });
+    toast({ title: "3D Scan Complete! 🎉", description: `${rawDescriptors.length} angle samples captured for maximum accuracy.` });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,10 +103,20 @@ const Register = () => {
         formData.department // category = class-section
       );
       if (registrationData) {
-        toast({ title: "Registration Successful! 🎉", description: "Face registered with 3D scan accuracy." });
+        // Store ALL 3D scan samples in face_descriptors for multi-angle matching
+        if (allDescriptors.length > 0) {
+          console.log(`Storing ${allDescriptors.length} 3D scan samples for user ${userId}`);
+          for (const descriptor of allDescriptors) {
+            await storeFaceSample(userId, descriptor, null, formData.name, 1.0);
+          }
+          console.log('All 3D scan samples stored successfully');
+        }
+        
+        toast({ title: "Registration Successful! 🎉", description: `Face registered with ${allDescriptors.length} 3D scan samples.` });
         setFormData({ name: '', email: '', phone: '', parentName: '', parentEmail: '', parentPhone: '', employeeId: '', department: '', position: '', rollNumber: '', bloodGroup: '', medicalInfo: '', transportMode: '' });
         setFaceImage(null);
         setFaceDescriptor(null);
+        setAllDescriptors([]);
         setFaceCaptured(false);
         setRegistrationStep(1);
       } else throw new Error("Registration failed");
