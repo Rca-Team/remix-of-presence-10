@@ -171,7 +171,7 @@ const Index = () => {
                   {/* Mascot on mobile - compact */}
                   <div className="lg:hidden flex justify-center">
                     <motion.img
-                      src={brandMascot}
+                      src={mascotWelcome}
                       alt="Presence mascot"
                       className="w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-2xl"
                       animate={{ y: [0, -8, 0] }}
