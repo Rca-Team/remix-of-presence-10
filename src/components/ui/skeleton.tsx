@@ -1,10 +1,15 @@
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
+import { motion, HTMLMotionProps } from "framer-motion"
+import * as React from "react"
+
+interface SkeletonProps extends Omit<HTMLMotionProps<"div">, "children"> {
+  className?: string;
+}
 
 function Skeleton({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: SkeletonProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -37,8 +42,9 @@ function Skeleton({
 // Enhanced skeleton variants for different use cases
 function SkeletonCard({
   className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: {
+  className?: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -48,7 +54,6 @@ function SkeletonCard({
         "relative overflow-hidden rounded-3xl bg-card/50 backdrop-blur-sm border border-border/30 p-6",
         className
       )}
-      {...props}
     >
       <div className="space-y-4">
         <Skeleton className="h-4 w-1/3 rounded-lg" />
@@ -73,8 +78,10 @@ function SkeletonCard({
 function SkeletonAvatar({
   className,
   size = "md",
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & { size?: "sm" | "md" | "lg" }) {
+}: {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}) {
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",
@@ -91,7 +98,6 @@ function SkeletonAvatar({
         sizeClasses[size],
         className
       )}
-      {...props}
     >
       <motion.div
         className="absolute inset-0"
@@ -108,15 +114,16 @@ function SkeletonAvatar({
 function SkeletonText({
   className,
   lines = 3,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & { lines?: number }) {
+}: {
+  className?: string;
+  lines?: number;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       className={cn("space-y-2", className)}
-      {...props}
     >
       {Array.from({ length: lines }).map((_, i) => (
         <motion.div
@@ -139,12 +146,12 @@ function SkeletonText({
 
 function SkeletonButton({
   className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: {
+  className?: string;
+}) {
   return (
     <Skeleton 
       className={cn("h-11 w-24 rounded-xl", className)} 
-      {...props} 
     />
   )
 }
