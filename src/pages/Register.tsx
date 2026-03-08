@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import PageTransition from '@/components/PageTransition';
-import MultiAngleCapture from '@/components/register/MultiAngleCapture';
+import Scan3DCapture from '@/components/register/Scan3DCapture';
 import { 
   User, Mail, Phone, Building2, GraduationCap, Camera, CheckCircle2,
   ArrowRight, ArrowLeft, Sparkles, Shield, Users, Scan, Heart, Bus
