@@ -96,15 +96,16 @@ const MobileSidebar = () => {
   
   const navigation = useMemo(() => {
     const items = [
-      { name: 'Home', path: '/', icon: Home },
-      { name: 'Profile', path: '/profile', icon: User, requiresAuth: true },
-      { name: 'Register', path: '/register', icon: UserPlus },
-      { name: 'Attendance', path: '/attendance', icon: Clock, requiresAuth: true },
+      { name: 'Home', path: '/', icon: Home, show: true },
+      { name: 'Parent Portal', path: '/parent', icon: GraduationCap, show: !user },
+      { name: 'Profile', path: '/profile', icon: User, show: !!user },
+      { name: 'Register', path: '/register', icon: UserPlus, show: !!user },
+      { name: 'Attendance', path: '/attendance', icon: Clock, show: !!user },
       { name: 'Gate Mode', path: '/gate', icon: Scan, show: isAdminOrPrincipal || isTeacher },
       { name: isTeacher && !isAdminOrPrincipal ? 'Teacher' : 'Admin', path: '/admin', icon: isTeacher && !isAdminOrPrincipal ? GraduationCap : ShieldCheck, show: isAdminOrPrincipal || isTeacher },
     ];
     return items.filter(item => item.show !== false);
-  }, [isAdminOrPrincipal, isTeacher]);
+  }, [isAdminOrPrincipal, isTeacher, user]);
   
   if (!isMobile) return null;
   

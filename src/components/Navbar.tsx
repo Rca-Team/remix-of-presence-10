@@ -66,9 +66,10 @@ const Navbar = () => {
         <nav className="hidden md:flex items-center space-x-1 animate-fade-in">
           {[
             { text: 'Home', path: '/', show: true },
-            { text: 'Profile', path: '/profile', show: true },
-            { text: 'Register', path: '/register', show: true },
-            { text: 'Attendance', path: '/attendance', show: true },
+            { text: 'Parent Portal', path: '/parent', show: !isAuthenticated },
+            { text: 'Profile', path: '/profile', show: isAuthenticated },
+            { text: 'Register', path: '/register', show: isAuthenticated },
+            { text: 'Attendance', path: '/attendance', show: isAuthenticated },
             { text: 'Gate Mode', path: '/gate', show: isAdminOrPrincipal || isTeacher },
             { text: 'Admin', path: '/admin', show: isAdminOrPrincipal || isTeacher },
           ].filter(item => item.show).map((item) => (
