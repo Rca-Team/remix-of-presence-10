@@ -212,33 +212,37 @@ const GateMode = () => {
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-card/80 backdrop-blur border-b border-border">
-        <div className="flex items-center gap-3">
-          <DoorOpen className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg text-foreground">{gateName}</span>
-          <Badge variant="outline" className="text-xs">
-            {isOnline ? <Wifi className="h-3 w-3 mr-1 text-green-500" /> : <WifiOff className="h-3 w-3 mr-1 text-destructive" />}
-            {isOnline ? 'Online' : 'Offline'}
+      {/* Top bar - compact on mobile */}
+      <div className="flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-2 bg-card/80 backdrop-blur border-b border-border safe-area-top">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          <DoorOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+          <span className="font-bold text-sm sm:text-lg text-foreground truncate">{gateName}</span>
+          <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0 px-1.5 sm:px-2">
+            {isOnline ? <Wifi className="h-3 w-3 mr-0.5 text-green-500" /> : <WifiOff className="h-3 w-3 mr-0.5 text-destructive" />}
+            <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setSoundEnabled(!soundEnabled)}>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSoundEnabled(!soundEnabled)}>
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
-            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-          </Button>
-          <Button variant="destructive" size="sm" onClick={endSession}>
-            <X className="h-4 w-4 mr-1" /> End Session
+          {!isMobile && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+            </Button>
+          )}
+          <Button variant="destructive" size="sm" className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3" onClick={endSession}>
+            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
+            <span className="hidden sm:inline">End Session</span>
+            <span className="sm:hidden">End</span>
           </Button>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex relative">
-        {/* Camera feed - takes 70% */}
-        <div className="flex-[7] relative">
+      {/* Main content - vertical on mobile, horizontal on desktop */}
+      <div className={`flex-1 flex relative ${isMobile ? 'flex-col' : 'flex-row'}`}>
+        {/* Camera feed */}
+        <div className={isMobile ? 'flex-1 relative' : 'flex-[7] relative'}>
           <GateModeScanner onFaceDetected={handleFaceDetected} isActive={!isSetup} />
           
           {/* Entry feedback overlay */}
@@ -250,18 +254,77 @@ const GateMode = () => {
               />
             )}
           </AnimatePresence>
+
+          {/* Mobile: floating mini stats */}
+          {isMobile && !mobileStatsOpen && (
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="bg-card/90 backdrop-blur rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-lg">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  <span className="text-xs font-bold text-foreground">{uniqueStudents}</span>
+                </div>
+                {unknownCount > 0 && (
+                  <div className="bg-destructive/90 backdrop-blur rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-lg">
+                    <AlertTriangle className="h-3.5 w-3.5 text-destructive-foreground" />
+                    <span className="text-xs font-bold text-destructive-foreground">{unknownCount}</span>
+                  </div>
+                )}
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-8 rounded-full shadow-lg text-xs"
+                onClick={() => setMobileStatsOpen(true)}
+              >
+                <ChevronUp className="h-3.5 w-3.5 mr-1" />
+                Details
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Stats sidebar - takes 30% */}
-        <div className="flex-[3] border-l border-border">
-          <GateStatsOverlay
-            totalEntries={recognizedCount}
-            totalStudents={totalStudents}
-            uniqueStudents={uniqueStudents}
-            unknownCount={unknownCount}
-            recentEntries={entries.slice(0, 20)}
-          />
-        </div>
+        {/* Stats sidebar - desktop only */}
+        {!isMobile && (
+          <div className="flex-[3] border-l border-border">
+            <GateStatsOverlay
+              totalEntries={recognizedCount}
+              totalStudents={totalStudents}
+              uniqueStudents={uniqueStudents}
+              unknownCount={unknownCount}
+              recentEntries={entries.slice(0, 20)}
+            />
+          </div>
+        )}
+
+        {/* Mobile stats bottom sheet */}
+        <AnimatePresence>
+          {isMobile && mobileStatsOpen && (
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'tween', duration: 0.3 }}
+              className="absolute bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl rounded-t-2xl border-t border-border shadow-2xl z-20"
+              style={{ maxHeight: '60vh' }}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <h3 className="font-semibold text-foreground text-sm">Gate Stats</h3>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMobileStatsOpen(false)}>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(60vh - 48px)' }}>
+                <GateStatsOverlay
+                  totalEntries={recognizedCount}
+                  totalStudents={totalStudents}
+                  uniqueStudents={uniqueStudents}
+                  unknownCount={unknownCount}
+                  recentEntries={entries.slice(0, 20)}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Stranger Alert */}
