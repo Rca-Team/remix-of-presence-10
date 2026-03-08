@@ -138,6 +138,7 @@ const SplashAnimation: React.FC<SplashAnimationProps> = ({
                   <div className="relative">
                     {/* Face scan frame SVG */}
                     <svg viewBox="0 0 64 64" className="w-16 h-16 md:w-20 md:h-20" fill="none">
+                      {/* Scan frame corners */}
                       <motion.path d="M16 8h-8v8" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round"
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.2 }}/>
                       <motion.path d="M48 8h8v8" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round"
@@ -146,14 +147,12 @@ const SplashAnimation: React.FC<SplashAnimationProps> = ({
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.6 }}/>
                       <motion.path d="M48 56h8v-8" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round"
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.8 }}/>
-                      {/* Eye */}
-                      <motion.circle cx="32" cy="28" r="7" stroke="#22d3ee" strokeWidth="1.5"
+                      {/* Human head */}
+                      <motion.circle cx="32" cy="24" r="8" stroke="#22d3ee" strokeWidth="1.5"
                         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, delay: 1 }}/>
-                      <motion.circle cx="32" cy="28" r="2.5" fill="#22d3ee"
-                        initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.5, type: "spring" }}/>
-                      {/* Scan line */}
-                      <motion.line x1="22" y1="44" x2="42" y2="44" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round"
-                        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.8, delay: 1.2 }}/>
+                      {/* Body/shoulders */}
+                      <motion.path d="M16 52c0-8.8 7.2-16 16-16s16 8.8 16 16" stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round"
+                        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 1.3 }}/>
                     </svg>
 
                     {/* Scanning beam */}
