@@ -132,7 +132,7 @@ const Index = () => {
 
                 <motion.h1 variants={itemVariants} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
                   <span className="block">Attendance</span>
-                  <span className="block bg-gradient-to-r from-primary via-primary/80 to-accent bg-clip-text text-transparent">
+                  <span className="block text-gradient-aurora">
                     Reimagined
                   </span>
                 </motion.h1>
