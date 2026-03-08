@@ -335,6 +335,87 @@ const ClassTeacherManager: React.FC<Props> = ({ category, onBack }) => {
     }
   };
 
+  // --- Print Daily Substitution Report (all classes) ---
+  const printDailySubstitutionReport = async () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const dayName = format(new Date(), 'EEEE, MMMM d, yyyy');
+
+    const { data: allSubs } = await supabase
+      .from('substitutions')
+      .select('*')
+      .eq('date', today)
+      .order('category')
+      .order('period_number');
+
+    const { data: timings } = await supabase
+      .from('period_timings')
+      .select('*')
+      .order('period_number');
+
+    const timingsMap = new Map((timings || []).map((t: any) => [t.period_number, t]));
+
+    const grouped: Record<string, any[]> = {};
+    (allSubs || []).forEach((s: any) => {
+      if (!grouped[s.category]) grouped[s.category] = [];
+      grouped[s.category].push(s);
+    });
+
+    const totalAbsent = new Set((allSubs || []).map((s: any) => s.absent_teacher_id)).size;
+    const totalSubs = (allSubs || []).length;
+
+    const rows = Object.entries(grouped).map(([cat, subs]) =>
+      subs.map((s: any, i: number) => {
+        const pt = timingsMap.get(s.period_number);
+        const time = pt ? `${(pt as any).start_time}\u2013${(pt as any).end_time}` : '';
+        return `<tr>
+          ${i === 0 ? `<td rowspan="${subs.length}" style="border:1px solid #d1d5db;padding:8px 12px;font-weight:600;vertical-align:top;background:#f9fafb;">${getCategoryLabel(cat)}</td>` : ''}
+          <td style="border:1px solid #d1d5db;padding:8px 12px;text-align:center;">Period ${s.period_number}${time ? `<br/><span style="font-size:11px;color:#6b7280;">${time}</span>` : ''}</td>
+          <td style="border:1px solid #d1d5db;padding:8px 12px;color:#dc2626;">${s.absent_teacher_name}</td>
+          <td style="border:1px solid #d1d5db;padding:8px 12px;color:#16a34a;font-weight:600;">${s.substitute_teacher_name}</td>
+          <td style="border:1px solid #d1d5db;padding:8px 12px;text-align:center;">
+            <span style="background:${s.auto_assigned ? '#dbeafe' : '#fef3c7'};color:${s.auto_assigned ? '#1d4ed8' : '#92400e'};padding:2px 8px;border-radius:12px;font-size:11px;">${s.auto_assigned ? 'Auto' : 'Manual'}</span>
+          </td>
+        </tr>`;
+      }).join('')
+    ).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Daily Substitution Report</title>
+    <style>
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { margin: 15mm; } }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; max-width: 900px; margin: 0 auto; padding: 20px; }
+      .header { text-align: center; border-bottom: 3px solid #1d4ed8; padding-bottom: 16px; margin-bottom: 24px; }
+      .header h1 { font-size: 22px; margin: 0 0 4px; color: #1d4ed8; }
+      .header p { margin: 2px 0; color: #6b7280; font-size: 13px; }
+      .stats { display: flex; gap: 16px; margin-bottom: 20px; }
+      .stat-box { flex: 1; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; text-align: center; }
+      .stat-box .num { font-size: 28px; font-weight: 700; color: #1d4ed8; }
+      .stat-box .lbl { font-size: 11px; color: #6b7280; text-transform: uppercase; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+      th { background: #1d4ed8; color: white; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .footer { text-align: center; margin-top: 30px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; }
+    </style></head><body>
+      <div class="header">
+        <h1>Daily Substitution Report</h1>
+        <p><strong>${dayName}</strong></p>
+        <p>Generated at ${format(new Date(), 'hh:mm a')}</p>
+      </div>
+      <div class="stats">
+        <div class="stat-box"><div class="num">${totalAbsent}</div><div class="lbl">Absent Teachers</div></div>
+        <div class="stat-box"><div class="num">${totalSubs}</div><div class="lbl">Substitutions</div></div>
+        <div class="stat-box"><div class="num">${Object.keys(grouped).length}</div><div class="lbl">Classes Affected</div></div>
+      </div>
+      ${totalSubs === 0 ? '<div style="text-align:center;padding:40px;color:#6b7280;">All teachers are present today. No substitutions needed.</div>' : `
+      <table>
+        <thead><tr><th>Class</th><th style="text-align:center;">Period</th><th>Absent Teacher</th><th>Substitute</th><th style="text-align:center;">Type</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`}
+      <div class="footer">School Attendance System &bull; Substitution Report &bull; ${dayName}</div>
+    </body></html>`;
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
+  };
+
   const classTeacher = classTeachers.find(ct => ct.role === 'class_teacher');
   const subjectTeacherList = classTeachers.filter(ct => ct.role === 'subject_teacher');
 
