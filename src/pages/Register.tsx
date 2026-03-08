@@ -189,7 +189,7 @@ const Register = () => {
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Face Registration</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold">Create your profile</h2>
-                <p className="mt-2 text-muted-foreground">Register with a guided 4-angle face scan</p>
+                <p className="mt-2 text-muted-foreground">Register with a guided 3D face scan</p>
               </motion.div>
 
               {/* Progress Steps */}
