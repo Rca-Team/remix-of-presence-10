@@ -38,42 +38,42 @@ const Index = () => {
       icon: Scan,
       title: "AI Face Recognition",
       description: "Advanced neural networks detect and verify faces in milliseconds",
-      gradient: "from-cyan to-primary",
-      glow: "glow-cyan"
+      gradient: "from-ios-blue to-ios-purple",
+      glow: "glow-ios-blue"
     },
     {
       icon: Clock,
       title: "Real-time Tracking",
       description: "Instant attendance updates with live dashboard monitoring",
-      gradient: "from-emerald to-teal",
-      glow: "glow-emerald"
+      gradient: "from-ios-green to-ios-mint",
+      glow: "glow-ios-green"
     },
     {
       icon: BarChart3,
       title: "Smart Analytics",
       description: "Deep insights with AI-powered attendance pattern analysis",
-      gradient: "from-violet to-indigo",
-      glow: "glow-violet"
+      gradient: "from-ios-purple to-violet",
+      glow: "glow-ios-purple"
     },
     {
       icon: Bell,
       title: "Auto Notifications",
       description: "Instant alerts to parents when students check in or out",
-      gradient: "from-amber to-rose",
-      glow: "glow-amber"
+      gradient: "from-ios-orange to-ios-yellow",
+      glow: "glow-ios-orange"
     },
     {
       icon: Shield,
       title: "Enterprise Security",
       description: "Bank-grade encryption protects all biometric data",
-      gradient: "from-indigo to-violet",
+      gradient: "from-indigo to-ios-purple",
       glow: "glow-violet"
     },
     {
       icon: Smartphone,
       title: "Mobile First",
       description: "Works seamlessly on any device, anywhere, anytime",
-      gradient: "from-teal to-cyan",
+      gradient: "from-ios-mint to-ios-blue",
       glow: "glow-cyan"
     }
   ];
@@ -88,27 +88,32 @@ const Index = () => {
   return (
     <PageTransition>
       <PageLayout className="overflow-hidden has-bottom-nav md:pb-0">
-        {/* Animated Background Elements */}
+        {/* Animated Background Elements - iOS-inspired vibrant orbs */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
+            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.35, 0.2] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 left-1/4 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-cyan/20 rounded-full blur-3xl" 
+            className="absolute top-0 left-1/4 w-48 sm:w-64 md:w-[500px] h-48 sm:h-64 md:h-[500px] bg-ios-blue/30 rounded-full blur-[80px]" 
           />
           <motion.div 
-            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.12, 0.2] }}
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.25, 0.15, 0.25] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 md:w-80 h-40 sm:h-60 md:h-80 bg-violet/20 rounded-full blur-3xl" 
+            className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 md:w-[400px] h-40 sm:h-60 md:h-[400px] bg-ios-purple/30 rounded-full blur-[80px]" 
           />
           <motion.div 
-            animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
+            animate={{ scale: [1, 1.4, 1], opacity: [0.15, 0.25, 0.15] }}
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-            className="absolute top-1/2 left-0 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-rose/15 rounded-full blur-3xl" 
+            className="absolute top-1/2 left-0 w-32 sm:w-48 md:w-[350px] h-32 sm:h-48 md:h-[350px] bg-ios-pink/25 rounded-full blur-[80px]" 
           />
           <motion.div 
-            animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.18, 0.1] }}
+            animate={{ scale: [1.1, 1, 1.1], opacity: [0.15, 0.25, 0.15] }}
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-            className="absolute top-1/4 right-0 w-40 sm:w-56 md:w-72 h-40 sm:h-56 md:h-72 bg-emerald/15 rounded-full blur-3xl" 
+            className="absolute top-1/4 right-0 w-40 sm:w-56 md:w-[380px] h-40 sm:h-56 md:h-[380px] bg-ios-green/25 rounded-full blur-[80px]" 
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+            className="absolute bottom-0 left-1/2 w-64 md:w-[450px] h-64 md:h-[450px] bg-ios-orange/20 rounded-full blur-[100px]" 
           />
         </div>
 
@@ -124,15 +129,15 @@ const Index = () => {
               {/* Left Content - Mobile optimized */}
               <div className="space-y-4 sm:space-y-6 md:space-y-8 text-center lg:text-left">
                 <motion.div variants={itemVariants} className="flex justify-center lg:justify-start">
-                  <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 text-xs sm:text-sm font-medium text-primary">
-                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-ios-blue/15 to-ios-purple/15 border border-ios-blue/30 text-xs sm:text-sm font-semibold text-ios-blue backdrop-blur-xl shadow-lg shadow-ios-blue/10">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse-subtle" />
                     AI-Powered Attendance
                   </span>
                 </motion.div>
 
                 <motion.h1 variants={itemVariants} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
                   <span className="block">Attendance</span>
-                  <span className="block text-gradient-aurora">
+                  <span className="block text-gradient-ios bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                     Reimagined
                   </span>
                 </motion.h1>
@@ -143,19 +148,19 @@ const Index = () => {
 
                 <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start px-4 sm:px-0">
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button size="lg" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 touch-target">
+                    <Button variant="ios" size="lg" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base touch-target">
                       Register Now   
                       <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                   <Link to="/parent-portal" className="w-full sm:w-auto">
-                    <Button size="lg" variant="outline" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 border-accent/30 bg-accent/5 hover:bg-accent/10 text-accent-foreground shadow-md hover:shadow-lg transition-all duration-300 touch-target">
+                    <Button variant="ios-green" size="lg" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base touch-target">
                       <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       Parent Portal
                     </Button>
                   </Link>
                   <Link to="/dashboard" className="w-full sm:w-auto">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 border-primary/20 hover:bg-primary/5 touch-target">
+                    <Button size="lg" variant="ios-glass" className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base touch-target">
                       View Demo
                     </Button>
                   </Link>
@@ -247,23 +252,33 @@ const Index = () => {
             viewport={{ once: true }} 
             variants={containerVariants}
           >
-            {stats.map((stat, i) => (
-              <motion.div 
-                key={i} 
-                variants={itemVariants} 
-                className="relative group text-center p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 hover:border-primary/30 transition-all duration-300 touch-target"
-              >
+            {stats.map((stat, i) => {
+              const colors = ['ios-blue', 'ios-green', 'ios-purple', 'ios-pink'];
+              const color = colors[i % colors.length];
+              return (
                 <motion.div 
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ delay: i * 0.1, type: "spring" }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient-neon"
+                  key={i} 
+                  variants={itemVariants} 
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className={`relative group text-center p-5 sm:p-6 md:p-8 rounded-3xl bg-card/80 backdrop-blur-xl border border-${color}/20 hover:border-${color}/50 shadow-lg hover:shadow-2xl touch-target overflow-hidden`}
+                  style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
                 >
-                  {stat.value}
+                  {/* Gradient glow effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-br from-${color}/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
+                  <div className={`absolute -top-10 -right-10 w-32 h-32 bg-${color}/30 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500`} />
+                  
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+                    className="relative text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink"
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="relative mt-2 sm:mt-3 text-sm sm:text-base font-medium text-muted-foreground">{stat.label}</div>
                 </motion.div>
-                <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
         </section>
 
@@ -276,19 +291,20 @@ const Index = () => {
             viewport={{ once: true }} 
             variants={containerVariants}
           >
-            <motion.span variants={itemVariants} className="inline-block px-4 py-1 rounded-full bg-violet/10 text-violet text-sm font-medium mb-4">
+            <motion.span variants={itemVariants} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-ios-purple/15 to-ios-pink/15 border border-ios-purple/30 text-ios-purple text-sm font-semibold mb-6 shadow-lg shadow-ios-purple/10">
+              <Zap className="w-4 h-4" />
               Powerful Features
             </motion.span>
-            <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-muted-foreground">
               Everything You Need
             </motion.h2>
-            <motion.p variants={itemVariants} className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <motion.p variants={itemVariants} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               A complete attendance solution designed for modern educational institutions
             </motion.p>
           </motion.div>
 
           <motion.div 
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" 
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" 
             initial="hidden" 
             whileInView="visible" 
             viewport={{ once: true }} 
@@ -298,18 +314,25 @@ const Index = () => {
               <motion.div 
                 key={i} 
                 variants={itemVariants} 
-                whileHover={{ y: -5 }}
-                className="group relative p-6 md:p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-500"
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="group relative p-6 md:p-8 rounded-3xl bg-card/80 backdrop-blur-xl border border-border/50 hover:border-ios-blue/30 shadow-lg hover:shadow-2xl overflow-hidden"
+                style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
               >
                 {/* Multi-color top accent */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-t-2xl opacity-60 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${feature.gradient} rounded-t-3xl opacity-70 group-hover:opacity-100 transition-opacity duration-500`} />
                 
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} mb-4 shadow-lg`}>
-                  <feature.icon className="w-6 h-6 text-primary-foreground" />
+                {/* Background glow */}
+                <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${feature.gradient} rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-700`} />
+                
+                <div className={`relative inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-5 shadow-xl group-hover:scale-110 transition-transform duration-500`}>
+                  <feature.icon className="w-7 h-7 text-white" />
                 </div>
                 
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="relative text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="relative text-muted-foreground leading-relaxed">{feature.description}</p>
+                
+                {/* Bottom gradient line on hover */}
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${feature.gradient} scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`} />
               </motion.div>
             ))}
           </motion.div>

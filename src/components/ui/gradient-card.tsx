@@ -7,7 +7,7 @@ interface GradientCardProps {
   value?: string | number;
   subtitle?: string;
   icon?: LucideIcon;
-  gradient?: 'cyan' | 'purple' | 'green' | 'orange' | 'pink' | 'blue';
+  gradient?: 'cyan' | 'purple' | 'green' | 'orange' | 'pink' | 'blue' | 'ios-blue' | 'ios-green' | 'ios-pink' | 'ios-purple';
   trend?: {
     value: number;
     positive: boolean;
@@ -18,30 +18,68 @@ interface GradientCardProps {
 }
 
 const gradientMap = {
-  cyan: 'from-cyan-500 to-cyan-600',
-  purple: 'from-purple-500 to-purple-600',
-  green: 'from-green-500 to-emerald-600',
-  orange: 'from-orange-500 to-red-600',
-  pink: 'from-pink-500 to-rose-600',
-  blue: 'from-blue-500 to-blue-600',
+  cyan: 'from-cyan to-ios-blue',
+  purple: 'from-violet to-ios-purple',
+  green: 'from-ios-green to-ios-mint',
+  orange: 'from-ios-orange to-ios-yellow',
+  pink: 'from-ios-pink to-ios-purple',
+  blue: 'from-ios-blue to-ios-purple',
+  'ios-blue': 'from-ios-blue to-ios-purple',
+  'ios-green': 'from-ios-green to-ios-mint',
+  'ios-pink': 'from-ios-pink to-ios-orange',
+  'ios-purple': 'from-ios-purple to-violet',
 };
 
 const borderMap = {
-  cyan: 'border-cyan-500/30',
-  purple: 'border-purple-500/30',
-  green: 'border-green-500/30',
-  orange: 'border-orange-500/30',
-  pink: 'border-pink-500/30',
-  blue: 'border-blue-500/30',
+  cyan: 'border-cyan/40',
+  purple: 'border-violet/40',
+  green: 'border-ios-green/40',
+  orange: 'border-ios-orange/40',
+  pink: 'border-ios-pink/40',
+  blue: 'border-ios-blue/40',
+  'ios-blue': 'border-ios-blue/40',
+  'ios-green': 'border-ios-green/40',
+  'ios-pink': 'border-ios-pink/40',
+  'ios-purple': 'border-ios-purple/40',
 };
 
 const glowMap = {
-  cyan: 'shadow-cyan-500/25',
-  purple: 'shadow-purple-500/25',
-  green: 'shadow-green-500/25',
-  orange: 'shadow-orange-500/25',
-  pink: 'shadow-pink-500/25',
-  blue: 'shadow-blue-500/25',
+  cyan: 'hover:shadow-cyan/30',
+  purple: 'hover:shadow-violet/30',
+  green: 'hover:shadow-ios-green/30',
+  orange: 'hover:shadow-ios-orange/30',
+  pink: 'hover:shadow-ios-pink/30',
+  blue: 'hover:shadow-ios-blue/30',
+  'ios-blue': 'hover:shadow-ios-blue/40',
+  'ios-green': 'hover:shadow-ios-green/40',
+  'ios-pink': 'hover:shadow-ios-pink/40',
+  'ios-purple': 'hover:shadow-ios-purple/40',
+};
+
+const iconBgMap = {
+  cyan: 'bg-cyan/15 text-cyan',
+  purple: 'bg-violet/15 text-violet',
+  green: 'bg-ios-green/15 text-ios-green',
+  orange: 'bg-ios-orange/15 text-ios-orange',
+  pink: 'bg-ios-pink/15 text-ios-pink',
+  blue: 'bg-ios-blue/15 text-ios-blue',
+  'ios-blue': 'bg-ios-blue/15 text-ios-blue',
+  'ios-green': 'bg-ios-green/15 text-ios-green',
+  'ios-pink': 'bg-ios-pink/15 text-ios-pink',
+  'ios-purple': 'bg-ios-purple/15 text-ios-purple',
+};
+
+const orbMap = {
+  cyan: 'bg-cyan',
+  purple: 'bg-violet',
+  green: 'bg-ios-green',
+  orange: 'bg-ios-orange',
+  pink: 'bg-ios-pink',
+  blue: 'bg-ios-blue',
+  'ios-blue': 'bg-ios-blue',
+  'ios-green': 'bg-ios-green',
+  'ios-pink': 'bg-ios-pink',
+  'ios-purple': 'bg-ios-purple',
 };
 
 export const GradientCard: React.FC<GradientCardProps> = ({
@@ -60,12 +98,13 @@ export const GradientCard: React.FC<GradientCardProps> = ({
     return (
       <div
         className={cn(
-          'relative overflow-hidden rounded-xl bg-gradient-to-br shadow-lg transition-all duration-300 hover:shadow-xl',
+          'relative overflow-hidden rounded-3xl bg-gradient-to-br shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02]',
           gradientMap[gradient],
           glowMap[gradient],
           className
         )}
         onClick={onClick}
+        style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
       >
         {children}
       </div>
@@ -76,61 +115,67 @@ export const GradientCard: React.FC<GradientCardProps> = ({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border bg-card p-6 transition-all duration-300',
-        'hover:-translate-y-1 hover:shadow-xl cursor-pointer',
+        'group relative overflow-hidden rounded-3xl border bg-card p-6 cursor-pointer backdrop-blur-sm',
+        'hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02]',
         borderMap[gradient],
-        `hover:${glowMap[gradient]}`,
+        glowMap[gradient],
         className
       )}
       onClick={onClick}
+      style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
     >
       {/* Background gradient */}
       <div className={cn(
-        'absolute inset-0 bg-gradient-to-br opacity-10',
+        'absolute inset-0 bg-gradient-to-br opacity-15 group-hover:opacity-25 transition-opacity duration-500',
         gradientMap[gradient]
       )} />
       
       {/* Animated glow orb */}
       <div className={cn(
-        'absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-30 transition-opacity group-hover:opacity-60',
-        gradient === 'cyan' && 'bg-cyan-400',
-        gradient === 'purple' && 'bg-purple-400',
-        gradient === 'green' && 'bg-green-400',
-        gradient === 'orange' && 'bg-orange-400',
-        gradient === 'pink' && 'bg-pink-400',
-        gradient === 'blue' && 'bg-blue-400',
+        'absolute -right-8 -top-8 h-28 w-28 rounded-full blur-3xl opacity-40 transition-all duration-500 group-hover:opacity-70 group-hover:scale-110',
+        orbMap[gradient]
+      )} />
+      
+      {/* Secondary animated orb */}
+      <div className={cn(
+        'absolute -left-4 -bottom-4 h-20 w-20 rounded-full blur-2xl opacity-20 transition-all duration-700 group-hover:opacity-40',
+        orbMap[gradient]
       )} />
       
       <div className="relative">
         <div className="flex items-start justify-between">
           <div>
-            {title && <p className="text-sm font-medium text-muted-foreground">{title}</p>}
-            {value !== undefined && <p className="mt-2 text-3xl font-bold tracking-tight">{value}</p>}
+            {title && (
+              <p className="text-sm font-semibold text-muted-foreground tracking-wide uppercase">
+                {title}
+              </p>
+            )}
+            {value !== undefined && (
+              <p className="mt-3 text-4xl font-bold tracking-tight animate-fade-in">
+                {value}
+              </p>
+            )}
             {subtitle && (
-              <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
+              <p className="mt-2 text-xs text-muted-foreground font-medium">{subtitle}</p>
             )}
             {trend && (
               <div className={cn(
-                'mt-2 flex items-center gap-1 text-xs font-medium',
-                trend.positive ? 'text-green-500' : 'text-red-500'
+                'mt-3 flex items-center gap-1.5 text-sm font-semibold px-2.5 py-1 rounded-full w-fit',
+                trend.positive 
+                  ? 'bg-ios-green/15 text-ios-green' 
+                  : 'bg-ios-red/15 text-ios-red'
               )}>
-                <span>{trend.positive ? '↑' : '↓'}</span>
+                <span className="text-base">{trend.positive ? '↑' : '↓'}</span>
                 <span>{Math.abs(trend.value)}%</span>
-                <span className="text-muted-foreground">vs last week</span>
               </div>
             )}
           </div>
           {Icon && (
             <div className={cn(
-              'rounded-lg bg-background/50 p-3 backdrop-blur-sm',
-              gradient === 'cyan' && 'text-cyan-400',
-              gradient === 'purple' && 'text-purple-400',
-              gradient === 'green' && 'text-green-400',
-              gradient === 'orange' && 'text-orange-400',
-              gradient === 'pink' && 'text-pink-400',
-              gradient === 'blue' && 'text-blue-400',
+              'rounded-2xl p-4 backdrop-blur-md transition-all duration-300 group-hover:scale-110',
+              iconBgMap[gradient]
             )}>
-              <Icon className="h-6 w-6" />
+              <Icon className="h-7 w-7" strokeWidth={2} />
             </div>
           )}
         </div>

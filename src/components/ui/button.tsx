@@ -5,25 +5,30 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-gradient-ios-blue text-white shadow-lg shadow-ios-blue/30 hover:shadow-xl hover:shadow-ios-blue/40 hover:-translate-y-0.5",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-gradient-to-r from-ios-red to-ios-pink text-white shadow-lg shadow-ios-red/30 hover:shadow-xl hover:shadow-ios-red/40 hover:-translate-y-0.5",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border-2 border-ios-blue/30 bg-background hover:bg-ios-blue/10 hover:border-ios-blue/50 text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:-translate-y-0.5",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-ios-blue underline-offset-4 hover:underline",
+        ios: "bg-gradient-ios-blue text-white shadow-lg shadow-ios-blue/40 hover:shadow-xl hover:shadow-ios-blue/50 hover:-translate-y-1 hover:scale-[1.02]",
+        "ios-green": "bg-gradient-ios-green text-white shadow-lg shadow-ios-green/40 hover:shadow-xl hover:shadow-ios-green/50 hover:-translate-y-1 hover:scale-[1.02]",
+        "ios-pink": "bg-gradient-ios-sunset text-white shadow-lg shadow-ios-pink/40 hover:shadow-xl hover:shadow-ios-pink/50 hover:-translate-y-1 hover:scale-[1.02]",
+        "ios-glass": "bg-white/20 dark:bg-white/10 backdrop-blur-xl border border-white/30 text-foreground hover:bg-white/30 dark:hover:bg-white/20",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-11 px-5 py-2",
+        sm: "h-9 rounded-lg px-4",
+        lg: "h-12 rounded-xl px-8 text-base",
+        xl: "h-14 rounded-2xl px-10 text-lg",
+        icon: "h-11 w-11 rounded-xl",
       },
     },
     defaultVariants: {
@@ -46,6 +51,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        style={{ transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
         {...props}
       />
     )

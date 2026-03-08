@@ -53,17 +53,20 @@ const Navbar = () => {
   return (
     <header 
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 md:px-8 py-4 backdrop-blur-md",
-        isScrolled ? "bg-white/80 dark:bg-black/30 shadow-sm" : "bg-transparent"
+        "fixed top-0 left-0 right-0 z-50 px-6 md:px-8 py-4",
+        isScrolled 
+          ? "bg-white/70 dark:bg-black/50 backdrop-blur-2xl shadow-lg border-b border-white/20 dark:border-white/10" 
+          : "bg-transparent backdrop-blur-sm"
       )}
+      style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="animate-fade-in">
+        <Link to="/" className="animate-ios-bounce">
           <Logo />
         </Link>
         
         {/* Desktop Navigation - Hidden on Mobile */}
-        <nav className="hidden md:flex items-center space-x-1 animate-fade-in">
+        <nav className="hidden md:flex items-center gap-1 animate-fade-in bg-muted/50 backdrop-blur-xl rounded-full p-1.5 border border-border/50">
           {[
             { text: 'Home', path: '/', show: true },
             { text: 'Parent Portal', path: '/parent', show: !isAuthenticated },
@@ -77,11 +80,12 @@ const Navbar = () => {
               key={item.path}
               to={item.path}
               className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-colors mobile-touch-target",
+                "px-5 py-2.5 rounded-full text-sm font-medium mobile-touch-target",
                 isActive(item.path)
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  ? "bg-gradient-ios-blue text-white shadow-lg shadow-ios-blue/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )}
+              style={{ transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
             >
               {item.text === 'Admin' && isTeacher && !isAdminOrPrincipal ? 'Teacher' : item.text}
             </Link>
@@ -89,34 +93,35 @@ const Navbar = () => {
         </nav>
         
         {/* Auth section - Only show on desktop */}
-        <div className="hidden md:flex items-center space-x-4 animate-fade-in">
+        <div className="hidden md:flex items-center gap-3 animate-fade-in">
           <Toggle 
             pressed={theme === 'dark'} 
             onPressedChange={toggleTheme}
             aria-label="Toggle theme"
-            className="relative w-10 h-10 rounded-full bg-background hover:bg-accent"
+            className="relative w-11 h-11 rounded-full bg-muted/50 hover:bg-accent backdrop-blur-xl border border-border/50 hover:scale-110 active:scale-95"
+            style={{ transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
           >
             {theme === 'dark' ? (
-              <Moon className="h-5 w-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 rotate-0 scale-100" />
+              <Moon className="h-5 w-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-ios-purple" />
             ) : (
-              <Sun className="h-5 w-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 rotate-0 scale-100 text-yellow-500 animate-pulse-subtle" />
+              <Sun className="h-5 w-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-ios-orange animate-pulse-subtle" />
             )}
           </Toggle>
           {isAuthenticated ? (
             <ProfileDropdown />
           ) : (
-            <>
+            <div className="flex items-center gap-2">
               <Link to="/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="rounded-full px-5">
                   Sign In
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button size="sm" className="animate-pulse-subtle">
+                <Button variant="ios" size="sm" className="rounded-full px-5 animate-glow-pulse">
                   Get Started
                 </Button>
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>
