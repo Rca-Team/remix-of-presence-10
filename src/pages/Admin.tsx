@@ -259,6 +259,8 @@ const Admin = () => {
         return <UserAccessManager />;
       case 'notifications':
         return <AdminNotificationSender availableFaces={availableFaces} />;
+      case 'notif-log':
+        return <NotificationLog />;
       case 'settings':
         return (
           <div className="space-y-6">
