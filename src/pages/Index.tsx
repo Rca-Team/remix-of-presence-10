@@ -251,7 +251,7 @@ const Index = () => {
                   initial={{ scale: 0 }}
                   whileInView={{ scale: 1 }}
                   transition={{ delay: i * 0.1, type: "spring" }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient-neon"
                 >
                   {stat.value}
                 </motion.div>
