@@ -297,6 +297,7 @@ const Admin = () => {
   // Mobile bottom nav
   const mobileQuickNav = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
+  { id: 'sections', icon: FolderKanban, label: 'Class' },
   { id: 'students', icon: Users, label: 'Students' },
   { id: 'register', icon: UserPlus, label: 'Register' },
   { id: 'reports', icon: BarChart3, label: 'Reports' }];
@@ -315,7 +316,6 @@ const Admin = () => {
             "border-r border-border bg-card flex flex-col transition-all duration-200",
             sidebarCollapsed ? "w-16" : "w-56"
           )}>
-              {/* Sidebar Header */}
               <div className="p-3 border-b border-border flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
                   <Shield className="w-4 h-4 text-primary-foreground" />
@@ -328,7 +328,6 @@ const Admin = () => {
               }
               </div>
 
-              {/* Nav Items */}
               <ScrollArea className="flex-1 py-2">
                 {groups.map((group) =>
               <div key={group} className="mb-1">
@@ -372,7 +371,6 @@ const Admin = () => {
               )}
               </ScrollArea>
 
-              {/* Sidebar Footer */}
               <div className="p-2 border-t border-border space-y-1">
                 <div className="flex items-center justify-between px-2">
                   <ThemeToggle />
@@ -397,14 +395,14 @@ const Admin = () => {
 
           {/* Main Content */}
           <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            {/* Top Bar */}
-            <div className="border-b border-border bg-card px-4 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div>
-                  <h1 className="text-lg font-semibold truncate">
+            {/* Top Bar - Compact on mobile */}
+            <div className="border-b border-border bg-card px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-lg font-semibold truncate">
                     {navItems.find((n) => n.id === activeTab)?.label || 'Dashboard'}
                   </h1>
-                  <p className="text-xs text-muted-foreground hidden sm:block">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block truncate">
                     {activeTab === 'dashboard' && 'Overview of attendance and registered students'}
                     {activeTab === 'register' && 'Register new student with multi-angle face scan'}
                     {activeTab === 'students' && 'View and manage all registered students'}
@@ -412,23 +410,23 @@ const Admin = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <AdminTutorial onNavigate={handleTabChange} />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRefresh}>
-                  <RefreshCw className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={handleRefresh}>
+                  <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
                 {isMobile && <ThemeToggle />}
               </div>
             </div>
 
-            {/* Stats Bar */}
-            <div className="border-b border-border bg-card/50 px-4 py-2">
-              <div className="flex gap-4 overflow-x-auto">
+            {/* Stats Bar - Scrollable on mobile */}
+            <div className="border-b border-border bg-card/50 px-3 sm:px-4 py-1.5 sm:py-2">
+              <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar">
                 {statsCards.map((stat, i) =>
-                <div key={i} className="flex items-center gap-2 py-1 min-w-fit">
-                    <stat.icon className={cn("w-4 h-4", stat.color)} />
-                    <span className="text-lg font-bold">{stat.value}</span>
-                    <span className="text-xs text-muted-foreground">{stat.label}</span>
+                <div key={i} className="flex items-center gap-1.5 sm:gap-2 py-0.5 sm:py-1 min-w-fit">
+                    <stat.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", stat.color)} />
+                    <span className="text-base sm:text-lg font-bold">{stat.value}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</span>
                   </div>
                 )}
               </div>
@@ -436,7 +434,7 @@ const Admin = () => {
 
             {/* Content Area */}
             <PullToRefresh onRefresh={handleRefresh} enabled={isMobile} className="flex-1 overflow-auto">
-              <div className="p-4 sm:p-6 pb-20 sm:pb-6">
+              <div className="p-3 sm:p-4 md:p-6 pb-24 sm:pb-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -453,10 +451,10 @@ const Admin = () => {
           </main>
         </div>
 
-        {/* Mobile Bottom Navigation */}
+        {/* Mobile Bottom Navigation - Improved */}
         {isMobile &&
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-area-bottom">
-            <div className="flex justify-around py-1.5">
+        <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
+            <div className="flex justify-around py-1">
               {mobileQuickNav.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -464,12 +462,16 @@ const Admin = () => {
                   key={item.id}
                   onClick={() => handleTabChange(item.id)}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors",
+                    "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all min-w-0 flex-1",
+                    "active:scale-90",
                     isActive ? "text-primary" : "text-muted-foreground"
                   )}>
                   
-                    <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
-                    <span className="text-[10px] font-medium">{item.label}</span>
+                    <item.icon className={cn("w-[18px] h-[18px] sm:w-5 sm:h-5", isActive && "text-primary")} />
+                    <span className="text-[9px] sm:text-[10px] font-medium leading-tight">{item.label}</span>
+                    {isActive && (
+                      <motion.div layoutId="admin-mobile-dot" className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+                    )}
                   </button>);
 
             })}
@@ -479,23 +481,24 @@ const Admin = () => {
                 <SheetTrigger asChild>
                   <button
                   className={cn(
-                    "flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors",
+                    "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all min-w-0 flex-1",
+                    "active:scale-90",
                     moreNavItems.some((n) => n.id === activeTab) ? "text-primary" : "text-muted-foreground"
                   )}>
                   
-                    <Settings className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">More</span>
+                    <Settings className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+                    <span className="text-[9px] sm:text-[10px] font-medium leading-tight">More</span>
                   </button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[70vh]">
-                  <div className="pt-2 pb-4">
+                <SheetContent side="bottom" className="rounded-t-[24px] pb-safe max-h-[75vh] bg-card/95 backdrop-blur-2xl border-0">
+                  <div className="pt-1 pb-4">
                     <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4" />
                     <h3 className="text-sm font-semibold text-foreground mb-3 px-1">All Features</h3>
-                    <ScrollArea className="max-h-[50vh]">
+                    <ScrollArea className="max-h-[55vh]">
                       {groups.map((group) =>
-                    <div key={group} className="mb-3">
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">{group}</p>
-                          <div className="grid grid-cols-3 gap-2">
+                    <div key={group} className="mb-4">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">{group}</p>
+                          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                             {navItems.filter((n) => n.group === group).map((item) => {
                           const isActive = activeTab === item.id;
                           return (
@@ -503,14 +506,15 @@ const Admin = () => {
                               key={item.id}
                               onClick={() => {handleTabChange(item.id);setMoreOpen(false);}}
                               className={cn(
-                                "flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors relative",
+                                "flex flex-col items-center gap-1 p-2.5 sm:p-3 rounded-xl transition-colors relative",
+                                "active:scale-95",
                                 isActive ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:bg-muted"
                               )}>
                               
-                                  <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
-                                  <span className="text-[10px] font-medium leading-tight text-center">{item.label}</span>
+                                  <item.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", isActive && "text-primary")} />
+                                  <span className="text-[9px] sm:text-[10px] font-medium leading-tight text-center">{item.label}</span>
                                   {item.count !== undefined && item.count > 0 &&
-                              <Badge variant="destructive" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-3.5 min-w-[14px]">
+                              <Badge variant="destructive" className="absolute -top-0.5 -right-0.5 text-[7px] px-0.5 py-0 h-3 min-w-[12px]">
                                       {item.count}
                                     </Badge>
                               }
