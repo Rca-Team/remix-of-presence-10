@@ -210,7 +210,7 @@ const SplashAnimation: React.FC<SplashAnimationProps> = ({
                 className="h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mx-auto mb-3"
               />
               <p className="text-cyan-300/40 text-xs md:text-sm tracking-[0.35em] font-light uppercase">
-                Intelligent Face Recognition System
+                Smart School Automation Platform
               </p>
             </motion.div>
 
