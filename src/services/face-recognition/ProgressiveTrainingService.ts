@@ -2,8 +2,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { descriptorToString, stringToDescriptor } from './ModelService';
 import { uploadImage } from './StorageService';
 
-const MAX_SAMPLES_PER_USER = 10; // Maximum face samples to store per user
-const MIN_CONFIDENCE_FOR_TRAINING = 0.75; // Minimum confidence to add sample
+const MAX_SAMPLES_PER_USER = 15; // Allow more samples for 3D scans
+const MIN_CONFIDENCE_FOR_TRAINING = 0.75;
 
 interface TrainingSample {
   id: string;
