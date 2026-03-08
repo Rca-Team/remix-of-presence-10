@@ -208,10 +208,10 @@ export async function getFaceDescriptor(
         : `Image dimensions: ${imageElement.width}x${imageElement.height}`
     );
     
-    // Use TinyFaceDetector with proper options
+    // Use TinyFaceDetector with better settings for accuracy
     const detectionOptions = new faceapi.TinyFaceDetectorOptions({ 
-      inputSize: 416, 
-      scoreThreshold: 0.5 
+      inputSize: 512,       // Larger input = better accuracy (was 416)
+      scoreThreshold: 0.4   // Slightly more permissive detection (was 0.5)
     });
     
     const detections = await faceapi.detectSingleFace(imageElement, detectionOptions)
