@@ -19,40 +19,42 @@ const QuickStatsPanel: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Get today's attendance records
     const { data: todayData } = await supabase
       .from('attendance_records')
       .select('user_id, status, device_info')
       .gte('timestamp', today.toISOString())
       .in('status', ['present', 'late', 'absent']);
 
-    const { count: registeredCount } = await supabase
-      .from('attendance_records')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'registered');
+    // Count total registered students from face_descriptors (unique user_ids)
+    const { data: faceData } = await supabase
+      .from('face_descriptors')
+      .select('user_id');
 
-    if (todayData) {
-      const uniquePresent = new Set<string>();
-      const uniqueLate = new Set<string>();
+    const uniqueRegistered = new Set<string>();
+    faceData?.forEach(f => { if (f.user_id) uniqueRegistered.add(f.user_id); });
+    const total = uniqueRegistered.size;
 
-      todayData.forEach(record => {
-        const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
-        if (userId) {
-          if (record.status === 'present') uniquePresent.add(String(userId));
-          else if (record.status === 'late') uniqueLate.add(String(userId));
-        }
-      });
+    const uniquePresent = new Set<string>();
+    const uniqueLate = new Set<string>();
 
-      const present = uniquePresent.size;
-      const late = uniqueLate.size;
-      const total = registeredCount || 0;
+    todayData?.forEach(record => {
+      const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
+      if (userId) {
+        if (record.status === 'present') uniquePresent.add(String(userId));
+        else if (record.status === 'late') uniqueLate.add(String(userId));
+      }
+    });
 
-      setStats({
-        totalRegistered: total,
-        presentCount: present,
-        lateCount: late,
-        attendanceRate: total > 0 ? Math.round(((present + late) / total) * 100) : 0
-      });
-    }
+    const present = uniquePresent.size;
+    const late = uniqueLate.size;
+
+    setStats({
+      totalRegistered: total,
+      presentCount: present,
+      lateCount: late,
+      attendanceRate: total > 0 ? Math.round(((present + late) / total) * 100) : 0
+    });
   }, []);
 
   useEffect(() => {
