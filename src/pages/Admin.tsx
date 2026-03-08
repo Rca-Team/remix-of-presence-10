@@ -263,7 +263,12 @@ const Admin = () => {
       case 'idcards':
         return <StudentIDCardGenerator />;
       case 'reports':
-        return <AttendanceReportGenerator />;
+        return (
+          <div className="space-y-6">
+            <ClassSectionReport />
+            <AttendanceReportGenerator />
+          </div>
+        );
       case 'access':
         return <UserAccessManager />;
       case 'notifications':
