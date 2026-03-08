@@ -38,8 +38,9 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+import { CLASSES, SECTIONS, getCategoryLabel } from '@/constants/schoolConfig';
+
 type Role = 'user' | 'moderator' | 'admin';
-type Category = 'A' | 'B' | 'C' | 'D';
 
 interface RegisteredUser {
   id: string;
