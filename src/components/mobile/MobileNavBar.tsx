@@ -8,7 +8,7 @@ import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
-  { path: '/dashboard', icon: BarChart2, label: 'Dashboard' },
+  { path: '/dashboard', icon: BarChart2, label: 'Gate' },
   { path: '/register', icon: UserPlus, label: 'Register' },
   { path: '/attendance', icon: Clock, label: 'Attend' },
   { path: '/profile', icon: User, label: 'Profile' }
