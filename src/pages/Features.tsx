@@ -40,6 +40,10 @@ import SMSNotificationConfig from '@/components/features/SMSNotificationConfig';
 import AssemblyMode from '@/components/features/AssemblyMode';
 import SmartAlertDashboard from '@/components/alerts/SmartAlertDashboard';
 
+// Next-level features
+import VoiceAttendance from '@/components/features/VoiceAttendance';
+import SmartReportCard from '@/components/features/SmartReportCard';
+
 const Features = () => {
   const { isAdminOrPrincipal } = useUserRole();
   const [activeTab, setActiveTab] = useState('heatmap');
