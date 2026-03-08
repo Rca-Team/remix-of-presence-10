@@ -66,7 +66,7 @@ const Navbar = () => {
         <nav className="hidden md:flex items-center space-x-1 animate-fade-in">
           {[
             { text: 'Home', path: '/', show: true },
-            { text: 'Dashboard', path: '/dashboard', show: true },
+            { text: 'Gate', path: '/dashboard', show: true },
             { text: 'Profile', path: '/profile', show: true },
             { text: 'Register', path: '/register', show: true },
             { text: 'Attendance', path: '/attendance', show: true },
