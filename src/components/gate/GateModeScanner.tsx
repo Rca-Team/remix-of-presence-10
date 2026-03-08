@@ -27,6 +27,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
   const [fps, setFps] = useState(0);
   const [facesInFrame, setFacesInFrame] = useState(0);
   const [liveMatches, setLiveMatches] = useState<LiveConfidence[]>([]);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const processingRef = useRef(false);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
