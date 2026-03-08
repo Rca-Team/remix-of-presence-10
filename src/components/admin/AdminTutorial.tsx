@@ -187,7 +187,6 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
     }
   }, []);
 
-  // Find and highlight the target nav element
   const updateTargetPosition = useCallback(() => {
     if (!isOpen) return;
     const step = TUTORIAL_STEPS[currentStep];
@@ -209,12 +208,10 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
     };
   }, [updateTargetPosition]);
 
-  // Navigate to the tab when step changes
   useEffect(() => {
     if (isOpen) {
       const step = TUTORIAL_STEPS[currentStep];
       onNavigate(step.id);
-      // Re-check position after navigation settles
       setTimeout(updateTargetPosition, 100);
     }
   }, [isOpen, currentStep]);
@@ -260,21 +257,17 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
   const step = TUTORIAL_STEPS[currentStep];
   const progress = ((currentStep + 1) / TUTORIAL_STEPS.length) * 100;
 
-  // Calculate tooltip position
-  const getTooltipPosition = () => {
+  const getTooltipPosition = (): React.CSSProperties => {
     if (!targetRect) {
       return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
     }
-
     if (isMobile) {
-      // On mobile, tooltip goes above the bottom nav
       return {
-        bottom: `${window.innerHeight - targetRect.top + 16}px`,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        bottom: `${window.innerHeight - targetRect.top + 12}px`,
+        left: '12px',
+        right: '12px',
       };
     } else {
-      // On desktop, tooltip goes to the right of sidebar
       return {
         top: `${Math.min(targetRect.top, window.innerHeight - 340)}px`,
         left: `${targetRect.right + 16}px`,
@@ -282,17 +275,14 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
     }
   };
 
-  // Arrow pointing direction
   const getArrowStyle = (): React.CSSProperties => {
     if (!targetRect) return { display: 'none' };
-
     if (isMobile) {
-      // Arrow points down toward the bottom nav item
+      const targetCenter = targetRect.left + targetRect.width / 2;
       return {
         position: 'absolute' as const,
         bottom: '-8px',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        left: `${targetCenter - 12}px`,
         width: 0,
         height: 0,
         borderLeft: '8px solid transparent',
@@ -300,7 +290,6 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
         borderTop: `8px solid ${step.color}`,
       };
     } else {
-      // Arrow points left toward sidebar
       return {
         position: 'absolute' as const,
         top: '24px',
@@ -328,20 +317,14 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
         <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary animate-pulse" />
       </Button>
 
-      {/* Tutorial Overlay */}
+      {/* Tutorial — no blur, just the tooltip card + arrow */}
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Semi-transparent backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[90] bg-background/60 backdrop-blur-sm"
-              onClick={handleClose}
-            />
+            {/* Invisible dismiss layer */}
+            <div className="fixed inset-0 z-[90]" onClick={handleClose} />
 
-            {/* Highlight ring around target element */}
+            {/* Highlight ring */}
             {targetRect && (
               <motion.div
                 ref={highlightRef}
@@ -354,158 +337,79 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
                   left: targetRect.left - 4,
                   width: targetRect.width + 8,
                   height: targetRect.height + 8,
-                  boxShadow: `0 0 0 3px ${step.color}, 0 0 20px ${step.color}80, 0 0 40px ${step.color}40`,
+                  boxShadow: `0 0 0 3px ${step.color}, 0 0 16px ${step.color}60`,
                   transition: 'top 0.3s, left 0.3s, width 0.3s, height 0.3s',
                 }}
               >
-                {/* Pulsing ring */}
                 <motion.div
                   className="absolute inset-0 rounded-xl"
-                  animate={{
-                    boxShadow: [
-                      `0 0 0 0px ${step.color}60`,
-                      `0 0 0 10px ${step.color}00`,
-                    ],
-                  }}
+                  animate={{ boxShadow: [`0 0 0 0px ${step.color}60`, `0 0 0 8px ${step.color}00`] }}
                   transition={{ duration: 1.2, repeat: Infinity }}
                 />
               </motion.div>
             )}
 
-            {/* "Cut out" the target element so it's visible */}
-            {targetRect && (
-              <div
-                className="fixed z-[92] bg-transparent pointer-events-none"
-                style={{
-                  top: targetRect.top - 2,
-                  left: targetRect.left - 2,
-                  width: targetRect.width + 4,
-                  height: targetRect.height + 4,
-                  borderRadius: '12px',
-                  boxShadow: '0 0 0 9999px rgba(0,0,0,0)',
-                }}
-              />
-            )}
-
-            {/* Tooltip card with arrow */}
+            {/* Tooltip */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 10 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed z-[100] w-[min(360px,90vw)]"
-              style={getTooltipPosition()}
+              className="fixed z-[100]"
+              style={{
+                ...getTooltipPosition(),
+                ...(!isMobile && { width: 'min(360px, 90vw)', maxWidth: '400px' }),
+              }}
             >
               <div className="relative">
-                {/* Arrow */}
                 <div style={getArrowStyle()} />
-
-                {/* Card */}
-                <div
-                  className="rounded-2xl border-2 bg-card shadow-2xl overflow-hidden"
-                  style={{ borderColor: step.color }}
-                >
-                  {/* Progress bar */}
+                <div className="rounded-2xl border-2 bg-card shadow-2xl overflow-hidden" style={{ borderColor: step.color }}>
+                  {/* Progress */}
                   <div className="h-1 bg-muted">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: step.color }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.4 }}
-                    />
+                    <motion.div className="h-full rounded-full" style={{ background: step.color }} animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
                   </div>
-
                   {/* Header */}
-                  <div className="flex items-center justify-between px-4 pt-3">
+                  <div className="flex items-center justify-between px-3 sm:px-4 pt-2.5">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {currentStep + 1} / {TUTORIAL_STEPS.length}
-                      </span>
+                      <span className="text-xs font-medium text-muted-foreground">{currentStep + 1} / {TUTORIAL_STEPS.length}</span>
                     </div>
                     <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground px-2" onClick={handleClose}>
                       Skip <X className="w-3 h-3 ml-1" />
                     </Button>
                   </div>
-
                   {/* Content */}
-                  <div className="px-4 pt-3 pb-3">
+                  <div className="px-3 sm:px-4 pt-2.5 pb-2.5">
                     <AnimatePresence mode="wait" custom={direction}>
-                      <motion.div
-                        key={currentStep}
-                        custom={direction}
-                        initial={{ opacity: 0, x: direction * 40 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: direction * -40 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {/* Icon + Title */}
-                        <div className="flex items-center gap-3 mb-2">
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: `${step.color}20` }}
-                          >
-                            <step.icon className="w-5 h-5" style={{ color: step.color }} />
+                      <motion.div key={currentStep} custom={direction} initial={{ opacity: 0, x: direction * 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: direction * -40 }} transition={{ duration: 0.2 }}>
+                        <div className="flex items-center gap-2.5 mb-1.5">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${step.color}20` }}>
+                            <step.icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: step.color }} />
                           </div>
-                          <div>
-                            <h3 className="text-base font-bold text-foreground">{step.title}</h3>
-                            {/* Location hint */}
+                          <div className="min-w-0">
+                            <h3 className="text-sm sm:text-base font-bold text-foreground leading-tight truncate">{step.title}</h3>
                             <LocationHint step={step} isMobile={isMobile} />
                           </div>
                         </div>
-
-                        {/* Description */}
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {step.description}
-                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                       </motion.div>
                     </AnimatePresence>
                   </div>
-
-                  {/* Step dots - compact */}
-                  <div className="flex justify-center gap-1 pb-2">
+                  {/* Dots */}
+                  <div className="flex justify-center gap-1 pb-1.5">
                     {TUTORIAL_STEPS.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => { setDirection(i > currentStep ? 1 : -1); setCurrentStep(i); }}
-                        className="p-0.5"
-                      >
-                        <motion.div
-                          className="rounded-full"
-                          animate={{
-                            width: i === currentStep ? 16 : 5,
-                            height: 5,
-                            backgroundColor: i === currentStep ? step.color : 'hsl(var(--muted-foreground) / 0.25)',
-                          }}
-                          transition={{ duration: 0.25 }}
-                        />
+                      <button key={i} onClick={() => { setDirection(i > currentStep ? 1 : -1); setCurrentStep(i); }} className="p-0.5">
+                        <motion.div className="rounded-full" animate={{ width: i === currentStep ? 14 : 4, height: 4, backgroundColor: i === currentStep ? step.color : 'hsl(var(--muted-foreground) / 0.25)' }} transition={{ duration: 0.25 }} />
                       </button>
                     ))}
                   </div>
-
                   {/* Actions */}
-                  <div className="px-4 pb-4 flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={currentStep === 0}
-                      onClick={handlePrev}
-                      className="h-8"
-                    >
+                  <div className="px-3 sm:px-4 pb-3 flex items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={currentStep === 0} onClick={handlePrev} className="h-8">
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
-
-                    <Button
-                      size="sm"
-                      onClick={handleNext}
-                      className="h-8 flex-1 text-white"
-                      style={{ background: step.color }}
-                    >
-                      {currentStep === TUTORIAL_STEPS.length - 1 ? (
-                        <><Rocket className="w-4 h-4 mr-1" /> Got it!</>
-                      ) : (
-                        <>Next <ChevronRight className="w-4 h-4 ml-1" /></>
-                      )}
+                    <Button size="sm" onClick={handleNext} className="h-8 flex-1 text-white" style={{ background: step.color }}>
+                      {currentStep === TUTORIAL_STEPS.length - 1 ? (<><Rocket className="w-4 h-4 mr-1" /> Got it!</>) : (<>Next <ChevronRight className="w-4 h-4 ml-1" /></>)}
                     </Button>
                   </div>
                 </div>
