@@ -90,7 +90,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       }
     };
-  }, [isActive]);
+  }, [isActive, facingMode]);
 
   // Continuous detection loop
   const detectLoop = useCallback(async () => {
