@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { descriptorToString, stringToDescriptor } from './ModelService';
 import { getAttendanceCutoffTime } from '../attendance/AttendanceSettingsService';
-import { getAllTrainedDescriptors, calculateBestMatchDistance } from './ProgressiveTrainingService';
+import { getAllTrainedDescriptors } from './ProgressiveTrainingService';
 
 interface Employee {
   id: string;
@@ -35,35 +35,115 @@ interface DeviceInfo {
   firebase_image_url?: string;
 }
 
+/**
+ * Parse a descriptor from various storage formats (string, array, object)
+ */
+function parseDescriptor(raw: any): Float32Array | null {
+  try {
+    if (!raw) return null;
+    if (raw instanceof Float32Array) return raw;
+    if (typeof raw === 'string') {
+      return stringToDescriptor(raw);
+    }
+    if (Array.isArray(raw)) {
+      const arr = new Float32Array(raw as number[]);
+      return arr.length === 128 ? arr : null;
+    }
+    if (typeof raw === 'object') {
+      // jsonb object with numeric keys {"0": 0.1, "1": 0.2, ...}
+      const keys = Object.keys(raw);
+      if (keys.length === 128) {
+        const values = new Float32Array(128);
+        for (let i = 0; i < 128; i++) {
+          values[i] = Number(raw[i] ?? raw[String(i)] ?? 0);
+        }
+        return values;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Cosine similarity between two descriptors.
+ * Returns value between 0 (identical) and 2 (opposite).
+ * face-api.js descriptors work best with Euclidean distance on raw (unnormalized) vectors.
+ */
+function euclideanDistance(a: Float32Array, b: Float32Array): number {
+  if (a.length !== b.length) return Infinity;
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) {
+    const diff = a[i] - b[i];
+    sum += diff * diff;
+  }
+  return Math.sqrt(sum);
+}
+
+/**
+ * Cosine distance as supplementary metric
+ */
+function cosineDistance(a: Float32Array, b: Float32Array): number {
+  if (a.length !== b.length) return Infinity;
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB);
+  if (denom === 0) return Infinity;
+  const similarity = dot / denom;
+  return Math.sqrt(Math.max(0, 2 * (1 - similarity)));
+}
+
+/**
+ * Combined distance metric: uses the minimum of Euclidean and cosine distance
+ * to be more forgiving of lighting/angle variations.
+ */
+function combinedDistance(a: Float32Array, b: Float32Array): number {
+  return Math.min(euclideanDistance(a, b), cosineDistance(a, b));
+}
+
 export async function recognizeFace(faceDescriptor: Float32Array): Promise<RecognitionResult> {
   try {
-    console.log('Starting face recognition with progressive training');
+    console.log('Starting face recognition (improved pipeline)');
     
-    const normalizedInput = normalizeDescriptor(faceDescriptor);
+    // DO NOT normalize the input — face-api.js descriptors are meant to be
+    // compared raw via Euclidean distance. Normalizing destroys magnitude info.
+    const inputDescriptor = faceDescriptor;
     
-    // First, try matching against progressively trained descriptors
+    // ── Phase 1: Match against progressively trained descriptors (face_descriptors table) ──
     const trainedDescriptors = await getAllTrainedDescriptors();
     
     let bestMatch: { userId: string; userName: string; distance: number; sampleCount: number } | null = null;
-    // With 3D multi-angle samples, we can use a tighter threshold
-    // More samples = more confidence in match
-    let bestDistance = 0.50;
+    // face-api.js typical same-person distance: 0.3–0.45
+    // Threshold 0.6 is standard; we use 0.55 for reasonable accuracy
+    const MATCH_THRESHOLD = 0.6;
+    let bestDistance = MATCH_THRESHOLD;
     
     for (const [userId, data] of trainedDescriptors) {
-      const distance = calculateBestMatchDistance(
-        normalizedInput,
-        data.descriptors,
-        data.averagedDescriptor
-      );
+      // Compare against every stored sample and averaged descriptor
+      let minDist = euclideanDistance(inputDescriptor, data.averagedDescriptor);
       
-      console.log(`Progressive match: ${data.userName} (${data.sampleCount} samples) - distance: ${distance.toFixed(4)}`);
+      for (const descriptor of data.descriptors) {
+        const dist = euclideanDistance(inputDescriptor, descriptor);
+        if (dist < minDist) minDist = dist;
+      }
       
-      if (distance < bestDistance) {
-        bestDistance = distance;
+      // Also try cosine distance
+      const cosDist = cosineDistance(inputDescriptor, data.averagedDescriptor);
+      minDist = Math.min(minDist, cosDist);
+      
+      console.log(`Match: ${data.userName} (${data.sampleCount} samples) - distance: ${minDist.toFixed(4)}`);
+      
+      if (minDist < bestDistance) {
+        bestDistance = minDist;
         bestMatch = {
           userId,
           userName: data.userName,
-          distance,
+          distance: minDist,
           sampleCount: data.sampleCount
         };
       }
@@ -71,9 +151,8 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
     
     // If found a match in trained descriptors, fetch full user info
     if (bestMatch) {
-      console.log(`Best progressive match: ${bestMatch.userName} with ${bestMatch.sampleCount} training samples`);
+      console.log(`Best match: ${bestMatch.userName} (distance: ${bestMatch.distance.toFixed(4)}, samples: ${bestMatch.sampleCount})`);
       
-      // Fetch registration data for complete employee info
       const { data: registrationData } = await supabase
         .from('attendance_records')
         .select('id, user_id, device_info')
@@ -109,12 +188,12 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
             avatar_url: avatarUrl,
             trainingSamples: bestMatch.sampleCount
           },
-          confidence: 1 - bestMatch.distance
+          confidence: Math.max(0, 1 - bestMatch.distance)
         };
       }
     }
     
-    // Fallback to legacy recognition from attendance_records
+    // ── Phase 2: Fallback to legacy recognition from attendance_records ──
     console.log('Falling back to legacy recognition from attendance_records');
     
     const { data, error } = await supabase
@@ -135,33 +214,34 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
     console.log(`Found ${data.length} registered faces for legacy comparison`);
     
     let legacyBestMatch: any = null;
-    let legacyBestDistance = 0.55; // Tighter threshold for better accuracy
+    let legacyBestDistance = MATCH_THRESHOLD;
     
-    // Compare the face descriptor against all registered faces
     for (const record of data) {
       try {
-        // Prefer explicit column first
-        if (record.face_descriptor && typeof record.face_descriptor === 'string') {
-          const registeredDescriptor = stringToDescriptor(record.face_descriptor);
-          const distance = calculateDistance(faceDescriptor, registeredDescriptor);
-          console.log(`Face comparison (column): distance = ${distance.toFixed(4)} for record ${record.id}`);
+        // Try face_descriptor column first
+        const columnDescriptor = parseDescriptor(record.face_descriptor);
+        if (columnDescriptor) {
+          const distance = euclideanDistance(inputDescriptor, columnDescriptor);
+          console.log(`Legacy (column): distance = ${distance.toFixed(4)} for record ${record.id}`);
           if (distance < legacyBestDistance) {
             legacyBestDistance = distance;
             legacyBestMatch = record;
           }
         }
         
-        // Fallback to legacy storage in device_info.metadata.faceDescriptor
+        // Fallback to device_info.metadata.faceDescriptor
         const deviceInfo = record.device_info as DeviceInfo | null;
-        const metaDescriptor = deviceInfo?.metadata?.faceDescriptor;
-        if (metaDescriptor && typeof metaDescriptor === 'string') {
-          const registeredDescriptor = stringToDescriptor(metaDescriptor);
-          const distance = calculateDistance(faceDescriptor, registeredDescriptor);
-          const personName = deviceInfo?.metadata?.name || 'unknown';
-          console.log(`Face comparison (metadata): distance = ${distance.toFixed(4)} for ${personName}`);
-          if (distance < legacyBestDistance) {
-            legacyBestDistance = distance;
-            legacyBestMatch = record;
+        const metaDescriptorRaw = deviceInfo?.metadata?.faceDescriptor;
+        if (metaDescriptorRaw) {
+          const metaDescriptor = parseDescriptor(metaDescriptorRaw);
+          if (metaDescriptor) {
+            const distance = euclideanDistance(inputDescriptor, metaDescriptor);
+            const personName = deviceInfo?.metadata?.name || 'unknown';
+            console.log(`Legacy (metadata): distance = ${distance.toFixed(4)} for ${personName}`);
+            if (distance < legacyBestDistance) {
+              legacyBestDistance = distance;
+              legacyBestMatch = record;
+            }
           }
         }
       } catch (e) {
@@ -170,7 +250,7 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
     }
     
     if (legacyBestMatch) {
-      console.log(`Best legacy match found with confidence: ${((1 - legacyBestDistance) * 100).toFixed(2)}%`);
+      console.log(`Best legacy match found with distance: ${legacyBestDistance.toFixed(4)} (confidence: ${((1 - legacyBestDistance) * 100).toFixed(1)}%)`);
       
       const deviceInfo = legacyBestMatch.device_info as DeviceInfo | null;
       const employeeData = deviceInfo?.metadata;
@@ -180,7 +260,6 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
         return { recognized: false };
       }
 
-      // Fetch avatar_url from profiles table
       let avatarUrl = employeeData.firebase_image_url || '';
       if (legacyBestMatch.user_id && legacyBestMatch.user_id !== 'unknown') {
         const { data: profileData } = await supabase
@@ -191,24 +270,21 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
         
         if (profileData?.avatar_url) {
           avatarUrl = profileData.avatar_url;
-          console.log(`Fetched avatar_url from profiles: ${avatarUrl}`);
         }
       }
       
-      const employee: Employee = {
-        id: legacyBestMatch.user_id || 'unknown',
-        name: employeeData.name || 'Unknown',
-        employee_id: employeeData.employee_id || 'Unknown',
-        department: employeeData.department || 'Unknown',
-        position: employeeData.position || 'Unknown',
-        firebase_image_url: employeeData.firebase_image_url || '',
-        avatar_url: avatarUrl,
-      };
-      
       return {
         recognized: true,
-        employee,
-        confidence: 1 - legacyBestDistance
+        employee: {
+          id: legacyBestMatch.user_id || 'unknown',
+          name: employeeData.name || 'Unknown',
+          employee_id: employeeData.employee_id || 'Unknown',
+          department: employeeData.department || 'Unknown',
+          position: employeeData.position || 'Unknown',
+          firebase_image_url: employeeData.firebase_image_url || '',
+          avatar_url: avatarUrl,
+        },
+        confidence: Math.max(0, 1 - legacyBestDistance)
       };
     }
     
@@ -220,42 +296,6 @@ export async function recognizeFace(faceDescriptor: Float32Array): Promise<Recog
   }
 }
 
-// Normalize a face descriptor for consistent comparison
-function normalizeDescriptor(descriptor: Float32Array): Float32Array {
-  let magnitude = 0;
-  for (let i = 0; i < descriptor.length; i++) {
-    magnitude += descriptor[i] * descriptor[i];
-  }
-  magnitude = Math.sqrt(magnitude);
-  
-  if (magnitude === 0) return descriptor;
-  
-  const normalized = new Float32Array(descriptor.length);
-  for (let i = 0; i < descriptor.length; i++) {
-    normalized[i] = descriptor[i] / magnitude;
-  }
-  return normalized;
-}
-
-// Calculate Euclidean distance between two face descriptors
-function calculateDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
-  if (descriptor1.length !== descriptor2.length) {
-    throw new Error('Face descriptors have different dimensions');
-  }
-  
-  // Normalize both descriptors before comparison
-  const norm1 = normalizeDescriptor(descriptor1);
-  const norm2 = normalizeDescriptor(descriptor2);
-  
-  let sum = 0;
-  for (let i = 0; i < norm1.length; i++) {
-    const diff = norm1[i] - norm2[i];
-    sum += diff * diff;
-  }
-  
-  return Math.sqrt(sum);
-}
-
 // Check if current time is past cutoff time
 async function isPastCutoffTime(): Promise<boolean> {
   try {
@@ -263,11 +303,9 @@ async function isPastCutoffTime(): Promise<boolean> {
     const now = new Date();
     const cutoffDate = new Date();
     cutoffDate.setHours(cutoffTime.hour, cutoffTime.minute, 0, 0);
-    
     return now > cutoffDate;
   } catch (error) {
     console.error('Error checking cutoff time, defaulting to 9:00 AM:', error);
-    // Fallback to 9:00 AM if there's an error
     const now = new Date();
     const cutoffDate = new Date();
     cutoffDate.setHours(9, 0, 0, 0);
@@ -284,31 +322,23 @@ export async function recordAttendance(
   try {
     console.log(`Recording attendance for user ${userId} with status ${status}`);
     
-    // Apply time-based status logic - if it's past cutoff time, mark as late
     let timeAdjustedStatus = status;
     if (status === 'present') {
       const pastCutoff = await isPastCutoffTime();
       if (pastCutoff) {
         timeAdjustedStatus = 'late';
         console.log('Adjusting status to late based on cutoff time');
-      } else {
-        console.log('Status remains present - before cutoff time');
       }
     }
     
-    // Normalize status to 'present' for universal compatibility
     let normalizedStatus = timeAdjustedStatus;
     if (status === 'unauthorized') {
       normalizedStatus = 'present';
-      console.log('Normalizing status from unauthorized to present for consistency');
     }
     
     const timestamp = new Date().toISOString();
     
-    // First, check if we can get user info from profiles table
     let userName = null;
-    let userMetadata = null;
-    
     if (userId && userId !== 'unknown') {
       const { data: profileData } = await supabase
         .from('profiles')
@@ -316,13 +346,11 @@ export async function recordAttendance(
         .eq('id', userId)
         .single();
         
-      if (profileData && profileData.username) {
+      if (profileData?.username) {
         userName = profileData.username;
-        console.log(`Found username '${userName}' in profiles table`);
       }
     }
     
-    // Preserve existing device info if available
     const fullDeviceInfo = {
       type: 'webcam',
       timestamp,
@@ -333,8 +361,6 @@ export async function recordAttendance(
         name: userName || deviceInfo?.metadata?.name || 'Unknown'
       }
     };
-    
-    console.log('Recording attendance with device info:', fullDeviceInfo);
     
     const { data, error } = await supabase
       .from('attendance_records')
