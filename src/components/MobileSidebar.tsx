@@ -277,6 +277,7 @@ const MobileSidebar = () => {
                     >
                       <Link
                         to={item.path}
+                        onClick={() => haptic.onSelection()}
                         className={cn(
                           'group relative flex items-center gap-3 py-3 px-3 rounded-2xl',
                           'transition-all duration-300',
