@@ -4,23 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { 
-  Home, 
-  BarChart, 
-  UserPlus, 
-  Clock, 
-  Menu, 
-  User, 
-  ShieldCheck, 
-  Sun, 
-  Moon, 
-  UserCircle, 
+import {
+  Home,
+  UserPlus,
+  Clock,
+  User,
+  ShieldCheck,
+  Sun,
+  Moon,
+  UserCircle,
   GraduationCap,
   LogOut,
-  X,
   Scan,
-  Settings,
-  ChevronRight
+  ChevronRight,
+  Compass,
 } from 'lucide-react';
 import Logo from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -28,6 +25,17 @@ import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
+
+const navColors: Record<string, string> = {
+  Home: 'ios-blue',
+  'Parent Portal': 'ios-green',
+  Profile: 'ios-pink',
+  Register: 'ios-green',
+  Attendance: 'ios-purple',
+  'Gate Mode': 'ios-orange',
+  Admin: 'ios-red',
+  Teacher: 'ios-orange',
+};
 
 const MobileSidebar = () => {
   const [open, setOpen] = useState(false);
@@ -39,7 +47,7 @@ const MobileSidebar = () => {
   const [profile, setProfile] = useState<any>(null);
   const { isAdminOrPrincipal, isTeacher } = useUserRole();
   const { toast } = useToast();
-  
+
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
@@ -47,18 +55,15 @@ const MobileSidebar = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
+      if (session?.user) fetchProfile(session.user.id);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
+      if (session?.user) fetchProfile(session.user.id);
+      else setProfile(null);
     });
 
     return () => subscription.unsubscribe();
@@ -70,30 +75,20 @@ const MobileSidebar = () => {
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
-
-    if (!error && data) {
-      setProfile(data);
-    }
+    if (!error && data) setProfile(data);
   };
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
       setOpen(false);
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
+      toast({ title: 'Logged out', description: 'You have been successfully logged out.' });
       navigate('/');
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to log out.', variant: 'destructive' });
     }
   };
-  
+
   const navigation = useMemo(() => {
     const items = [
       { name: 'Home', path: '/', icon: Home, show: true },
@@ -102,185 +97,315 @@ const MobileSidebar = () => {
       { name: 'Register', path: '/register', icon: UserPlus, show: !!user },
       { name: 'Attendance', path: '/attendance', icon: Clock, show: !!user },
       { name: 'Gate Mode', path: '/gate', icon: Scan, show: isAdminOrPrincipal || isTeacher },
-      { name: isTeacher && !isAdminOrPrincipal ? 'Teacher' : 'Admin', path: '/admin', icon: isTeacher && !isAdminOrPrincipal ? GraduationCap : ShieldCheck, show: isAdminOrPrincipal || isTeacher },
+      {
+        name: isTeacher && !isAdminOrPrincipal ? 'Teacher' : 'Admin',
+        path: '/admin',
+        icon: isTeacher && !isAdminOrPrincipal ? GraduationCap : ShieldCheck,
+        show: isAdminOrPrincipal || isTeacher,
+      },
     ];
-    return items.filter(item => item.show !== false);
+    return items.filter((i) => i.show);
   }, [isAdminOrPrincipal, isTeacher, user]);
-  
+
   if (!isMobile) return null;
-  
+
   const isActive = (path: string) => location.pathname === path;
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
-  const displayName = profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+  const displayName =
+    profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
+        {/* ── Floating glass FAB ── */}
         <SheetTrigger asChild>
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
-            <Button 
-              size="icon" 
-              className="relative h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105 transition-all duration-300"
+            <button
+              className={cn(
+                'relative h-[58px] w-[58px] rounded-full',
+                'flex items-center justify-center',
+                'bg-white/50 dark:bg-white/[0.08]',
+                'backdrop-blur-2xl backdrop-saturate-[1.8]',
+                'border border-white/40 dark:border-white/[0.12]',
+                'shadow-[0_4px_24px_-4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.5)]',
+                'dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)]',
+                'active:scale-90 transition-transform duration-200'
+              )}
             >
-              <Menu className="h-6 w-6 text-white" />
-              {/* Pulse effect */}
-              <span className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20" />
-            </Button>
+              <Compass className="h-6 w-6 text-foreground/80" strokeWidth={1.8} />
+
+              {/* Subtle glow ring */}
+              <span className="absolute inset-0 rounded-full animate-[pulse_3s_ease-in-out_infinite] border-2 border-primary/20" />
+            </button>
           </motion.div>
         </SheetTrigger>
-        
-        <SheetContent 
-          side="bottom" 
-          className="rounded-t-3xl max-h-[90vh] p-0 border-t-0 bg-gradient-to-b from-background to-muted/30"
+
+        {/* ── Bottom sheet ── */}
+        <SheetContent
+          side="bottom"
+          className={cn(
+            'rounded-t-[28px] max-h-[88vh] p-0 border-0',
+            'bg-white/60 dark:bg-black/50',
+            'backdrop-blur-3xl backdrop-saturate-[1.8]',
+            'shadow-[0_-8px_40px_-8px_rgba(0,0,0,0.15)]',
+            'dark:shadow-[0_-8px_40px_-8px_rgba(0,0,0,0.6)]'
+          )}
         >
-          {/* Handle bar */}
+          {/* Top edge highlight */}
+          <div className="absolute inset-x-0 top-0 h-px rounded-t-[28px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/10 to-transparent" />
+
+          {/* Handle */}
           <div className="flex justify-center pt-3 pb-2">
-            <div className="w-12 h-1.5 rounded-full bg-muted-foreground/20" />
+            <motion.div
+              initial={{ width: 32 }}
+              animate={{ width: open ? 40 : 32 }}
+              className="h-[5px] rounded-full bg-foreground/15"
+            />
           </div>
 
-          <div className="flex flex-col h-full max-h-[85vh] overflow-hidden">
-            {/* Header */}
-            <div className="px-6 pb-4 border-b border-border/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <Scan className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <Logo className="text-lg" />
-                    <p className="text-xs text-muted-foreground">Smart Attendance</p>
-                  </div>
-                </div>
-                
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={toggleTheme}
-                  className="relative w-12 h-12 rounded-xl bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center"
+          <div className="flex flex-col max-h-[82vh] overflow-hidden">
+            {/* ── Header ── */}
+            <div className="px-5 pb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    'w-10 h-10 rounded-2xl flex items-center justify-center',
+                    'bg-primary/10 backdrop-blur-sm'
+                  )}
                 >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={theme}
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      exit={{ scale: 0, rotate: 180 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {theme === 'dark' ? (
-                        <Moon className="h-5 w-5 text-blue-400" />
-                      ) : (
-                        <Sun className="h-5 w-5 text-yellow-500" />
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-                </motion.button>
+                  <Scan className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <Logo className="text-lg" />
+                  <p className="text-[10px] text-muted-foreground tracking-wide">Smart Attendance</p>
+                </div>
               </div>
+
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={toggleTheme}
+                className={cn(
+                  'w-10 h-10 rounded-2xl flex items-center justify-center',
+                  'bg-white/50 dark:bg-white/[0.06]',
+                  'border border-white/40 dark:border-white/10',
+                  'backdrop-blur-xl'
+                )}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={theme}
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 90 }}
+                    transition={{ duration: 0.25, ease: [0.34, 1.56, 0.64, 1] }}
+                  >
+                    {theme === 'dark' ? (
+                      <Moon className="h-[18px] w-[18px] text-foreground/70" />
+                    ) : (
+                      <Sun className="h-[18px] w-[18px] text-foreground/70" />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </motion.button>
             </div>
 
-            {/* User Card (if logged in) */}
+            {/* ── User card ── */}
             {user && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mx-4 mt-4 p-4 rounded-2xl bg-gradient-to-r from-blue-600/10 to-cyan-600/10 border border-blue-500/20"
+                transition={{ delay: 0.05 }}
+                className="mx-4 mb-3"
               >
-                <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3">
+                <Link
+                  to="/profile"
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 p-3 rounded-2xl',
+                    'bg-white/50 dark:bg-white/[0.05]',
+                    'border border-white/30 dark:border-white/[0.08]',
+                    'backdrop-blur-xl',
+                    'active:scale-[0.98] transition-transform duration-200'
+                  )}
+                >
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt={displayName}
-                      className="h-12 w-12 rounded-full object-cover border-2 border-blue-500/30"
+                      className="h-11 w-11 rounded-full object-cover ring-2 ring-white/30 dark:ring-white/10"
                     />
                   ) : (
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center">
-                      <UserCircle className="h-7 w-7 text-white" />
+                    <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center">
+                      <UserCircle className="h-6 w-6 text-primary" />
                     </div>
                   )}
-                  <div className="flex-1">
-                    <p className="font-semibold">{displayName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{displayName}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                 </Link>
               </motion.div>
             )}
-            
-            {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-4 py-4">
-              <ul className="space-y-2">
-                {navigation.map((item, index) => (
-                  <motion.li 
-                    key={item.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link
-                      to={item.path}
-                      className={cn(
-                        "flex items-center py-3.5 px-4 rounded-xl transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25"
-                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                      )}
+
+            {/* ── Navigation grid ── */}
+            <nav className="flex-1 overflow-y-auto px-4 py-2">
+              <div className="space-y-1">
+                {navigation.map((item, index) => {
+                  const active = isActive(item.path);
+                  const color = navColors[item.name] || 'ios-blue';
+
+                  return (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        delay: 0.04 * index,
+                        type: 'spring',
+                        stiffness: 350,
+                        damping: 28,
+                      }}
                     >
-                      <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center mr-3 transition-colors",
-                        isActive(item.path) 
-                          ? "bg-white/20" 
-                          : "bg-muted"
-                      )}>
-                        <item.icon className="h-5 w-5" />
-                      </div>
-                      <span className="font-medium">{item.name}</span>
-                      {isActive(item.path) && (
-                        <motion.div 
-                          layoutId="activeIndicator"
-                          className="ml-auto w-2 h-2 rounded-full bg-white"
-                        />
-                      )}
-                    </Link>
-                  </motion.li>
-                ))}
-              </ul>
+                      <Link
+                        to={item.path}
+                        className={cn(
+                          'group relative flex items-center gap-3 py-3 px-3 rounded-2xl',
+                          'transition-all duration-300',
+                          'active:scale-[0.97]',
+                          active
+                            ? ''
+                            : 'hover:bg-white/30 dark:hover:bg-white/[0.04]'
+                        )}
+                      >
+                        {/* Active background pill */}
+                        {active && (
+                          <motion.div
+                            layoutId="sheet-active-pill"
+                            className="absolute inset-0 rounded-2xl"
+                            style={{
+                              background: `linear-gradient(135deg, hsl(var(--${color}) / 0.15), hsl(var(--${color}) / 0.05))`,
+                              border: `1px solid hsl(var(--${color}) / 0.2)`,
+                              boxShadow: `0 2px 12px -2px hsl(var(--${color}) / 0.15)`,
+                            }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                          />
+                        )}
+
+                        <div
+                          className={cn(
+                            'relative z-10 w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
+                            'transition-colors duration-300',
+                            active
+                              ? ''
+                              : 'bg-muted/60'
+                          )}
+                          style={
+                            active
+                              ? {
+                                  background: `hsl(var(--${color}) / 0.15)`,
+                                }
+                              : undefined
+                          }
+                        >
+                          <item.icon
+                            className="h-[18px] w-[18px] transition-colors duration-300"
+                            strokeWidth={active ? 2.2 : 1.8}
+                            style={
+                              active
+                                ? { color: `hsl(var(--${color}))` }
+                                : { color: 'hsl(var(--muted-foreground))' }
+                            }
+                          />
+                        </div>
+
+                        <span
+                          className={cn(
+                            'relative z-10 font-medium text-[15px] transition-colors duration-300',
+                            active ? 'text-foreground' : 'text-muted-foreground'
+                          )}
+                        >
+                          {item.name}
+                        </span>
+
+                        {active && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="relative z-10 ml-auto w-[6px] h-[6px] rounded-full"
+                            style={{
+                              background: `hsl(var(--${color}))`,
+                              boxShadow: `0 0 8px hsl(var(--${color}) / 0.5)`,
+                            }}
+                          />
+                        )}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </nav>
-            
-            {/* Bottom Actions */}
-            <div className="p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm space-y-3">
+
+            {/* ── Bottom actions ── */}
+            <div
+              className={cn(
+                'p-4 mt-auto',
+                'border-t border-white/20 dark:border-white/[0.06]',
+                'bg-white/30 dark:bg-white/[0.02] backdrop-blur-xl'
+              )}
+            >
               {user ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-2"
-                >
-                  <Button 
-                    variant="outline" 
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <Button
+                    variant="outline"
                     onClick={handleLogout}
-                    className="w-full justify-start h-12 border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    className={cn(
+                      'w-full justify-start h-12 rounded-2xl',
+                      'bg-white/40 dark:bg-white/[0.04]',
+                      'border-destructive/20 text-destructive',
+                      'backdrop-blur-sm',
+                      'hover:bg-destructive/10 active:scale-[0.98] transition-all duration-200'
+                    )}
                   >
-                    <LogOut className="h-5 w-5 mr-3" />
+                    <LogOut className="h-[18px] w-[18px] mr-3" />
                     Sign Out
                   </Button>
                 </motion.div>
               ) : (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-2"
                 >
                   <Link to="/login" className="block">
-                    <Button variant="outline" className="w-full justify-start h-12">
-                      <User className="h-5 w-5 mr-3" />
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start h-12 rounded-2xl',
+                        'bg-white/40 dark:bg-white/[0.04]',
+                        'backdrop-blur-sm',
+                        'active:scale-[0.98] transition-all duration-200'
+                      )}
+                    >
+                      <User className="h-[18px] w-[18px] mr-3" />
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup" className="block">
-                    <Button className="w-full justify-start h-12 bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/25">
-                      <UserPlus className="h-5 w-5 mr-3" />
+                    <Button
+                      className={cn(
+                        'w-full justify-start h-12 rounded-2xl',
+                        'bg-primary/90 backdrop-blur-sm',
+                        'shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)]',
+                        'active:scale-[0.98] transition-all duration-200'
+                      )}
+                    >
+                      <UserPlus className="h-[18px] w-[18px] mr-3" />
                       Get Started
                     </Button>
                   </Link>
