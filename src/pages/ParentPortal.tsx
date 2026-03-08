@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  UserCheck, UserX, Clock, Calendar, TrendingUp, LogOut,
-  GraduationCap, CheckCircle2, AlertTriangle, XCircle
+  UserCheck, UserX, Clock, Calendar, TrendingUp,
+  GraduationCap, CheckCircle2, AlertTriangle, XCircle, Search, ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Logo from '@/components/Logo';
+import { Link } from 'react-router-dom';
 import { format, startOfMonth, eachDayOfInterval, isWeekend, subDays, isSameDay, isToday } from 'date-fns';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChildInfo {
   id: string;
@@ -26,77 +28,81 @@ interface ChildInfo {
 
 interface DayRecord {
   date: Date;
-  status: 'present' | 'late' | 'absent' | 'future';
+  status: 'present' | 'late' | 'absent';
   time?: string;
 }
 
 const STORAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/face-images/`;
 
 export default function ParentPortalPage() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [children, setChildren] = useState<ChildInfo[]>([]);
-  const [selectedChild, setSelectedChild] = useState<ChildInfo | null>(null);
+  const { toast } = useToast();
+  const [admissionNo, setAdmissionNo] = useState('');
+  const [phoneNo, setPhoneNo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [child, setChild] = useState<ChildInfo | null>(null);
   const [monthRecords, setMonthRecords] = useState<DayRecord[]>([]);
   const [trendData, setTrendData] = useState<{ day: string; pct: number }[]>([]);
   const [stats, setStats] = useState({ present: 0, late: 0, absent: 0, total: 0, rate: 0, streak: 0 });
   const [todayStatus, setTodayStatus] = useState<{ status: string; time?: string }>({ status: 'absent' });
 
-  useEffect(() => {
-    loadChildren();
-  }, []);
+  const handleSearch = async () => {
+    if (!admissionNo.trim() || !phoneNo.trim()) {
+      toast({ title: 'Required', description: 'Please enter both Admission No. and Phone No.', variant: 'destructive' });
+      return;
+    }
 
-  useEffect(() => {
-    if (selectedChild) loadAttendance(selectedChild.employee_id);
-  }, [selectedChild]);
+    // Basic input validation
+    const cleanAdmission = admissionNo.trim().substring(0, 50);
+    const cleanPhone = phoneNo.trim().replace(/[^0-9+]/g, '').substring(0, 15);
+    if (cleanPhone.length < 10) {
+      toast({ title: 'Invalid Phone', description: 'Please enter a valid phone number.', variant: 'destructive' });
+      return;
+    }
 
-  const loadChildren = async () => {
     setLoading(true);
+    setSearched(true);
+    setChild(null);
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('parent_phone, parent_email')
-        .eq('user_id', user.id)
-        .single();
-
-      // Fetch registered students linked via parent contact
-      const { data: records } = await supabase
+      // Fetch registered students
+      const { data: records, error } = await supabase
         .from('attendance_records')
         .select('*')
         .eq('status', 'registered');
 
-      const matched: ChildInfo[] = (records || []).reduce((acc: ChildInfo[], r) => {
+      if (error) throw error;
+
+      // Find matching student by admission no AND parent phone
+      const matched = (records || []).find(r => {
         const di = r.device_info as any;
         const meta = di?.metadata || di || {};
-        const parentPhone = meta.parent_phone || meta.parentPhone || '';
-        const parentEmail = meta.parent_email || meta.parentEmail || '';
+        const empId = (meta.employee_id || meta.roll_number || '').toString().toLowerCase();
+        const parentPhone = (meta.parent_phone || meta.parentPhone || '').toString();
+        const phoneMatch = parentPhone.includes(cleanPhone.replace('+91', '').slice(-10));
+        return empId === cleanAdmission.toLowerCase() && phoneMatch;
+      });
 
-        const isLinked =
-          (profile?.parent_phone && parentPhone && parentPhone.includes(profile.parent_phone.replace('+91', ''))) ||
-          (profile?.parent_email && parentEmail && parentEmail.toLowerCase() === profile.parent_email.toLowerCase());
+      if (!matched) {
+        toast({ title: 'Not Found', description: 'No student found with this Admission No. and Phone No. combination.', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
 
-        if (isLinked || (!profile?.parent_phone && !profile?.parent_email)) {
-          const name = meta.name || meta.label || 'Student';
-          if (name !== 'Student' && !acc.find(c => c.employee_id === (meta.employee_id || meta.roll_number))) {
-            acc.push({
-              id: r.id,
-              name,
-              employee_id: meta.employee_id || meta.roll_number || 'N/A',
-              category: r.category || 'A',
-              image_url: r.image_url || '',
-            });
-          }
-        }
-        return acc;
-      }, []);
-
-      setChildren(matched);
-      if (matched.length > 0) setSelectedChild(matched[0]);
+      const di = matched.device_info as any;
+      const meta = di?.metadata || di || {};
+      const childInfo: ChildInfo = {
+        id: matched.id,
+        name: meta.name || meta.label || 'Student',
+        employee_id: meta.employee_id || meta.roll_number || 'N/A',
+        category: matched.category || 'A',
+        image_url: matched.image_url || '',
+      };
+      setChild(childInfo);
+      await loadAttendance(childInfo.employee_id);
     } catch (e) {
-      console.error('Error loading children:', e);
+      console.error('Search error:', e);
+      toast({ title: 'Error', description: 'Something went wrong. Please try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -105,8 +111,7 @@ export default function ParentPortalPage() {
   const loadAttendance = async (employeeId: string) => {
     const today = new Date();
     const monthStart = startOfMonth(today);
-    const allDays = eachDayOfInterval({ start: monthStart, end: today });
-    const workingDays = allDays.filter(d => !isWeekend(d));
+    const workingDays = eachDayOfInterval({ start: monthStart, end: today }).filter(d => !isWeekend(d));
 
     const { data: records } = await supabase
       .from('attendance_records')
@@ -120,7 +125,6 @@ export default function ParentPortalPage() {
       return empId === employeeId;
     });
 
-    // Build date map
     const dateMap: Record<string, { status: string; time: string }> = {};
     studentRecords.forEach(r => {
       const ds = format(new Date(r.timestamp), 'yyyy-MM-dd');
@@ -129,24 +133,17 @@ export default function ParentPortalPage() {
       }
     });
 
-    // Month calendar
     const monthRecs: DayRecord[] = workingDays.map(d => {
       const ds = format(d, 'yyyy-MM-dd');
       const rec = dateMap[ds];
-      return {
-        date: d,
-        status: rec ? (rec.status as 'present' | 'late') : 'absent',
-        time: rec?.time,
-      };
+      return { date: d, status: rec ? (rec.status as 'present' | 'late') : 'absent', time: rec?.time };
     });
     setMonthRecords(monthRecs);
 
-    // Today
     const todayStr = format(today, 'yyyy-MM-dd');
     const todayRec = dateMap[todayStr];
     setTodayStatus(todayRec ? { status: todayRec.status, time: todayRec.time } : { status: isWeekend(today) ? 'weekend' : 'absent' });
 
-    // Stats
     const present = monthRecs.filter(r => r.status === 'present').length;
     const late = monthRecs.filter(r => r.status === 'late').length;
     const absent = monthRecs.filter(r => r.status === 'absent').length;
@@ -158,18 +155,12 @@ export default function ParentPortalPage() {
     }
     setStats({ present, late, absent, total, rate: total > 0 ? Math.round(((present + late) / total) * 100) : 0, streak });
 
-    // Trend (last 7 working days)
     const last7 = eachDayOfInterval({ start: subDays(today, 9), end: today }).filter(d => !isWeekend(d)).slice(-7);
     setTrendData(last7.map(d => {
       const ds = format(d, 'yyyy-MM-dd');
       const rec = dateMap[ds];
       return { day: format(d, 'EEE'), pct: rec?.status === 'present' ? 100 : rec?.status === 'late' ? 75 : 0 };
     }));
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
   };
 
   const getImgUrl = (url: string) => url?.startsWith('data:') ? url : url ? `${STORAGE_URL}${url}` : '';
@@ -181,18 +172,6 @@ export default function ParentPortalPage() {
     weekend: { icon: <Calendar className="h-8 w-8" />, label: 'Weekend', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border' },
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-4 space-y-4">
-        <Skeleton className="h-14 w-full" />
-        <Skeleton className="h-32 w-full" />
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20" />)}
-        </div>
-      </div>
-    );
-  }
-
   const sc = statusConfig[todayStatus.status] || statusConfig.absent;
 
   return (
@@ -201,53 +180,87 @@ export default function ParentPortalPage() {
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-2">
+            <Link to="/">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
             <Logo />
             <span className="font-bold text-foreground text-sm">Parent Portal</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-1" /> Logout
-          </Button>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto p-4 space-y-4 pb-20">
-        {/* Child Selector */}
-        {children.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {children.map(c => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedChild(c)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm whitespace-nowrap transition-all ${
-                  selectedChild?.id === c.id ? 'border-primary bg-primary/10 font-semibold' : 'border-border'
-                }`}
-              >
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={getImgUrl(c.image_url)} />
-                  <AvatarFallback className="text-xs">{c.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                {c.name.split(' ')[0]}
-              </button>
-            ))}
-          </div>
+        {/* Search Form */}
+        {!child && (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Search className="h-5 w-5 text-primary" />
+                Find Your Child's Attendance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter your child's admission number and your registered phone number to view attendance.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="admission">Admission / Roll Number</Label>
+                  <Input
+                    id="admission"
+                    placeholder="e.g. 2024001"
+                    value={admissionNo}
+                    onChange={(e) => setAdmissionNo(e.target.value)}
+                    maxLength={50}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Parent Phone Number</Label>
+                  <Input
+                    id="phone"
+                    placeholder="e.g. 9876543210"
+                    value={phoneNo}
+                    onChange={(e) => setPhoneNo(e.target.value)}
+                    type="tel"
+                    maxLength={15}
+                    className="mt-1"
+                  />
+                </div>
+                <Button onClick={handleSearch} disabled={loading} className="w-full">
+                  {loading ? 'Searching...' : 'View Attendance'}
+                </Button>
+              </div>
+              {searched && !child && !loading && (
+                <p className="text-sm text-destructive text-center">No matching student found. Please check your details.</p>
+              )}
+            </CardContent>
+          </Card>
         )}
 
-        {selectedChild && (
+        {child && (
           <>
+            {/* Back button */}
+            <Button variant="ghost" size="sm" onClick={() => { setChild(null); setSearched(false); }}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Search Another
+            </Button>
+
             {/* Student Info */}
             <Card className="border-primary/20">
               <CardContent className="p-4 flex items-center gap-4">
                 <Avatar className="h-16 w-16 border-2 border-primary/30">
-                  <AvatarImage src={getImgUrl(selectedChild.image_url)} />
-                  <AvatarFallback className="text-xl">{selectedChild.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={getImgUrl(child.image_url)} />
+                  <AvatarFallback className="text-xl">{child.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h2 className="font-bold text-lg text-foreground">{selectedChild.name}</h2>
+                  <h2 className="font-bold text-lg text-foreground">{child.name}</h2>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="secondary" className="text-xs">
-                      <GraduationCap className="h-3 w-3 mr-1" /> Class {selectedChild.category}
+                      <GraduationCap className="h-3 w-3 mr-1" /> Class {child.category}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">Roll: {selectedChild.employee_id}</Badge>
+                    <Badge variant="outline" className="text-xs">Roll: {child.employee_id}</Badge>
                   </div>
                 </div>
                 <div className="text-center">
@@ -317,20 +330,14 @@ export default function ParentPortalPage() {
                     <div key={i} className="text-[10px] text-center text-muted-foreground font-medium">{d}</div>
                   ))}
                   {(() => {
-                    const monthStart = startOfMonth(new Date());
-                    const firstDay = monthStart.getDay();
+                    const ms = startOfMonth(new Date());
+                    const firstDay = ms.getDay();
                     const offset = firstDay === 0 ? 6 : firstDay - 1;
-                    const blanks = Array.from({ length: offset }, (_, i) => (
-                      <div key={`b-${i}`} />
-                    ));
-                    const allDays = eachDayOfInterval({ start: monthStart, end: new Date() });
+                    const blanks = Array.from({ length: offset }, (_, i) => <div key={`b-${i}`} />);
+                    const allDays = eachDayOfInterval({ start: ms, end: new Date() });
                     const dayEls = allDays.map(d => {
                       const rec = monthRecords.find(r => isSameDay(r.date, d));
                       const isWknd = isWeekend(d);
-                      const color = isWknd ? 'bg-muted/30' :
-                        rec?.status === 'present' ? 'bg-green-500' :
-                        rec?.status === 'late' ? 'bg-yellow-500' :
-                        'bg-red-500/70';
                       return (
                         <div
                           key={d.toISOString()}
@@ -340,7 +347,6 @@ export default function ParentPortalPage() {
                             rec?.status === 'late' ? 'text-white bg-yellow-500' :
                             'text-white bg-red-500/80'
                           } ${isToday(d) ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}`}
-                          title={rec?.time ? `${rec.status} at ${rec.time}` : isWknd ? 'Weekend' : 'Absent'}
                         >
                           {d.getDate()}
                         </div>
@@ -387,30 +393,12 @@ export default function ParentPortalPage() {
                       }}
                       formatter={(v: number) => [`${v}%`, 'Attendance']}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="pct"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2.5}
-                      dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                    />
+                    <Line type="monotone" dataKey="pct" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ fill: 'hsl(var(--primary))', r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </>
-        )}
-
-        {children.length === 0 && !loading && (
-          <Card className="text-center py-16">
-            <CardContent>
-              <GraduationCap className="h-16 w-16 mx-auto mb-4 text-muted-foreground/40" />
-              <h3 className="font-semibold text-lg text-foreground">No Students Linked</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Contact the school admin to link your child to your account.
-              </p>
-            </CardContent>
-          </Card>
         )}
       </main>
     </div>
