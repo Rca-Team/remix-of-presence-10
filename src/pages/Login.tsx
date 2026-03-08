@@ -56,7 +56,7 @@ const Login = () => {
         description: "Welcome back to Presence",
       });
       
-      navigate('/dashboard');
+      navigate('/attendance');
     } catch (error: any) {
       toast({
         title: "Login failed",

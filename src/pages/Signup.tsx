@@ -33,7 +33,7 @@ const Signup = () => {
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/attendance');
       }
     });
 

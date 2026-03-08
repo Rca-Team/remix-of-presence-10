@@ -36,7 +36,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
             .single();
 
           if (!roleData) {
-            navigate('/dashboard');
+            navigate('/attendance');
             return;
           }
         }
