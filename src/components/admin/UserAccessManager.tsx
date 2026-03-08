@@ -178,7 +178,7 @@ const UserAccessManager: React.FC = () => {
   const openEditDialog = (user: RegisteredUser) => {
     setSelectedUser(user);
     setNewRole(user.role);
-    setSelectedCategories(user.teacherCategories as Category[]);
+    setSelectedCategories(user.teacherCategories);
     setDialogOpen(true);
   };
 
