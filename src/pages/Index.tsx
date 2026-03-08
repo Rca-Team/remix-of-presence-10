@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import mascotWelcome from '@/assets/mascot-welcome.png';
+import brandMascot from '@/assets/brand-mascot.png';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import PageLayout from '@/components/layouts/PageLayout';
@@ -171,7 +171,7 @@ const Index = () => {
                   {/* Mascot on mobile - compact */}
                   <div className="lg:hidden flex justify-center">
                     <motion.img
-                      src={mascotWelcome}
+                      src={brandMascot}
                       alt="Presence mascot"
                       className="w-32 h-32 sm:w-40 sm:h-40 object-contain drop-shadow-2xl"
                       animate={{ y: [0, -8, 0] }}
@@ -187,7 +187,7 @@ const Index = () => {
                       
                       {/* Mascot floating over the card */}
                       <motion.img
-                        src={mascotWelcome}
+                        src={brandMascot}
                         alt="Presence brand ambassador"
                         className="absolute -top-16 -right-8 w-36 h-36 object-contain drop-shadow-2xl z-10"
                         animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}

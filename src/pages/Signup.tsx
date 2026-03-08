@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { PasswordInput } from '@/components/ui/password-input';
-import mascotSignup from '@/assets/mascot-signup.png';
+import brandMascot from '@/assets/brand-mascot.png';
 import Logo from '@/components/Logo';
 import { Lock, Mail, User, ShieldCheck, ArrowLeft, Scan, BookOpen, Shield, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,7 +103,7 @@ const Signup = () => {
             className="flex justify-center"
           >
             <motion.img
-              src={mascotSignup}
+              src={brandMascot}
               alt="Presence brand ambassador"
               className="w-44 h-44 object-contain drop-shadow-2xl"
               animate={{ y: [0, -8, 0] }}
