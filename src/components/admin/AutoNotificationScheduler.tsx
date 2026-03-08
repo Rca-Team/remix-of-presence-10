@@ -160,23 +160,45 @@ const AutoNotificationScheduler: React.FC = () => {
           </AlertDescription>
         </Alert>
 
-        <Button 
-          onClick={triggerAutoNotifications}
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
-              <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
-              Sending Notifications...
-            </>
-          ) : (
-            <>
-              <Bell className="mr-2 h-4 w-4" />
-              Send Notifications Now
-            </>
+        <Separator className="my-4" />
+
+        <div className="space-y-3">
+          <h4 className="font-semibold flex items-center gap-2 text-sm">
+            <MailWarning className="h-4 w-4 text-destructive" />
+            Absence Cutoff Alerts
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            Send emails to absent students' parents and their class teachers after the attendance cutoff time.
+          </p>
+
+          {cutoffResult && (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription>
+                {cutoffResult.absentCount} absent • {cutoffResult.emailsSent} email(s) sent • {cutoffResult.inAppSent} in-app notification(s)
+              </AlertDescription>
+            </Alert>
           )}
-        </Button>
+
+          <Button
+            onClick={triggerCutoffAbsenceNotify}
+            disabled={isCutoffLoading || !isPastCutoff}
+            variant="destructive"
+            className="w-full"
+          >
+            {isCutoffLoading ? (
+              <>
+                <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin mr-2" />
+                Sending Absence Alerts...
+              </>
+            ) : (
+              <>
+                <MailWarning className="mr-2 h-4 w-4" />
+                {isPastCutoff ? 'Send Absence Cutoff Alerts' : 'Available After Cutoff Time'}
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
