@@ -332,6 +332,21 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
               <span className="text-[10px] sm:text-xs font-medium text-foreground">{fps} FPS</span>
             </div>
           </div>
+
+          {/* Camera flip button */}
+          <button
+            onClick={() => {
+              if (videoRef.current?.srcObject) {
+                (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+              }
+              setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+              setIsLoading(true);
+            }}
+            className="bg-card/80 backdrop-blur rounded-full p-2 sm:p-2.5 hover:bg-card transition-colors"
+            title={facingMode === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+          >
+            <SwitchCamera className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
+          </button>
         </div>
       )}
 
