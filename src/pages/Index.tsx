@@ -148,19 +148,19 @@ const Index = () => {
 
                 <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start px-4 sm:px-0">
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button size="lg" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 touch-target">
+                    <Button variant="ios" size="lg" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base touch-target">
                       Register Now   
                       <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                   <Link to="/parent-portal" className="w-full sm:w-auto">
-                    <Button size="lg" variant="outline" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 border-accent/30 bg-accent/5 hover:bg-accent/10 text-accent-foreground shadow-md hover:shadow-lg transition-all duration-300 touch-target">
+                    <Button variant="ios-green" size="lg" className="group w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base touch-target">
                       <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       Parent Portal
                     </Button>
                   </Link>
                   <Link to="/dashboard" className="w-full sm:w-auto">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 border-primary/20 hover:bg-primary/5 touch-target">
+                    <Button size="lg" variant="ios-glass" className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base touch-target">
                       View Demo
                     </Button>
                   </Link>
