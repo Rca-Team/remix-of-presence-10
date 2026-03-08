@@ -65,9 +65,7 @@ const loadFaceModels = async (retries = 2, delay = 1500) => {
 const initApp = () => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <ThemeProvider defaultTheme="dark">
-        <App />
-      </ThemeProvider>
+      <App />
     </StrictMode>
   );
   
