@@ -150,7 +150,7 @@ const Signup = () => {
                   Email
                 </Label>
                 <Input id="email" name="email" type="email" placeholder="name@school.com" value={formData.email}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  onChange={handleInputChange} className="h-12 text-base" required />
               </div>
 
               <div className="space-y-1.5">
