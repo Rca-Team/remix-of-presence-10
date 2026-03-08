@@ -341,6 +341,7 @@ const Admin = () => {
                   return (
                     <button
                       key={item.id}
+                      data-nav-id={item.id}
                       onClick={() => handleTabChange(item.id)}
                       className={cn(
                         "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors",
@@ -460,6 +461,7 @@ const Admin = () => {
               return (
                 <button
                   key={item.id}
+                  data-nav-id={item.id}
                   onClick={() => handleTabChange(item.id)}
                   className={cn(
                     "flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all min-w-0 flex-1",
@@ -504,6 +506,7 @@ const Admin = () => {
                           return (
                             <button
                               key={item.id}
+                              data-nav-id={item.id}
                               onClick={() => {handleTabChange(item.id);setMoreOpen(false);}}
                               className={cn(
                                 "flex flex-col items-center gap-1 p-2.5 sm:p-3 rounded-xl transition-colors relative",
