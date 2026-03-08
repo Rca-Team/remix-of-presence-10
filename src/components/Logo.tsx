@@ -1,47 +1,74 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { GraduationCap, BookOpen, Award } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  animate?: boolean;
 }
 
-const Logo: React.FC<LogoProps> = ({ className, size = 'md' }) => {
+const Logo: React.FC<LogoProps> = ({ className, size = 'md', animate = false }) => {
   const sizeClasses = {
     sm: 'text-xl',
     md: 'text-2xl',
     lg: 'text-3xl'
   };
 
+  const iconSizes = {
+    sm: 'w-9 h-9',
+    md: 'w-12 h-12',
+    lg: 'w-14 h-14'
+  };
+
   return (
-    <div className={cn("font-semibold tracking-tight flex items-center gap-2", sizeClasses[size], className)}>
-      <div className="relative w-12 h-12 rounded-lg overflow-hidden group hover-3d">
-        {/* Animated background with enhanced shine effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/40 via-indigo-600/40 to-sky-500/40 animate-pulse-subtle"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer bg-[length:200%_100%]"></div>
+    <div className={cn("font-semibold tracking-tight flex items-center gap-2.5", sizeClasses[size], className)}>
+      <div className={cn("relative rounded-xl overflow-hidden group", iconSizes[size])}>
+        {/* Background with holographic gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600" />
         
-        {/* School icons that rotate on hover with smoother transitions */}
-        <div className="absolute inset-0 flex items-center justify-center transition-all duration-500 group-hover:rotate-0 rotate-0">
-          <GraduationCap className="w-6 h-6 text-primary animate-float z-10" />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 rotate-90">
-          <BookOpen className="w-6 h-6 text-[hsl(var(--school-green))] animate-float z-10" />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 rotate-180">
-          <Award className="w-6 h-6 text-[hsl(var(--school-yellow))] animate-float z-10" />
-        </div>
+        {/* Animated shine sweep */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shimmer bg-[length:200%_100%]" />
         
-        {/* Decorative school elements with glow effect */}
-        <div className="absolute bottom-1 left-1 w-2 h-2 bg-[hsl(var(--school-red))] rounded-full opacity-70 shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
-        <div className="absolute top-1 right-1 w-2 h-2 bg-[hsl(var(--school-green))] rounded-full opacity-70 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-        <div className="absolute top-1 left-1 w-2 h-2 bg-[hsl(var(--school-blue))] rounded-full opacity-70 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-        <div className="absolute bottom-1 right-1 w-2 h-2 bg-[hsl(var(--school-yellow))] rounded-full opacity-70 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+        {/* Hexagonal grid pattern overlay */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)`,
+            backgroundSize: '8px 8px'
+          }}
+        />
+
+        {/* Central icon - stylized "P" mark */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg viewBox="0 0 32 32" className="w-[60%] h-[60%]" fill="none">
+            {/* Face scan outline */}
+            <path d="M8 4h-4v4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+            <path d="M24 4h4v4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+            <path d="M8 28h-4v-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+            <path d="M24 28h4v-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+            {/* Eye/scan dot */}
+            <circle cx="16" cy="14" r="4" stroke="white" strokeWidth="1.5" fill="none" />
+            <circle cx="16" cy="14" r="1.5" fill="white" />
+            {/* Scan line */}
+            <line x1="10" y1="22" x2="22" y2="22" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+          </svg>
+        </div>
+
+        {/* Corner accents */}
+        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white/40 rounded-tl-sm" />
+        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white/40 rounded-tr-sm" />
+        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white/40 rounded-bl-sm" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white/40 rounded-br-sm" />
       </div>
-      <div className="flex flex-col">
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 animate-shimmer bg-[length:200%_100%]">Presence</span>
-        <span className="text-xs text-muted-foreground mt-[-3px]">School Attendance</span>
+      
+      <div className="flex flex-col leading-none">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 font-bold tracking-wide">
+          PRESENCE
+        </span>
+        <span className="text-[10px] text-muted-foreground tracking-[0.2em] font-normal uppercase mt-0.5">
+          Smart Attendance
+        </span>
       </div>
     </div>
   );
