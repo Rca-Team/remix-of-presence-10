@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import mascotHero from '@/assets/mascot-hero.png';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import PageLayout from '@/components/layouts/PageLayout';
