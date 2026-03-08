@@ -13,12 +13,12 @@ interface LateEntryFormProps {
 }
 
 const LATE_REASONS = [
-  { value: 'traffic', label: 'Traffic / यातायात' },
-  { value: 'medical', label: 'Medical / चिकित्सा' },
-  { value: 'transport', label: 'Transport Issue / परिवहन' },
-  { value: 'weather', label: 'Weather / मौसम' },
-  { value: 'personal', label: 'Personal / व्यक्तिगत' },
-  { value: 'other', label: 'Other / अन्य' },
+  { value: 'traffic', label: 'Traffic' },
+  { value: 'medical', label: 'Medical' },
+  { value: 'transport', label: 'Transport Issue' },
+  { value: 'weather', label: 'Weather' },
+  { value: 'personal', label: 'Personal' },
+  { value: 'other', label: 'Other' },
 ];
 
 const LateEntryForm = ({ student, onSubmit, onDismiss }: LateEntryFormProps) => {
@@ -29,43 +29,40 @@ const LateEntryForm = ({ student, onSubmit, onDismiss }: LateEntryFormProps) => 
   const handleSubmit = async () => {
     if (!reason) return;
     setSubmitting(true);
-    await onSubmit(reason, detail);
-    setSubmitting(false);
+    try {
+      await onSubmit(reason, detail);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
     >
-      <motion.div
-        initial={{ y: 30, scale: 0.95 }}
-        animate={{ y: 0, scale: 1 }}
-        exit={{ y: 30, scale: 0.95 }}
-        transition={{ type: 'tween' }}
-        className="bg-card rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-border"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-yellow-500" />
-            <h3 className="font-bold text-foreground">Late Entry</h3>
+      <div className="bg-card rounded-2xl w-full max-w-md p-6 space-y-4 border border-border shadow-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <h3 className="font-semibold">Late Entry</h3>
+              <p className="text-sm text-muted-foreground">{student.studentName}</p>
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onDismiss}>
-            <X className="h-4 w-4" />
+            <X className="w-4 h-4" />
           </Button>
         </div>
-
-        <p className="text-sm text-muted-foreground mb-4">
-          <span className="font-semibold text-foreground">{student.studentName}</span> arrived late at{' '}
-          {student.time.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-        </p>
 
         <div className="space-y-3">
           <Select value={reason} onValueChange={setReason}>
             <SelectTrigger>
-              <SelectValue placeholder="Select reason / कारण चुनें" />
+              <SelectValue placeholder="Select reason for being late" />
             </SelectTrigger>
             <SelectContent>
               {LATE_REASONS.map(r => (
@@ -75,20 +72,20 @@ const LateEntryForm = ({ student, onSubmit, onDismiss }: LateEntryFormProps) => 
           </Select>
 
           <Textarea
+            placeholder="Additional details (optional)"
             value={detail}
-            onChange={e => setDetail(e.target.value)}
-            placeholder="Additional details (optional)..."
-            rows={2}
+            onChange={(e) => setDetail(e.target.value)}
+            rows={3}
           />
-
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={onDismiss}>Skip</Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={!reason || submitting}>
-              {submitting ? 'Saving...' : 'Record'}
-            </Button>
-          </div>
         </div>
-      </motion.div>
+
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={onDismiss}>Skip</Button>
+          <Button className="flex-1" onClick={handleSubmit} disabled={!reason || submitting}>
+            {submitting ? 'Saving...' : 'Submit'}
+          </Button>
+        </div>
+      </div>
     </motion.div>
   );
 };
