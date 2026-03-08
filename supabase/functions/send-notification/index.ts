@@ -27,7 +27,7 @@ const notificationSchema = z.object({
   student: z.object({
     id: z.string().min(1).max(100),
     name: z.string().max(100),
-    status: z.enum(['present', 'late', 'absent'])
+    status: z.enum(['present', 'late', 'absent', 'notification'])
   }).optional(),
   targetUserId: z.string().uuid().optional() // For storing notification to specific user
 });
