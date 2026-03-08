@@ -18,6 +18,7 @@ import Profile from './pages/Profile';
 import Features from './pages/Features';
 import GateMode from './pages/GateMode';
 import ParentPortal from './pages/ParentPortal';
+import AIChatbot from './components/features/AIChatbot';
 
 import SplashAnimation from "./components/SplashAnimation";
 import { AttendanceProvider } from './contexts/AttendanceContext';
