@@ -259,36 +259,15 @@ const PrincipalDashboard: React.FC = () => {
                   <Badge variant="secondary" className="text-xs font-normal">{filteredStudents.length}</Badge>
                 </CardTitle>
               </div>
-              {/* Search & Filters */}
-              <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name or ID..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-8 h-8 text-sm"
-                  />
-                </div>
-                <div className="flex gap-1">
-                  {statusFilterOptions.map(opt => (
-                    <Button
-                      key={opt.key}
-                      variant={statusFilter === opt.key ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setStatusFilter(opt.key)}
-                      className="h-8 text-xs px-2.5 gap-1"
-                    >
-                      {opt.label}
-                      <span className={cn(
-                        "text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center",
-                        statusFilter === opt.key ? "bg-primary-foreground/20" : "bg-muted"
-                      )}>
-                        {opt.count}
-                      </span>
-                    </Button>
-                  ))}
-                </div>
+              {/* Search */}
+              <div className="relative mt-2">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or ID..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
               </div>
             </CardHeader>
             <CardContent className="p-0">
