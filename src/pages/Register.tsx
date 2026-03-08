@@ -125,7 +125,7 @@ const Register = () => {
 
   const steps = [
     { number: 1, title: "Student Info", icon: User },
-    { number: 2, title: "4-Angle Scan", icon: Camera }
+    { number: 2, title: "3D Face Scan", icon: Camera }
   ];
 
   return (
