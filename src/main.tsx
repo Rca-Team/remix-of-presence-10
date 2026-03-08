@@ -1,6 +1,5 @@
 import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
-import { ThemeProvider } from '@/hooks/use-theme'
 import App from './App.tsx'
 import './index.css'
 import { loadModels, areModelsLoaded } from './services/FaceRecognitionService'
@@ -66,9 +65,7 @@ const loadFaceModels = async (retries = 2, delay = 1500) => {
 const initApp = () => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <ThemeProvider defaultTheme="dark">
-        <App />
-      </ThemeProvider>
+      <App />
     </StrictMode>
   );
   
