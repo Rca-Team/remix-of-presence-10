@@ -39,45 +39,41 @@ export const getCutoffTime = async (): Promise<string> => {
  * Update the cutoff time for attendance in the settings table
  */
 export const updateCutoffTime = async (time: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from('attendance_settings')
-      .select('*')
-      .eq('key', 'cutoff_time')
-      .maybeSingle();
+  // First check if setting exists
+  const { data, error } = await supabase
+    .from('attendance_settings')
+    .select('*')
+    .eq('key', 'cutoff_time')
+    .maybeSingle();
 
-    if (error) {
-      console.error('Error checking cutoff time setting:', error);
-      return false;
-    }
-
-    // If setting exists, update it, otherwise insert a new record
-    if (data) {
-      const { error: updateError } = await supabase
-        .from('attendance_settings')
-        .update({ value: time })  // Store as string directly
-        .eq('id', data.id);
-
-      if (updateError) {
-        console.error('Error updating cutoff time:', updateError);
-        return false;
-      }
-    } else {
-      const { error: insertError } = await supabase
-        .from('attendance_settings')
-        .insert({ key: 'cutoff_time', value: time });  // Store as string directly
-
-      if (insertError) {
-        console.error('Error inserting cutoff time:', insertError);
-        return false;
-      }
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error in updateCutoffTime:', error);
-    return false;
+  if (error) {
+    console.error('Error checking cutoff time setting:', error);
+    throw new Error(error.message);
   }
+
+  if (data) {
+    const { error: updateError } = await supabase
+      .from('attendance_settings')
+      .update({ value: time, updated_at: new Date().toISOString() })
+      .eq('key', 'cutoff_time');
+
+    if (updateError) {
+      console.error('Error updating cutoff time:', updateError);
+      throw new Error(updateError.message);
+    }
+  } else {
+    const { error: insertError } = await supabase
+      .from('attendance_settings')
+      .insert({ key: 'cutoff_time', value: time });
+
+    if (insertError) {
+      console.error('Error inserting cutoff time:', insertError);
+      throw new Error(insertError.message);
+    }
+  }
+
+  console.log('Cutoff time saved successfully:', time);
+  return true;
 };
 
 /**
