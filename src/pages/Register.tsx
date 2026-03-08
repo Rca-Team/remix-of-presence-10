@@ -347,8 +347,8 @@ const Register = () => {
                                   </motion.div>
                                 </div>
                                 <div>
-                                  <p className="font-semibold text-lg text-green-600 dark:text-green-400">4-Angle Scan Complete!</p>
-                                  <p className="text-sm text-muted-foreground">Averaged descriptor from 4 angles for max accuracy</p>
+                                  <p className="font-semibold text-lg text-green-600 dark:text-green-400">3D Scan Complete!</p>
+                                  <p className="text-sm text-muted-foreground">Multi-sample 3D face map for max accuracy</p>
                                 </div>
                                 <Button type="button" variant="outline" onClick={() => { setFaceCaptured(false); setFaceImage(null); setFaceDescriptor(null); }}>
                                   <Camera className="w-4 h-4 mr-2" />Retake Scan
