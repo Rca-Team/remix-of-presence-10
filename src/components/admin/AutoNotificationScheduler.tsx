@@ -3,15 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bell, Clock, CheckCircle2, AlertCircle, MailWarning } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 const AutoNotificationScheduler: React.FC = () => {
   const { toast } = useToast();
   const [cutoffTime, setCutoffTime] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCutoffLoading, setIsCutoffLoading] = useState(false);
   const [lastRun, setLastRun] = useState<Date | null>(null);
   const [isPastCutoff, setIsPastCutoff] = useState(false);
+  const [cutoffResult, setCutoffResult] = useState<{ absentCount?: number; emailsSent?: number; inAppSent?: number } | null>(null);
 
   useEffect(() => {
     // Fetch cutoff time
@@ -75,6 +78,26 @@ const AutoNotificationScheduler: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const triggerCutoffAbsenceNotify = async () => {
+    setIsCutoffLoading(true);
+    setCutoffResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('absence-cutoff-notify', { body: {} });
+      if (error) throw error;
+
+      setCutoffResult({ absentCount: data?.absentCount, emailsSent: data?.emailsSent, inAppSent: data?.inAppSent });
+      toast({
+        title: 'Absence Notifications Sent',
+        description: data?.message || `${data?.absentCount || 0} absent user(s) notified.`,
+      });
+    } catch (error) {
+      console.error('Cutoff notify error:', error);
+      toast({ title: 'Error', description: 'Failed to send absence cutoff notifications', variant: 'destructive' });
+    } finally {
+      setIsCutoffLoading(false);
     }
   };
 
@@ -144,7 +167,7 @@ const AutoNotificationScheduler: React.FC = () => {
         >
           {isLoading ? (
             <>
-              <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
+              <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin mr-2" />
               Sending Notifications...
             </>
           ) : (
@@ -154,6 +177,46 @@ const AutoNotificationScheduler: React.FC = () => {
             </>
           )}
         </Button>
+
+        <Separator className="my-4" />
+
+        <div className="space-y-3">
+          <h4 className="font-semibold flex items-center gap-2 text-sm">
+            <MailWarning className="h-4 w-4 text-destructive" />
+            Absence Cutoff Alerts
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            Send emails to absent students' parents and their class teachers after the attendance cutoff time.
+          </p>
+
+          {cutoffResult && (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription>
+                {cutoffResult.absentCount} absent • {cutoffResult.emailsSent} email(s) sent • {cutoffResult.inAppSent} in-app notification(s)
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button
+            onClick={triggerCutoffAbsenceNotify}
+            disabled={isCutoffLoading || !isPastCutoff}
+            variant="destructive"
+            className="w-full"
+          >
+            {isCutoffLoading ? (
+              <>
+                <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin mr-2" />
+                Sending Absence Alerts...
+              </>
+            ) : (
+              <>
+                <MailWarning className="mr-2 h-4 w-4" />
+                {isPastCutoff ? 'Send Absence Cutoff Alerts' : 'Available After Cutoff Time'}
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
