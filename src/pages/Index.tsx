@@ -129,8 +129,8 @@ const Index = () => {
               {/* Left Content - Mobile optimized */}
               <div className="space-y-4 sm:space-y-6 md:space-y-8 text-center lg:text-left">
                 <motion.div variants={itemVariants} className="flex justify-center lg:justify-start">
-                  <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 text-xs sm:text-sm font-medium text-primary">
-                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-ios-blue/15 to-ios-purple/15 border border-ios-blue/30 text-xs sm:text-sm font-semibold text-ios-blue backdrop-blur-xl shadow-lg shadow-ios-blue/10">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse-subtle" />
                     AI-Powered Attendance
                   </span>
                 </motion.div>
