@@ -11,9 +11,3 @@ verify_jwt = false
 
 [functions.generate-notification]
 verify_jwt = false
-
-[functions.presence-chat]
-verify_jwt = false
-
-[functions.generate-report-card]
-verify_jwt = false

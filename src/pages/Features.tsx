@@ -6,8 +6,7 @@ import {
   IdCard, CalendarDays, Smile, Users, FileText, 
   Shield, Database, MessageCircle, Sparkles, Bus,
   MapPin, Brain, Heart, Trophy, Camera, Siren,
-  Flag, DoorOpen, MessageSquare, Megaphone, BookOpen,
-  Mic, FileBarChart
+  Flag, DoorOpen, MessageSquare, Megaphone, BookOpen
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -41,13 +40,9 @@ import SMSNotificationConfig from '@/components/features/SMSNotificationConfig';
 import AssemblyMode from '@/components/features/AssemblyMode';
 import SmartAlertDashboard from '@/components/alerts/SmartAlertDashboard';
 
-// Next-level features
-import VoiceAttendance from '@/components/features/VoiceAttendance';
-import SmartReportCard from '@/components/features/SmartReportCard';
-
 const Features = () => {
   const { isAdminOrPrincipal } = useUserRole();
-  const [activeTab, setActiveTab] = useState('voice');
+  const [activeTab, setActiveTab] = useState('heatmap');
   const navigate = useNavigate();
 
   const sampleStudent = {
@@ -81,12 +76,6 @@ const Features = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full whitespace-nowrap">
           <TabsList className="inline-flex mb-6">
-            <TabsTrigger value="voice" className="gap-2">
-              <Mic className="h-4 w-4" /> Voice Roll Call
-            </TabsTrigger>
-            <TabsTrigger value="reportcard" className="gap-2">
-              <FileBarChart className="h-4 w-4" /> Smart Reports
-            </TabsTrigger>
             <TabsTrigger value="heatmap" className="gap-2">
               <CalendarDays className="h-4 w-4" /> Heat Map
             </TabsTrigger>
@@ -155,8 +144,6 @@ const Features = () => {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        <TabsContent value="voice"><VoiceAttendance /></TabsContent>
-        <TabsContent value="reportcard"><SmartReportCard /></TabsContent>
         <TabsContent value="heatmap"><AttendanceHeatMap /></TabsContent>
         <TabsContent value="assembly"><AssemblyMode /></TabsContent>
         <TabsContent value="holidays"><IndianHolidayCalendar /></TabsContent>
