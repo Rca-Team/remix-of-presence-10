@@ -21,7 +21,8 @@ import {
   Sparkles,
   Bell,
   MessageSquare,
-  Search
+  Search,
+  Wand2
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -35,6 +36,9 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [aiContext, setAiContext] = useState('');
+  const [showAiInput, setShowAiInput] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sendStatus, setSendStatus] = useState<{ success: number; failed: number } | null>(null);
@@ -64,6 +68,55 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
     return template
       .replace(/\{STUDENT_NAME\}/g, studentName)
       .replace(/\{STUDENT_ID\}/g, studentId);
+  };
+
+  const handleAIGenerate = async () => {
+    setIsAILoading(true);
+    try {
+      const selectedNames = availableFaces
+        .filter(f => selectedStudents.includes(f.id))
+        .map(f => f.name)
+        .slice(0, 5);
+
+      const { data, error } = await supabase.functions.invoke('generate-notification', {
+        body: {
+          context: aiContext,
+          studentNames: selectedNames.length > 0 ? selectedNames : ['Student'],
+          notificationType: activeTab,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: 'AI Error',
+          description: data.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data?.subject) setSubject(data.subject);
+      if (data?.message) setMessage(data.message);
+
+      toast({
+        title: '✨ AI Generated',
+        description: 'Subject and message auto-filled. Review and edit before sending.',
+      });
+
+      setShowAiInput(false);
+      setAiContext('');
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast({
+        title: 'Generation Failed',
+        description: 'Could not generate notification. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAILoading(false);
+    }
   };
 
   const sendNotifications = async () => {
@@ -99,7 +152,6 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
     try {
       for (const student of targetStudents) {
         try {
-          // Get parent email from profile
           let { data: profile } = await supabase
             .from('profiles')
             .select('parent_email, parent_name, display_name')
@@ -123,7 +175,6 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
           const personalizedSubject = personalizeMessage(subject, student.name, student.employee_id);
           const personalizedMessage = personalizeMessage(message, student.name, student.employee_id);
 
-          // Save to notifications table
           await supabase.from('notifications').insert({
             user_id: student.id,
             title: personalizedSubject,
@@ -132,7 +183,6 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
             read: false,
           });
 
-          // Send email via edge function
           const { error } = await supabase.functions.invoke('send-notification', {
             body: {
               recipient: {
@@ -212,7 +262,6 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 space-y-3"
             >
-              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -223,7 +272,6 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
                 />
               </div>
 
-              {/* Select All (for bulk) */}
               {activeTab === 'bulk' && (
                 <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-2">
@@ -239,7 +287,6 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
                 </div>
               )}
 
-              {/* Student List */}
               <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
                 {filteredFaces.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground text-sm">
@@ -303,6 +350,71 @@ const AdminNotificationSender: React.FC<AdminNotificationSenderProps> = ({ avail
           )}
         </AnimatePresence>
       </Tabs>
+
+      {/* AI Auto-fill Section */}
+      <div className="space-y-2">
+        <AnimatePresence>
+          {showAiInput && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Wand2 className="w-4 h-4 text-primary" />
+                  What's this notification about? <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Input
+                  placeholder="e.g. Tomorrow is a holiday, attendance reminder, exam schedule..."
+                  value={aiContext}
+                  onChange={(e) => setAiContext(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleAIGenerate}
+                    disabled={isAILoading}
+                    size="sm"
+                    className="bg-gradient-to-r from-violet-600 to-primary hover:from-violet-700 hover:to-primary/90"
+                  >
+                    {isAILoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-1.5" />
+                        Generate
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setShowAiInput(false); setAiContext(''); }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!showAiInput && (
+          <Button
+            variant="outline"
+            onClick={() => setShowAiInput(true)}
+            className="w-full gap-2 border-dashed border-primary/30 text-primary hover:bg-primary/5"
+          >
+            <Wand2 className="w-4 h-4" />
+            AI Auto-fill Subject & Message
+          </Button>
+        )}
+      </div>
 
       {/* Message Composition */}
       <div className="space-y-4">
