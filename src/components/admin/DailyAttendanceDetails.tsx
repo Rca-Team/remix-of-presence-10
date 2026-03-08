@@ -1,9 +1,11 @@
-
 import React from 'react';
 import { format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, Clock, X, User } from 'lucide-react';
+import { UserCheck, Clock, XCircle, CalendarDays, ArrowRight } from 'lucide-react';
 import { useAttendance } from '@/contexts/AttendanceContext';
+import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DailyAttendanceDetailsProps {
   selectedDate: Date | undefined;
@@ -34,243 +36,176 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
 }) => {
   const { recentAttendance } = useAttendance();
 
-  // Format time to 12-hour format with AM/PM
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, 'h:mm a');
-  };
+  const formatTime = (dateString: string) => format(new Date(dateString), 'h:mm a');
 
-  // Format full date and time
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, 'MMM d, yyyy h:mm a');
-  };
-
-  // Format date to show day of week and date
-  const formatDateWithDay = (date: Date) => {
-    return format(date, 'EEEE, MMMM d, yyyy');
-  };
-
-  // Check if the selected date is today
   const isToday = (date: Date) => {
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
+    const t = new Date();
+    return date.getDate() === t.getDate() && date.getMonth() === t.getMonth() && date.getFullYear() === t.getFullYear();
   };
 
-  // Check if the selected date is in the future
   const isFutureDate = (date: Date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return date > t;
   };
 
-  // Filter out unknown faces from attendance records
-  const filterKnownFaces = (records: any[]) => {
-    return records.filter(record => {
-      const name = record.name || '';
-      return name !== '' && 
-             name !== 'User' && 
-             name !== 'Unknown Student' && 
-             !name.toLowerCase().includes('unknown');
-    });
-  };
+  const filterKnownFaces = (records: any[]) =>
+    records.filter(r => r.name && r.name !== 'User' && r.name !== 'Unknown Student' && !r.name.toLowerCase().includes('unknown'));
 
-  // Group attendance records by person's name
-  const groupByName = (records: any[]) => {
-    const grouped: Record<string, any[]> = {};
-    
-    records.forEach(record => {
-      const name = record.name || 'Unknown';
-      if (!grouped[name]) {
-        grouped[name] = [];
-      }
-      grouped[name].push(record);
-    });
-    
-    return grouped;
-  };
-
-  // Check for real-time attendance from recent records - only for selected user
   const getRealtimeAttendance = () => {
     if (!selectedDate || recentAttendance.length === 0 || !selectedFaceId) return null;
-    
-    const selectedDateStart = new Date(selectedDate);
-    selectedDateStart.setHours(0, 0, 0, 0);
-    const selectedDateEnd = new Date(selectedDate);
-    selectedDateEnd.setHours(23, 59, 59, 999);
-    
-    // Get the name of the currently selected user
+    const start = new Date(selectedDate); start.setHours(0, 0, 0, 0);
+    const end = new Date(selectedDate); end.setHours(23, 59, 59, 999);
     const userName = selectedUserName || (dailyAttendance.length > 0 ? dailyAttendance[0].name : null);
-    
-    // Filter records by date AND (user_id OR name) - strictly for selected user only
-    const filteredRecords = recentAttendance.filter(record => {
-      const recordDate = new Date(record.timestamp);
-      const matchesDate = recordDate >= selectedDateStart && recordDate <= selectedDateEnd;
-      
-      // Match by user_id first, then by name as fallback
-      const matchesUser = record.user_id === selectedFaceId || 
-                         record.id === selectedFaceId ||
-                         (userName && record.name === userName);
-      
-      // Filter out unknown names
-      const isKnownFace = record.name && 
-                         record.name !== 'User' && 
-                         record.name !== 'Unknown Student' && 
-                         !record.name.toLowerCase().includes('unknown');
-      
-      return matchesDate && matchesUser && isKnownFace;
+    return recentAttendance.filter(r => {
+      const d = new Date(r.timestamp);
+      const matchesDate = d >= start && d <= end;
+      const matchesUser = r.user_id === selectedFaceId || r.id === selectedFaceId || (userName && r.name === userName);
+      const isKnown = r.name && r.name !== 'User' && r.name !== 'Unknown Student' && !r.name.toLowerCase().includes('unknown');
+      return matchesDate && matchesUser && isKnown;
     });
-    
-    return filteredRecords;
   };
 
-  if (!selectedDate) return null;
+  if (!selectedDate) {
+    return (
+      <Card className="h-full border-dashed">
+        <CardContent className="h-full flex flex-col items-center justify-center py-12 gap-3">
+          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+            <CalendarDays className="w-6 h-6 text-muted-foreground/50" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium">Select a date</p>
+            <p className="text-xs text-muted-foreground">Click any day on the calendar to view details</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Check if there are attendance records for this date
-  const hasAttendanceRecords = dailyAttendance && dailyAttendance.length > 0;
-  const realtimeRecords = getRealtimeAttendance();
-  const hasRealtimeRecords = realtimeRecords && realtimeRecords.length > 0;
-  
-  // Filter out unknown faces from dailyAttendance
-  const filteredDailyAttendance = filterKnownFaces(dailyAttendance);
-  const hasFilteredAttendanceRecords = filteredDailyAttendance.length > 0;
-  
-  // Group attendance by name
-  const groupedDailyAttendance = groupByName(filteredDailyAttendance);
-  const groupedRealtimeAttendance = realtimeRecords ? groupByName(realtimeRecords) : {};
-  
-  // Check if the date is in any of the attendance arrays (present, late, absent)
   const isPresentDate = isDateInArray(selectedDate, attendanceDays);
   const isLateDate = isDateInArray(selectedDate, lateAttendanceDays);
   const isAbsentDate = isDateInArray(selectedDate, absentDays);
+  const filteredDaily = filterKnownFaces(dailyAttendance);
+  const realtimeRecords = getRealtimeAttendance();
+  const records = realtimeRecords && realtimeRecords.length > 0 ? realtimeRecords : filteredDaily;
+
+  // Determine overall status
+  let overallStatus: 'present' | 'late' | 'absent' | 'future' | 'no-data' = 'no-data';
+  if (isFutureDate(selectedDate)) overallStatus = 'future';
+  else if (isPresentDate || records.some(r => r.status?.toLowerCase().includes('present'))) overallStatus = 'present';
+  else if (isLateDate || records.some(r => r.status?.toLowerCase().includes('late'))) overallStatus = 'late';
+  else if (isAbsentDate) overallStatus = 'absent';
+  else overallStatus = 'absent';
+
+  const statusConfig = {
+    present: { icon: UserCheck, label: 'Present', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', dot: 'bg-green-500' },
+    late: { icon: Clock, label: 'Late', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
+    absent: { icon: XCircle, label: 'Absent', color: 'text-red-500 dark:text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', dot: 'bg-red-400' },
+    future: { icon: CalendarDays, label: 'Upcoming', color: 'text-muted-foreground', bg: 'bg-muted/50', border: 'border-border', dot: 'bg-muted-foreground' },
+    'no-data': { icon: CalendarDays, label: 'No Data', color: 'text-muted-foreground', bg: 'bg-muted/50', border: 'border-border', dot: 'bg-muted-foreground' },
+  };
+
+  const config = statusConfig[overallStatus];
+  const StatusIcon = config.icon;
 
   return (
-    <div className="border-t pt-4 mt-4">
-      <h3 className="font-medium mb-2 flex items-center">
-        {formatDateWithDay(selectedDate)}
-        {isToday(selectedDate) && (
-          <span className="ml-2 text-sm text-green-500 flex items-center">
-            (Today)
-          </span>
-        )}
-      </h3>
-      
-      {isFutureDate(selectedDate) ? (
-        <p className="text-sm text-muted-foreground">Future date selected. No attendance data available yet.</p>
-      ) : hasRealtimeRecords ? (
-        <div className="space-y-4">
-          {/* Group by person name */}
-          {Object.entries(groupedRealtimeAttendance).map(([name, records]) => (
-            <div key={name} className="bg-muted/30 rounded-md p-3">
-              <div className="flex items-center gap-3 mb-2">
-                <img 
-                  src={records[0]?.image_url && records[0].image_url.startsWith('data:') 
-                    ? records[0].image_url 
-                    : records[0]?.image_url
-                      ? `https://tegpyalokurixuvgeuks.supabase.co/storage/v1/object/public/face-images/${records[0].image_url}`
-                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`
-                  } 
-                  alt={name} 
-                  className="h-8 w-8 rounded-full object-cover border-2 border-border"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`;
-                  }}
-                />
-                <h4 className="font-medium text-sm">{name}</h4>
-              </div>
-              <div className="space-y-2">
-                {records.map((record) => (
-                  <div key={record.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md animate-fade-in">
-                    <div className="flex flex-col">
-                      <div className="flex items-center">
-                        {record.status === 'Late' ? (
-                          <Clock className="h-4 w-4 text-amber-500 mr-2" />
-                        ) : (
-                          <UserCheck className="h-4 w-4 text-green-500 mr-2" />
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {formatTime(record.timestamp)}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge variant={record.status === 'Late' ? "outline" : "default"}>
-                      {record.status}
-                    </Badge>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={selectedDate.toISOString()}
+        initial={{ opacity: 0, x: 12 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -12 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Card className={cn("h-full overflow-hidden border", config.border)}>
+          <CardContent className="p-0">
+            {/* Date header */}
+            <div className={cn("px-4 py-3 border-b", config.bg)}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">{format(selectedDate, 'EEEE')}</p>
+                  <p className="font-bold text-lg tabular-nums">{format(selectedDate, 'MMM d, yyyy')}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isToday(selectedDate) && (
+                    <Badge variant="secondary" className="text-[10px]">Today</Badge>
+                  )}
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", config.bg)}>
+                    <StatusIcon className={cn("w-5 h-5", config.color)} />
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      ) : hasFilteredAttendanceRecords ? (
-        <div className="space-y-4">
-          {/* Group by person name */}
-          {Object.entries(groupedDailyAttendance).map(([name, records]) => (
-            <div key={name} className="bg-muted/30 rounded-md p-3">
-              <div className="flex items-center gap-3 mb-2">
-                <img 
-                  src={records[0]?.image_url && records[0].image_url.startsWith('data:') 
-                    ? records[0].image_url 
-                    : records[0]?.image_url
-                      ? `https://tegpyalokurixuvgeuks.supabase.co/storage/v1/object/public/face-images/${records[0].image_url}`
-                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`
-                  } 
-                  alt={name} 
-                  className="h-8 w-8 rounded-full object-cover border-2 border-border"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`;
-                  }}
-                />
-                <h4 className="font-medium text-sm">{name}</h4>
-              </div>
-              <div className="space-y-2">
-                {records.map((record) => (
-                  <div key={record.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md animate-fade-in">
-                    <div className="flex flex-col">
-                      <div className="flex items-center">
-                        {record.status === 'late' ? (
-                          <Clock className="h-4 w-4 text-amber-500 mr-2" />
-                        ) : (
-                          <UserCheck className="h-4 w-4 text-green-500 mr-2" />
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {formatTime(record.timestamp)}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge variant={record.status === 'late' ? "outline" : "default"}>
-                      {record.status === 'late' ? 'Late' : 'Present'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+
+            {/* Status banner */}
+            <div className={cn("px-4 py-3 flex items-center gap-3", config.bg, "border-b", config.border)}>
+              <span className={cn("w-2.5 h-2.5 rounded-full", config.dot)} />
+              <span className={cn("text-sm font-semibold", config.color)}>{config.label}</span>
+              {records.length > 0 && records[0]?.timestamp && overallStatus !== 'future' && (
+                <span className="text-xs text-muted-foreground ml-auto">
+                  {formatTime(records[0].timestamp)}
+                </span>
+              )}
             </div>
-          ))}
-        </div>
-      ) : isPresentDate ? (
-        <div className="flex items-center justify-center p-4 bg-green-50 rounded-md animate-fade-in">
-          <UserCheck className="h-5 w-5 text-green-500 mr-2" />
-          <span className="text-green-500 font-medium">Present</span>
-        </div>
-      ) : isLateDate ? (
-        <div className="flex items-center justify-center p-4 bg-amber-50 rounded-md animate-fade-in">
-          <Clock className="h-5 w-5 text-amber-500 mr-2" />
-          <span className="text-amber-500 font-medium">Late</span>
-        </div>
-      ) : isAbsentDate ? (
-        <div className="flex items-center justify-center p-4 bg-red-50 rounded-md animate-fade-in">
-          <X className="h-5 w-5 text-red-500 mr-2" />
-          <span className="text-red-500 font-medium">Absent</span>
-        </div>
-      ) : (
-        <div className="flex items-center justify-center p-4 bg-red-50 rounded-md animate-fade-in">
-          <X className="h-5 w-5 text-red-500 mr-2" />
-          <span className="text-red-500 font-medium">Absent</span>
-        </div>
-      )}
-    </div>
+
+            {/* Records */}
+            <div className="p-4">
+              {overallStatus === 'future' ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  This is a future date. Attendance data will appear after the day passes.
+                </p>
+              ) : records.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                    Activity Log
+                  </p>
+                  {records.map((record, i) => (
+                    <motion.div
+                      key={record.id || i}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors"
+                    >
+                      <div className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                        record.status?.toLowerCase().includes('late') ? 'bg-amber-500/15' : 'bg-green-500/15'
+                      )}>
+                        {record.status?.toLowerCase().includes('late') ? (
+                          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        ) : (
+                          <UserCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{formatTime(record.timestamp)}</p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px]",
+                          record.status?.toLowerCase().includes('late')
+                            ? 'border-amber-500/30 text-amber-600 dark:text-amber-400'
+                            : 'border-green-500/30 text-green-600 dark:text-green-400'
+                        )}
+                      >
+                        {record.status?.toLowerCase().includes('late') ? 'Late' : 'Present'}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground">
+                    {overallStatus === 'absent' ? 'No attendance recorded for this day.' : 'No detailed records available.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
