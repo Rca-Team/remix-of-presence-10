@@ -24,6 +24,7 @@ import EmergencyAlertPanel from '@/components/admin/EmergencyAlertPanel';
 import PDFBulkRegistration from '@/components/admin/PDFBulkRegistration';
 import NotificationLog from '@/components/admin/NotificationLog';
 import AdminInbox from '@/components/admin/AdminInbox';
+import AdminTutorial from '@/components/admin/AdminTutorial';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -412,6 +413,7 @@ const Admin = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <AdminTutorial onNavigate={handleTabChange} />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRefresh}>
                   <RefreshCw className="h-4 w-4" />
                 </Button>
