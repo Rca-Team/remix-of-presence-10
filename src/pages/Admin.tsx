@@ -19,6 +19,7 @@ import BatchIDCardExtractor from '@/components/admin/BatchIDCardExtractor';
 import StudentIDCardGenerator from '@/components/admin/StudentIDCardGenerator';
 import AttendanceReportGenerator from '@/components/admin/AttendanceReportGenerator';
 import PDFBulkRegistration from '@/components/admin/PDFBulkRegistration';
+import NotificationLog from '@/components/admin/NotificationLog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,7 +32,7 @@ import {
   User, Calendar, Clock, UserPlus, FolderKanban, School,
   LayoutDashboard, Settings, FileText, Bell, Users, BarChart3, 
   Shield, Activity, TrendingUp, ChevronRight, Send, UserCog, 
-  CreditCard, Image, Download, RefreshCw
+  CreditCard, Image, Download, RefreshCw, MessageSquareText
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -203,6 +204,7 @@ const Admin = () => {
     { id: 'reports', icon: BarChart3, label: 'Reports', group: 'Management' },
     { id: 'access', icon: UserCog, label: 'Access', group: 'Management' },
     { id: 'notifications', icon: Bell, label: 'Notifications', group: 'Management', count: notificationCount },
+    { id: 'notif-log', icon: MessageSquareText, label: 'Delivery Log', group: 'Management' },
     { id: 'settings', icon: Settings, label: 'Settings', group: 'Management' },
   ];
 
@@ -257,6 +259,8 @@ const Admin = () => {
         return <UserAccessManager />;
       case 'notifications':
         return <AdminNotificationSender availableFaces={availableFaces} />;
+      case 'notif-log':
+        return <NotificationLog />;
       case 'settings':
         return (
           <div className="space-y-6">
