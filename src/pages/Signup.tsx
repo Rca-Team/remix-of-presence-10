@@ -127,8 +127,8 @@ const Signup = () => {
           </div>
 
           <div className="text-center lg:text-left space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-bold">Create account</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <h1 className="text-3xl font-bold">Create account</h1>
+            <p className="text-base text-muted-foreground">
               Get started with Presence Smart School
             </p>
           </div>
