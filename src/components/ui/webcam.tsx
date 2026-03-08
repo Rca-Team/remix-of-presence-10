@@ -131,7 +131,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
           
           try {
             const minimalStream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: cameraFacing }
+              video: { facingMode: currentFacing }
             });
             
             if (localVideoRef.current) {
