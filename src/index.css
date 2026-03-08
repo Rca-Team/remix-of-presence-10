@@ -221,32 +221,137 @@
 }
 
 @layer components {
+  /* iOS Glass Panel */
   .glass-panel {
-    @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-xl border border-white/30 dark:border-cyan-500/20 rounded-2xl shadow-lg dark:shadow-cyan-500/10;
-    transition: all 0.4s var(--animation-timing);
+    @apply bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl shadow-xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 0.5s var(--ios-spring);
+  }
+
+  .glass-panel:hover {
+    transform: scale(1.01);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   }
   
   .backdrop-panel {
-    @apply bg-gradient-subtle backdrop-blur-md rounded-2xl shadow-sm;
-    transition: all 0.4s var(--animation-timing);
+    @apply bg-gradient-subtle backdrop-blur-xl rounded-3xl shadow-lg;
+    transition: all 0.5s var(--ios-spring);
   }
 
   .text-balance {
     text-wrap: balance;
   }
 
+  /* iOS Card with spring animation */
+  .ios-card {
+    @apply relative bg-card rounded-3xl p-6 overflow-hidden border border-border/50;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transition: all 0.5s var(--ios-spring);
+  }
+
+  .ios-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+
+  .ios-card:active {
+    transform: translateY(-2px) scale(0.98);
+    transition: all 0.15s ease-out;
+  }
+
+  /* iOS Colorful Cards */
+  .ios-card-blue {
+    @apply ios-card;
+    background: linear-gradient(145deg, hsl(var(--ios-blue) / 0.15), hsl(var(--ios-blue) / 0.05));
+    border-color: hsl(var(--ios-blue) / 0.3);
+  }
+
+  .ios-card-green {
+    @apply ios-card;
+    background: linear-gradient(145deg, hsl(var(--ios-green) / 0.15), hsl(var(--ios-green) / 0.05));
+    border-color: hsl(var(--ios-green) / 0.3);
+  }
+
+  .ios-card-orange {
+    @apply ios-card;
+    background: linear-gradient(145deg, hsl(var(--ios-orange) / 0.15), hsl(var(--ios-orange) / 0.05));
+    border-color: hsl(var(--ios-orange) / 0.3);
+  }
+
+  .ios-card-pink {
+    @apply ios-card;
+    background: linear-gradient(145deg, hsl(var(--ios-pink) / 0.15), hsl(var(--ios-pink) / 0.05));
+    border-color: hsl(var(--ios-pink) / 0.3);
+  }
+
+  .ios-card-purple {
+    @apply ios-card;
+    background: linear-gradient(145deg, hsl(var(--ios-purple) / 0.15), hsl(var(--ios-purple) / 0.05));
+    border-color: hsl(var(--ios-purple) / 0.3);
+  }
+
+  .ios-card-mint {
+    @apply ios-card;
+    background: linear-gradient(145deg, hsl(var(--ios-mint) / 0.15), hsl(var(--ios-mint) / 0.05));
+    border-color: hsl(var(--ios-mint) / 0.3);
+  }
+
+  /* iOS Gradient Buttons */
+  .ios-button {
+    @apply relative px-6 py-3 rounded-2xl font-semibold text-white overflow-hidden;
+    background: linear-gradient(145deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)));
+    box-shadow: 0 4px 15px hsl(var(--ios-blue) / 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.4s var(--ios-spring);
+  }
+
+  .ios-button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px hsl(var(--ios-blue) / 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .ios-button:active {
+    transform: translateY(-1px) scale(0.98);
+    transition: all 0.1s ease-out;
+  }
+
+  .ios-button-green {
+    background: linear-gradient(145deg, hsl(var(--ios-green)), hsl(var(--ios-mint)));
+    box-shadow: 0 4px 15px hsl(var(--ios-green) / 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .ios-button-orange {
+    background: linear-gradient(145deg, hsl(var(--ios-orange)), hsl(var(--ios-yellow)));
+    box-shadow: 0 4px 15px hsl(var(--ios-orange) / 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .ios-button-pink {
+    background: linear-gradient(145deg, hsl(var(--ios-pink)), hsl(var(--ios-purple)));
+    box-shadow: 0 4px 15px hsl(var(--ios-pink) / 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
   /* Enhanced Card hover effect */
   .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md;
-    transition: transform 0.4s var(--animation-timing), 
-                box-shadow 0.4s var(--animation-timing),
-                opacity 0.4s var(--animation-timing);
+    transition: all 0.5s var(--ios-spring);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   }
 
   /* Enhanced Button hover effect */
   .button-hover {
-    @apply transition-all duration-300 hover:brightness-105 active:brightness-95;
-    transition: all 0.3s var(--animation-timing);
+    transition: all 0.4s var(--ios-spring);
+  }
+  
+  .button-hover:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
+  
+  .button-hover:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
   }
   
   /* Mobile optimizations */
@@ -271,6 +376,27 @@
     @apply text-sm sm:text-base md:text-lg;
   }
 
+  /* iOS Vibrant glow effects */
+  .glow-ios-blue {
+    box-shadow: 0 0 30px hsl(var(--ios-blue) / 0.4), 0 0 60px hsl(var(--ios-blue) / 0.2);
+  }
+
+  .glow-ios-green {
+    box-shadow: 0 0 30px hsl(var(--ios-green) / 0.4), 0 0 60px hsl(var(--ios-green) / 0.2);
+  }
+
+  .glow-ios-pink {
+    box-shadow: 0 0 30px hsl(var(--ios-pink) / 0.4), 0 0 60px hsl(var(--ios-pink) / 0.2);
+  }
+
+  .glow-ios-purple {
+    box-shadow: 0 0 30px hsl(var(--ios-purple) / 0.4), 0 0 60px hsl(var(--ios-purple) / 0.2);
+  }
+
+  .glow-ios-orange {
+    box-shadow: 0 0 30px hsl(var(--ios-orange) / 0.4), 0 0 60px hsl(var(--ios-orange) / 0.2);
+  }
+
   /* Neon glow effects */
   .neon-glow-cyan {
     box-shadow: 0 0 20px hsl(var(--neon-cyan) / 0.3), 0 0 40px hsl(var(--neon-cyan) / 0.2);
@@ -284,123 +410,189 @@
     box-shadow: 0 0 20px hsl(var(--neon-blue) / 0.3), 0 0 40px hsl(var(--neon-blue) / 0.2);
   }
 
-  /* School themed components - enhanced with multi-color accents */
+  /* iOS Animated Pills/Tags */
+  .ios-pill {
+    @apply inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium;
+    background: linear-gradient(145deg, hsl(var(--ios-blue) / 0.15), hsl(var(--ios-purple) / 0.1));
+    border: 1px solid hsl(var(--ios-blue) / 0.3);
+    transition: all 0.4s var(--ios-spring);
+  }
+
+  .ios-pill:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px hsl(var(--ios-blue) / 0.3);
+  }
+
+  /* School themed components - enhanced with iOS colors */
   .school-card {
-    @apply relative overflow-hidden rounded-xl border bg-card dark:border-cyan/20 shadow-md transition-all hover:shadow-xl;
-    transition: all 0.4s var(--animation-timing);
+    @apply relative overflow-hidden rounded-3xl border bg-card shadow-lg;
+    border-color: hsl(var(--ios-blue) / 0.2);
+    transition: all 0.5s var(--ios-spring);
+  }
+
+  .school-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
   }
 
   .school-card::before {
     @apply content-[''] absolute top-0 left-0 w-full h-1;
-    background: linear-gradient(90deg, hsl(var(--cyan)), hsl(var(--violet)), hsl(var(--rose)), hsl(var(--amber)));
+    background: linear-gradient(90deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)), hsl(var(--ios-pink)), hsl(var(--ios-orange)));
   }
 
   /* Multi-color card borders */
   .card-gradient-border {
-    @apply relative rounded-xl overflow-hidden;
+    @apply relative rounded-3xl overflow-hidden;
   }
   .card-gradient-border::before {
     content: '';
-    @apply absolute inset-0 rounded-xl;
-    padding: 1px;
-    background: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--violet)), hsl(var(--rose)));
+    @apply absolute inset-0 rounded-3xl;
+    padding: 2px;
+    background: linear-gradient(135deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)), hsl(var(--ios-pink)));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
   }
 
-  /* Multi-color text gradients */
+  /* iOS Text gradients */
+  .text-gradient-ios {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)));
+  }
+
   .text-gradient-ocean {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--primary)));
+    background-image: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--ios-blue)));
   }
+  
   .text-gradient-aurora {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--emerald)), hsl(var(--cyan)), hsl(var(--violet)));
+    background-image: linear-gradient(135deg, hsl(var(--ios-green)), hsl(var(--ios-mint)), hsl(var(--ios-blue)));
   }
+  
   .text-gradient-cosmic {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--violet)), hsl(var(--fuchsia)), hsl(var(--rose)));
+    background-image: linear-gradient(135deg, hsl(var(--ios-purple)), hsl(var(--ios-pink)), hsl(var(--rose)));
   }
+  
   .text-gradient-sunset {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--rose)), hsl(var(--amber)));
+    background-image: linear-gradient(135deg, hsl(var(--ios-pink)), hsl(var(--ios-orange)), hsl(var(--ios-yellow)));
   }
+  
   .text-gradient-neon {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--violet)));
+    background-image: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--ios-purple)));
   }
 
   /* Multi-color glow effects */
-  .glow-cyan { box-shadow: 0 0 20px hsl(var(--cyan) / 0.3), 0 0 40px hsl(var(--cyan) / 0.15); }
-  .glow-violet { box-shadow: 0 0 20px hsl(var(--violet) / 0.3), 0 0 40px hsl(var(--violet) / 0.15); }
-  .glow-rose { box-shadow: 0 0 20px hsl(var(--rose) / 0.3), 0 0 40px hsl(var(--rose) / 0.15); }
-  .glow-emerald { box-shadow: 0 0 20px hsl(var(--emerald) / 0.3), 0 0 40px hsl(var(--emerald) / 0.15); }
-  .glow-amber { box-shadow: 0 0 20px hsl(var(--amber) / 0.3), 0 0 40px hsl(var(--amber) / 0.15); }
+  .glow-cyan { box-shadow: 0 0 25px hsl(var(--cyan) / 0.35), 0 0 50px hsl(var(--cyan) / 0.2); }
+  .glow-violet { box-shadow: 0 0 25px hsl(var(--violet) / 0.35), 0 0 50px hsl(var(--violet) / 0.2); }
+  .glow-rose { box-shadow: 0 0 25px hsl(var(--rose) / 0.35), 0 0 50px hsl(var(--rose) / 0.2); }
+  .glow-emerald { box-shadow: 0 0 25px hsl(var(--emerald) / 0.35), 0 0 50px hsl(var(--emerald) / 0.2); }
+  .glow-amber { box-shadow: 0 0 25px hsl(var(--amber) / 0.35), 0 0 50px hsl(var(--amber) / 0.2); }
   .glow-multi {
     box-shadow: 
-      -4px -4px 20px hsl(var(--cyan) / 0.15),
-      4px -4px 20px hsl(var(--violet) / 0.15),
-      4px 4px 20px hsl(var(--rose) / 0.15),
-      -4px 4px 20px hsl(var(--emerald) / 0.15);
+      -6px -6px 25px hsl(var(--ios-blue) / 0.2),
+      6px -6px 25px hsl(var(--ios-purple) / 0.2),
+      6px 6px 25px hsl(var(--ios-pink) / 0.2),
+      -6px 6px 25px hsl(var(--ios-green) / 0.2);
   }
 
-  /* ISO UI Components */
+  /* iOS Attendance badges */
   .attendance-present {
-    @apply bg-success text-success-foreground font-medium px-2 py-1 rounded-full text-xs;
-    box-shadow: 0 2px 10px hsl(var(--success) / 0.25);
+    @apply font-semibold px-3 py-1.5 rounded-full text-xs;
+    background: linear-gradient(145deg, hsl(var(--ios-green)), hsl(var(--ios-mint)));
+    color: white;
+    box-shadow: 0 4px 12px hsl(var(--ios-green) / 0.4);
   }
 
   .attendance-late {
-    @apply bg-warning text-warning-foreground font-medium px-2 py-1 rounded-full text-xs;
-    box-shadow: 0 2px 10px hsl(var(--warning) / 0.25);
+    @apply font-semibold px-3 py-1.5 rounded-full text-xs;
+    background: linear-gradient(145deg, hsl(var(--ios-orange)), hsl(var(--ios-yellow)));
+    color: white;
+    box-shadow: 0 4px 12px hsl(var(--ios-orange) / 0.4);
   }
 
   .attendance-absent {
-    @apply bg-destructive text-destructive-foreground font-medium px-2 py-1 rounded-full text-xs;
-    box-shadow: 0 2px 10px hsl(var(--destructive) / 0.25);
+    @apply font-semibold px-3 py-1.5 rounded-full text-xs;
+    background: linear-gradient(145deg, hsl(var(--ios-red)), hsl(var(--ios-pink)));
+    color: white;
+    box-shadow: 0 4px 12px hsl(var(--ios-red) / 0.4);
   }
 
   .school-gradient-bg {
-    @apply bg-gradient-to-br from-background via-background to-background;
-    transition: background 1s var(--animation-timing);
+    background: linear-gradient(180deg, hsl(var(--background)), hsl(var(--background) / 0.95), hsl(var(--ios-blue) / 0.03));
+    transition: background 1s var(--ios-smooth);
   }
   
-  /* New ISO UI Components */
+  /* iOS Card variants */
   .iso-card {
-    @apply relative bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg overflow-hidden;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 
-                0 8px 10px -6px rgba(0, 0, 0, 0.01);
-    transition: all 0.4s var(--animation-timing);
+    @apply relative bg-card rounded-3xl p-6 overflow-hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transition: all 0.5s var(--ios-spring);
   }
   
   .iso-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
-                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
   }
   
   .iso-input {
-    @apply bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none;
-    transition: all 0.3s var(--animation-timing);
+    @apply bg-muted/50 border border-border rounded-xl px-4 py-3 outline-none;
+    transition: all 0.3s var(--ios-spring);
+  }
+  
+  .iso-input:focus {
+    @apply ring-2 ring-primary border-primary;
+    box-shadow: 0 0 20px hsl(var(--ios-blue) / 0.2);
   }
   
   .iso-button {
-    @apply relative overflow-hidden rounded-lg px-5 py-2.5 font-medium transition-all;
-    transition: all 0.3s var(--animation-timing);
+    @apply relative overflow-hidden rounded-xl px-6 py-3 font-semibold transition-all;
+    transition: all 0.4s var(--ios-spring);
   }
   
   .iso-button:after {
     content: '';
-    @apply absolute inset-0 rounded-lg opacity-0;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 80%);
-    transition: opacity 0.5s var(--animation-timing);
+    @apply absolute inset-0 rounded-xl opacity-0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+    transition: opacity 0.4s var(--ios-smooth);
   }
   
   .iso-button:active:after {
-    opacity: 0.4;
+    opacity: 0.5;
     transition: 0s;
+  }
+
+  /* iOS Floating action */
+  .ios-fab {
+    @apply fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center text-white;
+    background: linear-gradient(145deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)));
+    box-shadow: 0 8px 25px hsl(var(--ios-blue) / 0.5);
+    transition: all 0.4s var(--ios-spring);
+  }
+
+  .ios-fab:hover {
+    transform: scale(1.1) translateY(-4px);
+    box-shadow: 0 12px 35px hsl(var(--ios-blue) / 0.6);
+  }
+
+  /* iOS Nav pill */
+  .ios-nav-pill {
+    @apply px-5 py-2.5 rounded-full font-medium transition-all;
+    transition: all 0.4s var(--ios-spring);
+  }
+
+  .ios-nav-pill.active {
+    background: linear-gradient(145deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)));
+    color: white;
+    box-shadow: 0 4px 15px hsl(var(--ios-blue) / 0.4);
+  }
+
+  .ios-nav-pill:not(.active):hover {
+    background: hsl(var(--muted));
   }
 }
 
