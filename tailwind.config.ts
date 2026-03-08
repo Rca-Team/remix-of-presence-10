@@ -70,7 +70,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Multi-color tokens
+				cyan: { DEFAULT: 'hsl(var(--cyan))' },
+				violet: { DEFAULT: 'hsl(var(--violet))' },
+				rose: { DEFAULT: 'hsl(var(--rose))' },
+				amber: { DEFAULT: 'hsl(var(--amber))' },
+				emerald: { DEFAULT: 'hsl(var(--emerald))' },
+				indigo: { DEFAULT: 'hsl(var(--indigo))' },
+				teal: { DEFAULT: 'hsl(var(--teal))' },
+				fuchsia: { DEFAULT: 'hsl(var(--fuchsia))' },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
