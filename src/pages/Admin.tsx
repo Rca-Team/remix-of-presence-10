@@ -62,6 +62,7 @@ const Admin = () => {
   const [nameFilter, setNameFilter] = useState<string>('all');
   const [availableFaces, setAvailableFaces] = useState<{id: string, name: string, employee_id: string}[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [stats, setStats] = useState({
     totalFaces: 0,
