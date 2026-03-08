@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert, SwitchCamera } from 'lucide-react';
+import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert, SwitchCamera, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GateEntry } from '@/pages/GateMode';
 import { loadModels, areModelsLoaded } from '@/services/face-recognition/ModelService';
 import { recognizeFace, recordAttendance } from '@/services/face-recognition/RecognitionService';
+import { usePhotoEnhancer } from '@/hooks/usePhotoEnhancer';
 import * as faceapi from 'face-api.js';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
