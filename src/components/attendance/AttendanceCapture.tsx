@@ -57,6 +57,8 @@ const AttendanceCapture = () => {
     resetProcessing: resetResult
   } = useOptimizedFaceRecognition();
 
+  const { isEnhancing: isAIEnhancing, autoEnhance, lastQualityScore } = usePhotoEnhancer();
+
   // Wrapper to reset all state including captured image and detected faces
   const handleReset = () => {
     resetResult();
