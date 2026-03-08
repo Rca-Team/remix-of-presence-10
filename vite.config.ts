@@ -70,11 +70,6 @@ export default defineConfig(({ mode }) => {
     ].filter(Boolean),
     resolve: {
       alias: [
-        // Force all imports of the auto-generated Supabase client to use our safe wrapper.
-        {
-          find: "@/integrations/supabase/client",
-          replacement: path.resolve(__dirname, "./src/integrations/supabase/safeClient.ts"),
-        },
         {
           find: "@",
           replacement: path.resolve(__dirname, "./src"),
