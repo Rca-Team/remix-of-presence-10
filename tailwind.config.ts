@@ -71,7 +71,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Multi-color tokens
+				// iOS-inspired vibrant palette
 				cyan: { DEFAULT: 'hsl(var(--cyan))' },
 				violet: { DEFAULT: 'hsl(var(--violet))' },
 				rose: { DEFAULT: 'hsl(var(--rose))' },
@@ -80,6 +80,15 @@ export default {
 				indigo: { DEFAULT: 'hsl(var(--indigo))' },
 				teal: { DEFAULT: 'hsl(var(--teal))' },
 				fuchsia: { DEFAULT: 'hsl(var(--fuchsia))' },
+				// iOS accent colors
+				'ios-blue': { DEFAULT: 'hsl(var(--ios-blue))' },
+				'ios-green': { DEFAULT: 'hsl(var(--ios-green))' },
+				'ios-orange': { DEFAULT: 'hsl(var(--ios-orange))' },
+				'ios-pink': { DEFAULT: 'hsl(var(--ios-pink))' },
+				'ios-purple': { DEFAULT: 'hsl(var(--ios-purple))' },
+				'ios-red': { DEFAULT: 'hsl(var(--ios-red))' },
+				'ios-yellow': { DEFAULT: 'hsl(var(--ios-yellow))' },
+				'ios-mint': { DEFAULT: 'hsl(var(--ios-mint))' },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
