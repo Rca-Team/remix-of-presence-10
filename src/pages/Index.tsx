@@ -229,10 +229,10 @@ const Index = () => {
                 className="text-center p-3 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-sm sm:shadow-lg"
               >
                 <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
-                  className="text-lg sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
+                  className="text-xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                   {stat.value}
                 </motion.div>
-                <div className="mt-1 sm:mt-3 text-[10px] sm:text-sm font-medium text-muted-foreground">{stat.label}</div>
+                <div className="mt-1 sm:mt-3 text-xs sm:text-sm font-medium text-muted-foreground">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
