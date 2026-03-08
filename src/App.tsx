@@ -40,7 +40,7 @@ function AnimatedRoutes() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <Dashboard />
+            <GateMode />
           </ProtectedRoute>
         } />
         <Route path="/register" element={<Register />} />
