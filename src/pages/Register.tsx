@@ -355,7 +355,7 @@ const Register = () => {
                                 </Button>
                               </motion.div>
                             ) : (
-                              <MultiAngleCapture onComplete={handleMultiAngleComplete} isModelLoading={isModelLoading} />
+                              <Scan3DCapture onComplete={handleMultiAngleComplete} isModelLoading={isModelLoading} />
                             )}
                           </div>
                         </div>
