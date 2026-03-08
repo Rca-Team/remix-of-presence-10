@@ -187,7 +187,7 @@ const Index = () => {
                       
                       {/* Mascot floating over the card */}
                       <motion.img
-                        src={brandMascot}
+                        src={mascotWelcome}
                         alt="Presence brand ambassador"
                         className="absolute -top-16 -right-8 w-36 h-36 object-contain drop-shadow-2xl z-10"
                         animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}

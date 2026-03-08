@@ -103,7 +103,7 @@ const Signup = () => {
             className="flex justify-center"
           >
             <motion.img
-              src={brandMascot}
+              src={mascotSignup}
               alt="Presence brand ambassador"
               className="w-44 h-44 object-contain drop-shadow-2xl"
               animate={{ y: [0, -8, 0] }}
