@@ -240,6 +240,39 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
             attendanceMarkedRef.current.add(studentId);
             try {
               await recordAttendance(studentId, 'present', detection.detection.score);
+              
+              // Send automatic email notification to parent
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('parent_email, parent_name, display_name')
+                .eq('user_id', studentId)
+                .maybeSingle();
+              
+              if (profile?.parent_email) {
+                const timeStr = new Date().toLocaleTimeString();
+                const dateStr = new Date().toLocaleDateString();
+                supabase.functions.invoke('send-notification', {
+                  body: {
+                    recipient: {
+                      email: profile.parent_email,
+                      name: profile.parent_name || 'Parent/Guardian'
+                    },
+                    message: {
+                      subject: `✅ ${profile.display_name || studentName} arrived at school`,
+                      body: `Your child ${profile.display_name || studentName} was recognized at the school gate and marked present on ${dateStr} at ${timeStr}.\n\nThis is an automated notification from the Gate Entry System.`
+                    },
+                    student: {
+                      id: studentId,
+                      name: profile.display_name || studentName,
+                      status: 'present'
+                    },
+                    targetUserId: studentId
+                  }
+                }).then(res => {
+                  if (res.error) console.error('Gate notification error:', res.error);
+                  else console.log('Gate entry notification sent for:', studentName);
+                });
+              }
             } catch (err) {
               console.error('Failed to record attendance:', err);
             }
