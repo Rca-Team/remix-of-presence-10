@@ -156,7 +156,7 @@ const Index = () => {
 
                 <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-5 pt-1 sm:pt-4 px-2 sm:px-0">
                   {["AI Powered", "Real-time", "Parent Portal", "Secure"].map((badge, i) => (
-                    <div key={i} className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground">
+                    <div key={i} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                       <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                       {badge}
                     </div>
