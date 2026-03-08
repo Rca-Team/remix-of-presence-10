@@ -88,27 +88,32 @@ const Index = () => {
   return (
     <PageTransition>
       <PageLayout className="overflow-hidden has-bottom-nav md:pb-0">
-        {/* Animated Background Elements */}
+        {/* Animated Background Elements - iOS-inspired vibrant orbs */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
+            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.35, 0.2] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 left-1/4 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-cyan/20 rounded-full blur-3xl" 
+            className="absolute top-0 left-1/4 w-48 sm:w-64 md:w-[500px] h-48 sm:h-64 md:h-[500px] bg-ios-blue/30 rounded-full blur-[80px]" 
           />
           <motion.div 
-            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.12, 0.2] }}
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.25, 0.15, 0.25] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 md:w-80 h-40 sm:h-60 md:h-80 bg-violet/20 rounded-full blur-3xl" 
+            className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 md:w-[400px] h-40 sm:h-60 md:h-[400px] bg-ios-purple/30 rounded-full blur-[80px]" 
           />
           <motion.div 
-            animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
+            animate={{ scale: [1, 1.4, 1], opacity: [0.15, 0.25, 0.15] }}
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-            className="absolute top-1/2 left-0 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-rose/15 rounded-full blur-3xl" 
+            className="absolute top-1/2 left-0 w-32 sm:w-48 md:w-[350px] h-32 sm:h-48 md:h-[350px] bg-ios-pink/25 rounded-full blur-[80px]" 
           />
           <motion.div 
-            animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.18, 0.1] }}
+            animate={{ scale: [1.1, 1, 1.1], opacity: [0.15, 0.25, 0.15] }}
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-            className="absolute top-1/4 right-0 w-40 sm:w-56 md:w-72 h-40 sm:h-56 md:h-72 bg-emerald/15 rounded-full blur-3xl" 
+            className="absolute top-1/4 right-0 w-40 sm:w-56 md:w-[380px] h-40 sm:h-56 md:h-[380px] bg-ios-green/25 rounded-full blur-[80px]" 
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+            className="absolute bottom-0 left-1/2 w-64 md:w-[450px] h-64 md:h-[450px] bg-ios-orange/20 rounded-full blur-[100px]" 
           />
         </div>
 
