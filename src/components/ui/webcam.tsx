@@ -33,6 +33,7 @@ export const Webcam = forwardRef<HTMLVideoElement, WebcamProps>(({
   const [error, setError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [currentFacing, setCurrentFacing] = useState<'user' | 'environment'>(cameraFacing);
   const retryTimeoutRef = useRef<number | null>(null);
   const attemptCountRef = useRef(0);
   const enhancementIntervalRef = useRef<number | null>(null);
