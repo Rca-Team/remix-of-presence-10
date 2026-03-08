@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { PasswordInput } from '@/components/ui/password-input';
-import brandMascot from '@/assets/brand-mascot.png';
+
 import Logo from '@/components/Logo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Lock, Mail, ArrowLeft, Scan, BookOpen, Shield, Bell } from 'lucide-react';
