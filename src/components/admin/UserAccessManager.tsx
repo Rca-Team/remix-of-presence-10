@@ -54,7 +54,7 @@ interface RegisteredUser {
   teacherCategories: string[];
 }
 
-const CATEGORIES: Category[] = ['A', 'B', 'C', 'D'];
+const ALL_CLASS_SECTIONS = CLASSES.flatMap(cls => SECTIONS.map(sec => `${cls}-${sec}`));
 
 const ROLE_CONFIG: Record<Role, { label: string; icon: React.ElementType; color: string }> = {
   admin: { label: 'Admin', icon: Crown, color: 'text-yellow-500 bg-yellow-500/10' },
