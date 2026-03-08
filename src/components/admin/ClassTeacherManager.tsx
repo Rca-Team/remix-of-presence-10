@@ -639,10 +639,16 @@ const ClassTeacherManager: React.FC<Props> = ({ category, onBack }) => {
               <h3 className="font-semibold">Today's Substitutions</h3>
               <p className="text-sm text-muted-foreground">{format(new Date(), 'EEEE, MMM d yyyy')}</p>
             </div>
-            <Button onClick={findSubstitutes} disabled={isSaving}>
-              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-              Auto-Assign Substitutes
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={printDailySubstitutionReport}>
+                <Printer className="w-4 h-4 mr-2" />
+                Print Report
+              </Button>
+              <Button onClick={findSubstitutes} disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                Auto-Assign Substitutes
+              </Button>
+            </div>
           </div>
 
           {substitutions.length === 0 ? (
