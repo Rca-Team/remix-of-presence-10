@@ -66,7 +66,7 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md', animate = false }) 
           PRESENCE
         </span>
         <span className="text-[10px] text-muted-foreground tracking-[0.2em] font-normal uppercase mt-0.5">
-          Smart Attendance
+          Smart School
         </span>
       </div>
     </div>

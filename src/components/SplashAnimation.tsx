@@ -35,9 +35,10 @@ const SplashAnimation: React.FC<SplashAnimationProps> = ({
     return () => { clearTimeout(timer); clearTimeout(t1); clearTimeout(t2); clearInterval(progressInterval); };
   }, [duration, onComplete]);
 
-  const loadingText = progress < 30 ? 'Initializing neural engine...' :
-    progress < 60 ? 'Loading face models...' :
-    progress < 90 ? 'Calibrating sensors...' : 'System ready';
+  const loadingText = progress < 25 ? 'Initializing smart school...' :
+    progress < 50 ? 'Loading AI modules...' :
+    progress < 75 ? 'Connecting systems...' :
+    progress < 95 ? 'Preparing dashboard...' : 'System ready';
 
   return (
     <AnimatePresence>
@@ -209,7 +210,7 @@ const SplashAnimation: React.FC<SplashAnimationProps> = ({
                 className="h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mx-auto mb-3"
               />
               <p className="text-cyan-300/40 text-xs md:text-sm tracking-[0.35em] font-light uppercase">
-                Intelligent Face Recognition System
+                Smart School Automation Platform
               </p>
             </motion.div>
 
