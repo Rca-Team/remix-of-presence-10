@@ -42,16 +42,15 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md', animate = false }) 
         {/* Central icon - stylized "P" mark */}
         <div className="absolute inset-0 flex items-center justify-center">
           <svg viewBox="0 0 32 32" className="w-[60%] h-[60%]" fill="none">
-            {/* Face scan outline */}
+            {/* Face scan corners */}
             <path d="M8 4h-4v4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
             <path d="M24 4h4v4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
             <path d="M8 28h-4v-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
             <path d="M24 28h4v-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-            {/* Eye/scan dot */}
-            <circle cx="16" cy="14" r="4" stroke="white" strokeWidth="1.5" fill="none" />
-            <circle cx="16" cy="14" r="1.5" fill="white" />
-            {/* Scan line */}
-            <line x1="10" y1="22" x2="22" y2="22" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+            {/* Human head */}
+            <circle cx="16" cy="12" r="4.5" stroke="white" strokeWidth="1.5" fill="none" />
+            {/* Body/shoulders */}
+            <path d="M8 26c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7"/>
           </svg>
         </div>
 
