@@ -159,8 +159,8 @@ const Signup = () => {
                   Password
                 </Label>
                 <PasswordInput id="password" name="password" placeholder="••••••••" value={formData.password}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
-                <p className="text-[10px] sm:text-xs text-muted-foreground">Minimum 6 characters</p>
+                  onChange={handleInputChange} className="h-12 text-base" required />
+                <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
               </div>
 
               <div className="space-y-1.5">
