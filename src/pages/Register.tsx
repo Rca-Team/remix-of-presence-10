@@ -7,6 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { registerFace } from '@/services/FaceRecognitionService';
+import { storeFaceSample } from '@/services/face-recognition/ProgressiveTrainingService';
 import { loadRegistrationModels } from '@/services/face-recognition/OptimizedRegistrationService';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
