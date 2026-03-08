@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { PasswordInput } from '@/components/ui/password-input';
+import brandMascot from '@/assets/brand-mascot.png';
 import Logo from '@/components/Logo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Lock, Mail, ArrowLeft, Scan, BookOpen, Shield, Bell } from 'lucide-react';
@@ -81,10 +82,23 @@ const Login = () => {
             className="text-3xl font-bold text-foreground">
             Complete School Automation Platform
           </motion.h2>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="text-muted-foreground text-lg">
-            AI-powered face recognition, timetable management, gate security & parent communication.
-          </motion.p>
+
+          {/* Mascot */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.35, type: 'spring' }}
+            className="flex justify-center"
+          >
+            <motion.img
+              src={brandMascot}
+              alt="Presence brand ambassador"
+              className="w-44 h-44 object-contain drop-shadow-2xl"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </motion.div>
+
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
             className="grid grid-cols-2 gap-3">
             {[
