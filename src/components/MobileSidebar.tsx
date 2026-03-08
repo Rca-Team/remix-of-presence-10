@@ -97,7 +97,7 @@ const MobileSidebar = () => {
   const navigation = useMemo(() => {
     const items = [
       { name: 'Home', path: '/', icon: Home },
-      { name: 'Dashboard', path: '/dashboard', icon: BarChart, requiresAuth: true },
+      { name: 'Gate', path: '/dashboard', icon: BarChart, requiresAuth: true },
       { name: 'Profile', path: '/profile', icon: User, requiresAuth: true },
       { name: 'Register', path: '/register', icon: UserPlus },
       { name: 'Attendance', path: '/attendance', icon: Clock, requiresAuth: true },
