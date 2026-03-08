@@ -203,14 +203,14 @@ export default function ParentPortalPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Enter your child's admission number and your registered phone number to view attendance.
+                Enter your child's Student ID and your registered phone number to view attendance.
               </p>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="admission">Admission / Roll Number</Label>
+                  <Label htmlFor="admission">Student ID</Label>
                   <Input
                     id="admission"
-                    placeholder="e.g. 2024001"
+                    placeholder="e.g. STU001"
                     value={admissionNo}
                     onChange={(e) => setAdmissionNo(e.target.value)}
                     maxLength={50}
