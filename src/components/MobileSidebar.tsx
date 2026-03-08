@@ -25,6 +25,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 const navColors: Record<string, string> = {
   Home: 'ios-blue',
@@ -47,6 +48,7 @@ const MobileSidebar = () => {
   const [profile, setProfile] = useState<any>(null);
   const { isAdminOrPrincipal, isTeacher } = useUserRole();
   const { toast } = useToast();
+  const haptic = useHapticFeedback();
 
   useEffect(() => {
     setOpen(false);
@@ -81,6 +83,7 @@ const MobileSidebar = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      haptic.onSuccess();
       setOpen(false);
       toast({ title: 'Logged out', description: 'You have been successfully logged out.' });
       navigate('/');
@@ -110,7 +113,7 @@ const MobileSidebar = () => {
   if (!isMobile) return null;
 
   const isActive = (path: string) => location.pathname === path;
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => { haptic.onSelection(); setTheme(theme === 'dark' ? 'light' : 'dark'); };
   const displayName =
     profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
@@ -126,6 +129,7 @@ const MobileSidebar = () => {
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
             <button
+              onClick={() => haptic.onButtonPress()}
               className={cn(
                 'relative h-[58px] w-[58px] rounded-full',
                 'flex items-center justify-center',
@@ -274,6 +278,7 @@ const MobileSidebar = () => {
                     >
                       <Link
                         to={item.path}
+                        onClick={() => haptic.onSelection()}
                         className={cn(
                           'group relative flex items-center gap-3 py-3 px-3 rounded-2xl',
                           'transition-all duration-300',
