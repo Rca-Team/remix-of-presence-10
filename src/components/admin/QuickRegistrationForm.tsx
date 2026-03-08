@@ -19,8 +19,10 @@ import {
 } from '@/components/ui/select';
 import ImageCropper from './ImageCropper';
 import { cn } from '@/lib/utils';
-
-type Category = 'A' | 'B' | 'C' | 'D' | 'Teacher';
+import { 
+  CLASSES, SECTIONS, ALL_CATEGORIES, TRANSPORT_MODES, BLOOD_GROUPS,
+  type Category 
+} from '@/constants/schoolConfig';
 
 interface ScanDirection {
   id: string;
@@ -55,9 +57,14 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
   const [formData, setFormData] = useState({
     name: prefillData?.name || '',
     employee_id: prefillData?.employee_id || '',
-    department: prefillData?.department || '',
-    position: prefillData?.position || '',
-    category: prefillData?.category || 'A' as Category
+    roll_number: '',
+    parent_phone: '',
+    blood_group: '',
+    medical_info: '',
+    transport_mode: '',
+    selectedClass: '6',
+    selectedSection: 'A',
+    category: prefillData?.category || '6-A' as Category,
   });
 
   const [scanDirections, setScanDirections] = useState<ScanDirection[]>([
@@ -75,10 +82,20 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [scanMode, setScanMode] = useState<'multi' | 'single'>('multi');
   const [singleImage, setSingleImage] = useState<{ blob: Blob | null; url: string }>({ blob: null, url: '' });
-  const [showCropper, setShowCropper] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
 
   const capturedCount = scanDirections.filter(d => d.captured).length;
   const scanProgress = (capturedCount / scanDirections.length) * 100;
+
+  // Update category when class/section changes
+  useEffect(() => {
+    if (!isTeacher) {
+      setFormData(prev => ({
+        ...prev,
+        category: `${prev.selectedClass}-${prev.selectedSection}` as Category,
+      }));
+    }
+  }, [formData.selectedClass, formData.selectedSection, isTeacher]);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -98,13 +115,12 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
 
   useEffect(() => {
     if (prefillData) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: prefillData.name || '',
         employee_id: prefillData.employee_id || '',
-        department: prefillData.department || '',
-        position: prefillData.position || '',
-        category: prefillData.category || 'A'
-      });
+        category: prefillData.category || '6-A',
+      }));
       if (prefillData.imageBlob) {
         setScanMode('single');
         setSingleImage({ blob: prefillData.imageBlob, url: URL.createObjectURL(prefillData.imageBlob) });
@@ -162,7 +178,6 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
     canvas.toBlob(async (blob) => {
       if (!blob) return;
 
-      // Extract face descriptor
       let descriptor: Float32Array | null = null;
       if (modelsReady) {
         const result = await getFaceDescriptorFromBlob(blob);
@@ -178,17 +193,14 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
         i === currentScanIndex ? { ...d, captured: true, blob, url, descriptor } : d
       ));
 
-      // Auto advance to next uncaptured direction
       const nextIndex = scanDirections.findIndex((d, i) => i > currentScanIndex && !d.captured);
       if (nextIndex !== -1) {
         setCurrentScanIndex(nextIndex);
       } else {
-        // All captured or go back to first uncaptured
         const firstUncaptured = scanDirections.findIndex((d, i) => i !== currentScanIndex && !d.captured);
         if (firstUncaptured !== -1) {
           setCurrentScanIndex(firstUncaptured);
         } else {
-          // All done
           stopCamera();
           toast({ title: "All Angles Captured!", description: "4-way face scan complete. Ready to register." });
         }
@@ -227,12 +239,24 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
 
     setIsProcessing(true);
     try {
+      const parentContactInfo = formData.parent_phone ? {
+        parent_phone: formData.parent_phone,
+      } : undefined;
+
+      // Build department string with extra student info
+      const extraInfo = [
+        formData.roll_number && `Roll: ${formData.roll_number}`,
+        formData.blood_group && `Blood: ${formData.blood_group}`,
+        formData.transport_mode && `Transport: ${formData.transport_mode}`,
+        formData.medical_info && `Medical: ${formData.medical_info}`,
+      ].filter(Boolean).join(' | ');
+
+      const department = extraInfo || 'General';
+
       if (scanMode === 'multi' && hasMultiScan) {
-        // Register with best descriptor (front preferred)
         const frontScan = scanDirections.find(d => d.id === 'front' && d.captured);
         const primaryScan = frontScan || scanDirections.find(d => d.captured)!;
         
-        // Average all descriptors for better accuracy
         const allDescriptors = scanDirections
           .filter(d => d.captured && d.descriptor)
           .map(d => d.descriptor!);
@@ -252,23 +276,14 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
           primaryScan.blob!,
           formData.name,
           formData.employee_id || `STU-${Date.now()}`,
-          formData.department || 'General',
-          formData.position || 'Student',
+          department,
+          formData.roll_number || 'Student',
           undefined,
           avgDescriptor,
-          undefined,
+          parentContactInfo,
           formData.category
         );
-
-        // Register additional angle descriptors as separate face_descriptors for better matching
-        for (const scan of scanDirections) {
-          if (scan.captured && scan.descriptor && scan.id !== 'front') {
-            // Store additional descriptors for this user to improve recognition from different angles
-            console.log(`Additional ${scan.id} angle descriptor stored for ${formData.name}`);
-          }
-        }
       } else {
-        // Single image registration
         let descriptor: Float32Array | undefined;
         if (modelsReady && singleImage.blob) {
           const result = await getFaceDescriptorFromBlob(singleImage.blob);
@@ -284,17 +299,22 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
           singleImage.blob!,
           formData.name,
           formData.employee_id || `STU-${Date.now()}`,
-          formData.department || 'General',
-          formData.position || 'Student',
+          department,
+          formData.roll_number || 'Student',
           undefined,
           descriptor,
-          undefined,
+          parentContactInfo,
           formData.category
         );
       }
 
-      toast({ title: "Registration Successful", description: `${formData.name} registered with ${scanMode === 'multi' ? `${capturedCount} angle(s)` : 'single photo'}` });
-      setFormData({ name: '', employee_id: '', department: '', position: '', category: 'A' });
+      toast({ title: "Registration Successful", description: `${formData.name} registered to ${formData.category}` });
+      setFormData({ 
+        name: '', employee_id: '', roll_number: '', parent_phone: '',
+        blood_group: '', medical_info: '', transport_mode: '',
+        selectedClass: formData.selectedClass, selectedSection: formData.selectedSection,
+        category: formData.category,
+      });
       resetScan();
       onSuccess?.();
     } catch (err) {
@@ -310,33 +330,21 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <User className="h-5 w-5" />
-          Face Registration
+          Student / Teacher Registration
         </CardTitle>
         <CardDescription>
-          Capture multiple angles for best recognition accuracy
+          Register with class, section, and parent details for school attendance
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Scan Mode Toggle */}
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={scanMode === 'multi' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setScanMode('multi')}
-            >
-              <Camera className="h-3.5 w-3.5 mr-1.5" />
-              4-Way Scan
+            <Button type="button" variant={scanMode === 'multi' ? 'default' : 'outline'} size="sm" onClick={() => setScanMode('multi')}>
+              <Camera className="h-3.5 w-3.5 mr-1.5" />4-Way Scan
             </Button>
-            <Button
-              type="button"
-              variant={scanMode === 'single' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setScanMode('single')}
-            >
-              <Upload className="h-3.5 w-3.5 mr-1.5" />
-              Single Photo
+            <Button type="button" variant={scanMode === 'single' ? 'default' : 'outline'} size="sm" onClick={() => setScanMode('single')}>
+              <Upload className="h-3.5 w-3.5 mr-1.5" />Single Photo
             </Button>
           </div>
 
@@ -389,50 +397,26 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
               <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
                 {isCameraActive ? (
                   <>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover"
-                      style={{ transform: 'scaleX(-1)' }}
-                    />
-                    {/* Face detection border */}
-                    <div className={cn(
-                      "absolute inset-4 border-2 rounded-xl transition-colors",
-                      faceDetected ? "border-green-500" : "border-yellow-500 border-dashed"
-                    )} />
-                    {/* Direction instruction */}
+                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} />
+                    <div className={cn("absolute inset-4 border-2 rounded-xl transition-colors", faceDetected ? "border-green-500" : "border-yellow-500 border-dashed")} />
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur px-3 py-1.5 rounded-full">
                       <div className="flex items-center gap-2">
                         <currentDirection.icon className="w-4 h-4 text-primary" />
                         <span className="text-sm font-medium">{currentDirection.instruction}</span>
                       </div>
                     </div>
-                    {/* Capture button */}
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={captureCurrentDirection}
-                        disabled={!faceDetected}
-                        size="sm"
-                      >
-                        <Camera className="h-4 w-4 mr-1.5" />
-                        {faceDetected ? `Capture ${currentDirection.label}` : 'Position Face'}
+                      <Button type="button" onClick={captureCurrentDirection} disabled={!faceDetected} size="sm">
+                        <Camera className="h-4 w-4 mr-1.5" />{faceDetected ? `Capture ${currentDirection.label}` : 'Position Face'}
                       </Button>
-                      <Button type="button" variant="secondary" size="sm" onClick={stopCamera}>
-                        Cancel
-                      </Button>
+                      <Button type="button" variant="secondary" size="sm" onClick={stopCamera}>Cancel</Button>
                     </div>
                   </>
                 ) : capturedCount > 0 ? (
                   <div className="flex flex-col items-center justify-center h-full gap-3 p-4">
                     <div className="grid grid-cols-4 gap-2 w-full max-w-xs">
                       {scanDirections.map(dir => (
-                        <div key={dir.id} className={cn(
-                          "aspect-square rounded-lg overflow-hidden border",
-                          dir.captured ? "border-green-500" : "border-dashed border-border"
-                        )}>
+                        <div key={dir.id} className={cn("aspect-square rounded-lg overflow-hidden border", dir.captured ? "border-green-500" : "border-dashed border-border")}>
                           {dir.captured ? (
                             <img src={dir.url} alt={dir.label} className="w-full h-full object-cover" />
                           ) : (
@@ -446,13 +430,11 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
                     <div className="flex gap-2">
                       {capturedCount < 4 && (
                         <Button type="button" size="sm" onClick={startCamera}>
-                          <Camera className="h-3.5 w-3.5 mr-1.5" />
-                          Continue Scan
+                          <Camera className="h-3.5 w-3.5 mr-1.5" />Continue Scan
                         </Button>
                       )}
                       <Button type="button" variant="outline" size="sm" onClick={resetScan}>
-                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                        Reset
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" />Reset
                       </Button>
                     </div>
                   </div>
@@ -461,7 +443,7 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
                     <div className="text-center space-y-1">
                       <Camera className="w-8 h-8 mx-auto text-muted-foreground" />
                       <p className="text-sm font-medium">4-Way Face Scan</p>
-                      <p className="text-xs text-muted-foreground">Captures front, left, right & up angles for best accuracy</p>
+                      <p className="text-xs text-muted-foreground">Captures front, left, right & up angles</p>
                     </div>
                     <Button type="button" onClick={startCamera} disabled={isLoadingModels}>
                       {isLoadingModels ? (
@@ -505,9 +487,6 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
                     <Button type="button" variant="secondary" size="sm" onClick={() => { setSingleImage({ blob: null, url: '' }); startCamera(); }}>
                       <Camera className="h-3 w-3 mr-1" />Retake
                     </Button>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => setSingleImage({ blob: null, url: '' })}>
-                      Remove
-                    </Button>
                   </div>
                 </div>
               ) : (
@@ -529,40 +508,118 @@ const QuickRegistrationForm: React.FC<QuickRegistrationFormProps> = ({ onSuccess
 
           <canvas ref={canvasRef} className="hidden" />
 
+          {/* Teacher toggle */}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isTeacher}
+                onChange={(e) => {
+                  setIsTeacher(e.target.checked);
+                  if (e.target.checked) {
+                    setFormData(prev => ({ ...prev, category: 'Teacher' as Category }));
+                  } else {
+                    setFormData(prev => ({ ...prev, category: `${prev.selectedClass}-${prev.selectedSection}` as Category }));
+                  }
+                }}
+                className="rounded border-border"
+              />
+              <span className="text-sm font-medium">Register as Teacher</span>
+            </label>
+          </div>
+
           {/* Form Fields */}
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <Label htmlFor="name">Full Name *</Label>
               <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Enter full name" required />
             </div>
+
             <div>
-              <Label htmlFor="employee_id">Student ID</Label>
-              <Input id="employee_id" value={formData.employee_id} onChange={(e) => setFormData(prev => ({ ...prev, employee_id: e.target.value }))} placeholder="Auto-generated" />
+              <Label htmlFor="employee_id">Student / Staff ID</Label>
+              <Input id="employee_id" value={formData.employee_id} onChange={(e) => setFormData(prev => ({ ...prev, employee_id: e.target.value }))} placeholder="Auto-generated if empty" />
             </div>
+
             <div>
-              <Label htmlFor="department">Department</Label>
-              <Input id="department" value={formData.department} onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))} placeholder="e.g. Computer Science" />
+              <Label htmlFor="roll_number">Roll Number</Label>
+              <Input id="roll_number" value={formData.roll_number} onChange={(e) => setFormData(prev => ({ ...prev, roll_number: e.target.value }))} placeholder="e.g. 1, 2, 3..." />
             </div>
+
+            {!isTeacher && (
+              <>
+                <div>
+                  <Label>Class *</Label>
+                  <Select value={formData.selectedClass} onValueChange={(v) => setFormData(prev => ({ ...prev, selectedClass: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CLASSES.map(cls => (
+                        <SelectItem key={cls} value={String(cls)}>Class {cls}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Section *</Label>
+                  <Select value={formData.selectedSection} onValueChange={(v) => setFormData(prev => ({ ...prev, selectedSection: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SECTIONS.map(sec => (
+                        <SelectItem key={sec} value={sec}>Section {sec}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
             <div className="col-span-2">
-              <Label htmlFor="category">Section *</Label>
-              <Select value={formData.category} onValueChange={(value: Category) => setFormData(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+              <Label htmlFor="parent_phone">Parent Phone (with country code)</Label>
+              <Input id="parent_phone" value={formData.parent_phone} onChange={(e) => setFormData(prev => ({ ...prev, parent_phone: e.target.value }))} placeholder="+91XXXXXXXXXX" />
+            </div>
+
+            <div>
+              <Label>Blood Group</Label>
+              <Select value={formData.blood_group} onValueChange={(v) => setFormData(prev => ({ ...prev, blood_group: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="A">Section A</SelectItem>
-                  <SelectItem value="B">Section B</SelectItem>
-                  <SelectItem value="C">Section C</SelectItem>
-                  <SelectItem value="D">Section D</SelectItem>
-                  <SelectItem value="Teacher">Teacher</SelectItem>
+                  {BLOOD_GROUPS.map(bg => (
+                    <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label>Transport Mode</Label>
+              <Select value={formData.transport_mode} onValueChange={(v) => setFormData(prev => ({ ...prev, transport_mode: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {TRANSPORT_MODES.map(tm => (
+                    <SelectItem key={tm} value={tm}>{tm}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2">
+              <Label htmlFor="medical_info">Medical Info (optional)</Label>
+              <Input id="medical_info" value={formData.medical_info} onChange={(e) => setFormData(prev => ({ ...prev, medical_info: e.target.value }))} placeholder="Allergies, conditions, etc." />
+            </div>
+          </div>
+
+          {/* Category Badge */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Will register to:</span>
+            <Badge variant="secondary" className="text-sm">
+              {isTeacher ? 'Teacher' : `Class ${formData.selectedClass} - Section ${formData.selectedSection}`}
+            </Badge>
           </div>
 
           <Button type="submit" className="w-full" disabled={isProcessing || (!scanDirections.some(d => d.captured) && !singleImage.blob)}>
             {isProcessing ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing {scanMode === 'multi' ? `${capturedCount} angles` : 'photo'}...</>
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
             ) : (
-              <><CheckCircle className="h-4 w-4 mr-2" />Register {scanMode === 'multi' && capturedCount > 0 ? `(${capturedCount} angles)` : ''}</>
+              <><CheckCircle className="h-4 w-4 mr-2" />Register {formData.name || 'Student'}</>
             )}
           </Button>
         </form>
