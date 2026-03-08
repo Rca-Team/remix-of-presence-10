@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Eye, Loader2, Scan, Zap, ShieldCheck, ShieldAlert, SwitchCamera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { GateEntry } from '@/pages/GateMode';
 import { loadModels, areModelsLoaded } from '@/services/face-recognition/ModelService';
