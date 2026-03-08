@@ -459,6 +459,18 @@ const AttendanceCapture = () => {
                 {detectedFaces.length} face{detectedFaces.length > 1 ? 's' : ''} detected
               </Badge>
             )}
+            {isAIEnhancing && (
+              <Badge variant="outline" className="ml-2 gap-1 animate-pulse">
+                <Wand2 className="h-3 w-3" />
+                AI Enhancing...
+              </Badge>
+            )}
+            {lastQualityScore !== null && lastQualityScore < 0.45 && !isAIEnhancing && (
+              <Badge variant="outline" className="ml-2 gap-1 text-amber-600 border-amber-300">
+                <Wand2 className="h-3 w-3" />
+                Low Quality Detected
+              </Badge>
+            )}
           </div>
         </div>
 
