@@ -309,7 +309,7 @@ const Admin = () => {
   return (
     <PageTransition>
       <PageLayout className="min-h-screen bg-background">
-        <div className="flex h-[calc(100vh-4rem)]">
+        <div className="flex h-[calc(100dvh-4rem)]">
           {/* Desktop Sidebar */}
           {!isMobile &&
           <aside className={cn(
