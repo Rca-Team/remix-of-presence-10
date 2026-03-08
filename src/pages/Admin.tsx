@@ -413,6 +413,7 @@ const Admin = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <AdminTutorial onNavigate={handleTabChange} />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRefresh}>
                   <RefreshCw className="h-4 w-4" />
                 </Button>
