@@ -123,14 +123,14 @@ const Index = () => {
                   </span>
                 </motion.div>
 
-                <motion.h1 variants={itemVariants} className="text-[28px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.15] sm:leading-tight px-2 sm:px-0">
+                <motion.h1 variants={itemVariants} className="text-[32px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.15] sm:leading-tight px-2 sm:px-0">
                   <span className="block">Your School,</span>
                   <span className="block bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                     Fully Automated
                   </span>
                 </motion.h1>
 
-                <motion.p variants={itemVariants} className="text-sm sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed px-3 sm:px-0">
+                <motion.p variants={itemVariants} className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed px-3 sm:px-0">
                   Face-recognition attendance, timetable, gate security, parent portal & AI analytics — one platform.
                 </motion.p>
 
