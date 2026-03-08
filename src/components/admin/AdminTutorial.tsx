@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, FolderKanban, Users, Calendar, UserPlus, Image,
   FileText, CreditCard, BarChart3, UserCog, Bell, MessageSquareText,
   Mail, Siren, Settings, X, ChevronRight, ChevronLeft, Sparkles,
-  HelpCircle, Zap, Rocket,
+  HelpCircle, Rocket, MapPin, MoreHorizontal,
 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TutorialStep {
   id: string;
@@ -14,7 +15,8 @@ interface TutorialStep {
   title: string;
   description: string;
   color: string;
-  glowColor: string;
+  mobileLocation: 'bottom-nav' | 'more-menu';
+  desktopGroup: string;
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
@@ -22,129 +24,145 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     id: 'dashboard',
     icon: LayoutDashboard,
     title: 'Dashboard',
-    description: 'Your command center — see live attendance stats, real-time activity feeds, today\'s present/late/absent counts, and AI-powered insights all in one glance.',
+    description: 'Your command center — live attendance stats, real-time activity feeds, and AI-powered insights.',
     color: 'hsl(var(--primary))',
-    glowColor: 'hsl(var(--primary) / 0.3)',
+    mobileLocation: 'bottom-nav',
+    desktopGroup: 'Overview',
   },
   {
     id: 'sections',
     icon: FolderKanban,
-    title: 'Class & Section Management',
-    description: 'View and manage all classes and sections. Assign class teachers and subject teachers, set up period-wise timetables, and auto-assign substitute teachers when someone is absent.',
+    title: 'Class & Timetable Management',
+    description: 'Manage classes, assign teachers, set up period-wise timetables (8 periods Mon–Sat), and auto-assign substitutes when teachers are absent.',
     color: '#8b5cf6',
-    glowColor: 'rgba(139, 92, 246, 0.3)',
+    mobileLocation: 'bottom-nav',
+    desktopGroup: 'Overview',
   },
   {
     id: 'students',
     icon: Users,
     title: 'Student Directory',
-    description: 'Browse all registered students with their face photos, names, and IDs. Click any student to view their detailed attendance calendar and history.',
+    description: 'Browse all registered students with photos, names, and IDs. Click any student to view their attendance calendar.',
     color: '#06b6d4',
-    glowColor: 'rgba(6, 182, 212, 0.3)',
+    mobileLocation: 'bottom-nav',
+    desktopGroup: 'Overview',
   },
   {
     id: 'calendar',
     icon: Calendar,
     title: 'Attendance Calendar',
-    description: 'A visual monthly calendar showing daily attendance status (present, late, absent) for any selected student. Track patterns and streaks at a glance.',
+    description: 'Visual monthly calendar showing daily attendance (present, late, absent) for any selected student.',
     color: '#10b981',
-    glowColor: 'rgba(16, 185, 129, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Overview',
   },
   {
     id: 'register',
     icon: UserPlus,
     title: 'Quick Registration',
-    description: 'Register new students instantly using a multi-angle face scan. Captures 5 different angles for maximum recognition accuracy during attendance.',
+    description: 'Register new students using a multi-angle face scan. Captures 5 angles for maximum accuracy.',
     color: '#f59e0b',
-    glowColor: 'rgba(245, 158, 11, 0.3)',
+    mobileLocation: 'bottom-nav',
+    desktopGroup: 'Registration',
   },
   {
     id: 'bulk',
     icon: Users,
     title: 'Bulk Registration',
-    description: 'Register multiple students at once using class photos or batch image uploads. The system detects and separates individual faces automatically.',
+    description: 'Register multiple students at once using class photos or batch image uploads.',
     color: '#ec4899',
-    glowColor: 'rgba(236, 72, 153, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Registration',
   },
   {
     id: 'idcard',
     icon: Image,
     title: 'ID Card Extraction',
-    description: 'Upload student ID card images and the AI will automatically extract the student\'s face photo, name, and ID number for quick registration.',
+    description: 'Upload ID card images — AI extracts face photos, names, and ID numbers automatically.',
     color: '#14b8a6',
-    glowColor: 'rgba(20, 184, 166, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Registration',
   },
   {
     id: 'pdf',
     icon: FileText,
     title: 'PDF Import',
-    description: 'Import student data from PDF documents like admission lists or school records. The system extracts names, IDs, and other details automatically.',
+    description: 'Import student data from PDF documents like admission lists or school records.',
     color: '#f97316',
-    glowColor: 'rgba(249, 115, 22, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Registration',
   },
   {
     id: 'idcards',
     icon: CreditCard,
     title: 'ID Card Generator',
-    description: 'Generate professional student ID cards with photos, QR codes, and school branding. Print-ready cards for all students in any class.',
+    description: 'Generate professional student ID cards with photos, QR codes, and school branding.',
     color: '#6366f1',
-    glowColor: 'rgba(99, 102, 241, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Registration',
   },
   {
     id: 'reports',
     icon: BarChart3,
     title: 'Reports & Analytics',
-    description: 'Generate class-wise, section-wise, and individual attendance reports with visual charts, progress bars, and export to print-ready PDFs.',
+    description: 'Generate class-wise attendance reports with charts and export to print-ready PDFs.',
     color: '#22c55e',
-    glowColor: 'rgba(34, 197, 94, 0.3)',
+    mobileLocation: 'bottom-nav',
+    desktopGroup: 'Management',
   },
   {
     id: 'access',
     icon: UserCog,
     title: 'User Access & Roles',
-    description: 'Manage user roles (Admin, Principal, Teacher). Grant teachers permission to take attendance for specific classes and view reports.',
+    description: 'Manage roles (Admin, Principal, Teacher). Grant teachers permission for specific classes.',
     color: '#ef4444',
-    glowColor: 'rgba(239, 68, 68, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Management',
   },
   {
     id: 'notifications',
     icon: Bell,
     title: 'Notifications',
-    description: 'Send targeted notifications to parents via email, WhatsApp, and SMS. Use AI auto-fill to generate personalized messages for each student.',
+    description: 'Send targeted notifications to parents via email, WhatsApp, and SMS with AI auto-fill.',
     color: '#a855f7',
-    glowColor: 'rgba(168, 85, 247, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Management',
   },
   {
     id: 'notif-log',
     icon: MessageSquareText,
     title: 'Delivery Log',
-    description: 'Track all sent notifications in real-time. See delivery status (sent, failed, pending) for every WhatsApp, email, and SMS message.',
+    description: 'Track all sent notifications — see delivery status for every WhatsApp, email, and SMS.',
     color: '#0ea5e9',
-    glowColor: 'rgba(14, 165, 233, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Management',
   },
   {
     id: 'inbox',
     icon: Mail,
     title: 'Admin Inbox',
-    description: 'View emails sent to the school\'s admission address. All incoming messages are captured and displayed here with real-time updates.',
+    description: 'View emails sent to the school. All incoming messages captured with real-time updates.',
     color: '#64748b',
-    glowColor: 'rgba(100, 116, 139, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Management',
   },
   {
     id: 'emergency',
     icon: Siren,
     title: 'Emergency Alerts',
-    description: 'Broadcast emergency alerts (fire, lockdown, earthquake, etc.) to ALL devices with the app installed. Triggers alarms even when the app is closed.',
+    description: 'Broadcast emergency alerts (fire, lockdown, earthquake) to ALL devices. Triggers alarms even when app is closed.',
     color: '#dc2626',
-    glowColor: 'rgba(220, 38, 38, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Management',
   },
   {
     id: 'settings',
     icon: Settings,
     title: 'Settings',
-    description: 'Configure attendance cutoff time, auto-notification schedules, and send absence alerts to parents and teachers after the cutoff period.',
+    description: 'Configure attendance cutoff time, auto-notification schedules, and absence alert triggers.',
     color: '#78716c',
-    glowColor: 'rgba(120, 113, 108, 0.3)',
+    mobileLocation: 'more-menu',
+    desktopGroup: 'Management',
   },
 ];
 
@@ -158,6 +176,9 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const isMobile = useIsMobile();
+  const highlightRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEY);
@@ -165,6 +186,38 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
       setTimeout(() => setIsOpen(true), 1500);
     }
   }, []);
+
+  // Find and highlight the target nav element
+  const updateTargetPosition = useCallback(() => {
+    if (!isOpen) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    const el = document.querySelector(`[data-nav-id="${step.id}"]`);
+    if (el) {
+      setTargetRect(el.getBoundingClientRect());
+    } else {
+      setTargetRect(null);
+    }
+  }, [isOpen, currentStep]);
+
+  useEffect(() => {
+    updateTargetPosition();
+    window.addEventListener('resize', updateTargetPosition);
+    window.addEventListener('scroll', updateTargetPosition, true);
+    return () => {
+      window.removeEventListener('resize', updateTargetPosition);
+      window.removeEventListener('scroll', updateTargetPosition, true);
+    };
+  }, [updateTargetPosition]);
+
+  // Navigate to the tab when step changes
+  useEffect(() => {
+    if (isOpen) {
+      const step = TUTORIAL_STEPS[currentStep];
+      onNavigate(step.id);
+      // Re-check position after navigation settles
+      setTimeout(updateTargetPosition, 100);
+    }
+  }, [isOpen, currentStep]);
 
   const handleNext = useCallback(() => {
     if (currentStep < TUTORIAL_STEPS.length - 1) {
@@ -193,12 +246,6 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
     setIsOpen(true);
   }, []);
 
-  const handleTryIt = useCallback(() => {
-    const step = TUTORIAL_STEPS[currentStep];
-    onNavigate(step.id);
-    handleClose();
-  }, [currentStep, onNavigate]);
-
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -212,6 +259,60 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
 
   const step = TUTORIAL_STEPS[currentStep];
   const progress = ((currentStep + 1) / TUTORIAL_STEPS.length) * 100;
+
+  // Calculate tooltip position
+  const getTooltipPosition = () => {
+    if (!targetRect) {
+      return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    }
+
+    if (isMobile) {
+      // On mobile, tooltip goes above the bottom nav
+      return {
+        bottom: `${window.innerHeight - targetRect.top + 16}px`,
+        left: '50%',
+        transform: 'translateX(-50%)',
+      };
+    } else {
+      // On desktop, tooltip goes to the right of sidebar
+      return {
+        top: `${Math.min(targetRect.top, window.innerHeight - 340)}px`,
+        left: `${targetRect.right + 16}px`,
+      };
+    }
+  };
+
+  // Arrow pointing direction
+  const getArrowStyle = (): React.CSSProperties => {
+    if (!targetRect) return { display: 'none' };
+
+    if (isMobile) {
+      // Arrow points down toward the bottom nav item
+      return {
+        position: 'absolute' as const,
+        bottom: '-8px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 0,
+        height: 0,
+        borderLeft: '8px solid transparent',
+        borderRight: '8px solid transparent',
+        borderTop: `8px solid ${step.color}`,
+      };
+    } else {
+      // Arrow points left toward sidebar
+      return {
+        position: 'absolute' as const,
+        top: '24px',
+        left: '-8px',
+        width: 0,
+        height: 0,
+        borderTop: '8px solid transparent',
+        borderBottom: '8px solid transparent',
+        borderRight: `8px solid ${step.color}`,
+      };
+    }
+  };
 
   return (
     <>
@@ -230,187 +331,213 @@ const AdminTutorial: React.FC<AdminTutorialProps> = ({ onNavigate }) => {
       {/* Tutorial Overlay */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center"
-          >
-            {/* Backdrop */}
+          <>
+            {/* Semi-transparent backdrop */}
             <motion.div
-              className="absolute inset-0 bg-background/80 backdrop-blur-md"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[90] bg-background/60 backdrop-blur-sm"
               onClick={handleClose}
             />
 
-            {/* Animated grid background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `radial-gradient(circle at 50% 50%, ${step.glowColor} 0%, transparent 50%)`,
-                transition: 'background-image 0.5s ease',
-              }} />
-              {/* Scan lines */}
+            {/* Highlight ring around target element */}
+            {targetRect && (
               <motion.div
-                className="absolute left-0 right-0 h-px opacity-20"
-                style={{ background: step.color }}
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-              />
-            </div>
+                ref={highlightRef}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="fixed z-[95] pointer-events-none rounded-xl"
+                style={{
+                  top: targetRect.top - 4,
+                  left: targetRect.left - 4,
+                  width: targetRect.width + 8,
+                  height: targetRect.height + 8,
+                  boxShadow: `0 0 0 3px ${step.color}, 0 0 20px ${step.color}80, 0 0 40px ${step.color}40`,
+                  transition: 'top 0.3s, left 0.3s, width 0.3s, height 0.3s',
+                }}
+              >
+                {/* Pulsing ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl"
+                  animate={{
+                    boxShadow: [
+                      `0 0 0 0px ${step.color}60`,
+                      `0 0 0 10px ${step.color}00`,
+                    ],
+                  }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                />
+              </motion.div>
+            )}
 
-            {/* Card */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 40 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 40 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-[90vw] max-w-lg mx-auto"
-            >
-              {/* Outer glow ring */}
+            {/* "Cut out" the target element so it's visible */}
+            {targetRect && (
               <div
-                className="absolute -inset-1 rounded-2xl opacity-50 blur-lg transition-all duration-500"
-                style={{ background: `linear-gradient(135deg, ${step.color}, transparent)` }}
+                className="fixed z-[92] bg-transparent pointer-events-none"
+                style={{
+                  top: targetRect.top - 2,
+                  left: targetRect.left - 2,
+                  width: targetRect.width + 4,
+                  height: targetRect.height + 4,
+                  borderRadius: '12px',
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0)',
+                }}
               />
+            )}
 
-              <div className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-2xl">
-                {/* Progress bar */}
-                <div className="h-1 bg-muted">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: step.color }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                  />
-                </div>
+            {/* Tooltip card with arrow */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed z-[100] w-[min(360px,90vw)]"
+              style={getTooltipPosition()}
+            >
+              <div className="relative">
+                {/* Arrow */}
+                <div style={getArrowStyle()} />
 
-                {/* Header with step counter + skip */}
-                <div className="flex items-center justify-between px-5 pt-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Step {currentStep + 1} of {TUTORIAL_STEPS.length}
-                    </span>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-foreground" onClick={handleClose}>
-                    Skip Tutorial <X className="w-3 h-3 ml-1" />
-                  </Button>
-                </div>
-
-                {/* Content */}
-                <div className="px-5 pt-4 pb-5">
-                  <AnimatePresence mode="wait" custom={direction}>
+                {/* Card */}
+                <div
+                  className="rounded-2xl border-2 bg-card shadow-2xl overflow-hidden"
+                  style={{ borderColor: step.color }}
+                >
+                  {/* Progress bar */}
+                  <div className="h-1 bg-muted">
                     <motion.div
-                      key={currentStep}
-                      custom={direction}
-                      initial={{ opacity: 0, x: direction * 60 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: direction * -60 }}
-                      transition={{ duration: 0.25, ease: 'easeOut' }}
-                      className="space-y-4"
-                    >
-                      {/* Icon */}
-                      <div className="flex justify-center">
-                        <motion.div
-                          className="relative w-20 h-20 rounded-2xl flex items-center justify-center"
-                          style={{ background: `${step.color}15` }}
-                          animate={{
-                            boxShadow: [
-                              `0 0 0 0px ${step.glowColor}`,
-                              `0 0 0 12px transparent`,
-                            ],
-                          }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          {/* Orbiting particle */}
-                          <motion.div
-                            className="absolute w-2 h-2 rounded-full"
-                            style={{ background: step.color }}
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                      className="h-full rounded-full"
+                      style={{ background: step.color }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.4 }}
+                    />
+                  </div>
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 pt-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {currentStep + 1} / {TUTORIAL_STEPS.length}
+                      </span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground px-2" onClick={handleClose}>
+                      Skip <X className="w-3 h-3 ml-1" />
+                    </Button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="px-4 pt-3 pb-3">
+                    <AnimatePresence mode="wait" custom={direction}>
+                      <motion.div
+                        key={currentStep}
+                        custom={direction}
+                        initial={{ opacity: 0, x: direction * 40 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: direction * -40 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {/* Icon + Title */}
+                        <div className="flex items-center gap-3 mb-2">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: `${step.color}20` }}
                           >
-                            <motion.div
-                              className="absolute -top-8 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
-                              style={{ background: step.color, opacity: 0.6 }}
-                            />
-                          </motion.div>
+                            <step.icon className="w-5 h-5" style={{ color: step.color }} />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-foreground">{step.title}</h3>
+                            {/* Location hint */}
+                            <LocationHint step={step} isMobile={isMobile} />
+                          </div>
+                        </div>
 
-                          <step.icon className="w-9 h-9" style={{ color: step.color }} />
-                        </motion.div>
-                      </div>
-
-                      {/* Title */}
-                      <div className="text-center space-y-2">
-                        <h2 className="text-xl font-bold text-foreground">{step.title}</h2>
-                        <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                        {/* Description */}
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                           {step.description}
                         </p>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
 
-                {/* Step dots */}
-                <div className="flex justify-center gap-1.5 pb-4">
-                  {TUTORIAL_STEPS.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setDirection(i > currentStep ? 1 : -1); setCurrentStep(i); }}
-                      className="p-0.5"
+                  {/* Step dots - compact */}
+                  <div className="flex justify-center gap-1 pb-2">
+                    {TUTORIAL_STEPS.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => { setDirection(i > currentStep ? 1 : -1); setCurrentStep(i); }}
+                        className="p-0.5"
+                      >
+                        <motion.div
+                          className="rounded-full"
+                          animate={{
+                            width: i === currentStep ? 16 : 5,
+                            height: 5,
+                            backgroundColor: i === currentStep ? step.color : 'hsl(var(--muted-foreground) / 0.25)',
+                          }}
+                          transition={{ duration: 0.25 }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="px-4 pb-4 flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentStep === 0}
+                      onClick={handlePrev}
+                      className="h-8"
                     >
-                      <motion.div
-                        className="rounded-full transition-colors"
-                        animate={{
-                          width: i === currentStep ? 20 : 6,
-                          height: 6,
-                          backgroundColor: i === currentStep ? step.color : 'hsl(var(--muted-foreground) / 0.3)',
-                        }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </button>
-                  ))}
-                </div>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
 
-                {/* Actions */}
-                <div className="px-5 pb-5 flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentStep === 0}
-                    onClick={handlePrev}
-                    className="h-9"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Back
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTryIt}
-                    className="h-9 flex-1"
-                    style={{ borderColor: step.color, color: step.color }}
-                  >
-                    <Zap className="w-3.5 h-3.5 mr-1" /> Try It Now
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    onClick={handleNext}
-                    className="h-9 flex-1"
-                    style={{ background: step.color }}
-                  >
-                    {currentStep === TUTORIAL_STEPS.length - 1 ? (
-                      <><Rocket className="w-4 h-4 mr-1" /> Finish</>
-                    ) : (
-                      <>Next <ChevronRight className="w-4 h-4 ml-1" /></>
-                    )}
-                  </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleNext}
+                      className="h-8 flex-1 text-white"
+                      style={{ background: step.color }}
+                    >
+                      {currentStep === TUTORIAL_STEPS.length - 1 ? (
+                        <><Rocket className="w-4 h-4 mr-1" /> Got it!</>
+                      ) : (
+                        <>Next <ChevronRight className="w-4 h-4 ml-1" /></>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
+  );
+};
+
+/** Small badge showing WHERE the feature lives */
+const LocationHint: React.FC<{ step: TutorialStep; isMobile: boolean }> = ({ step, isMobile }) => {
+  if (isMobile) {
+    return (
+      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <MapPin className="w-3 h-3" />
+        {step.mobileLocation === 'bottom-nav' ? (
+          <>Bottom navigation bar</>
+        ) : (
+          <>Tap <MoreHorizontal className="w-3 h-3 inline mx-0.5" /> <strong>More</strong> in bottom bar</>
+        )}
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+      <MapPin className="w-3 h-3" />
+      Left sidebar → {step.desktopGroup}
+    </span>
   );
 };
 
