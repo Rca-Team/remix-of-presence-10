@@ -312,7 +312,7 @@ const Index = () => {
         {/* CTA Section */}
         <section className="py-12 md:py-24">
           <motion.div 
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-8 md:p-16" 
+            className="relative overflow-hidden rounded-3xl bg-gradient-aurora p-8 md:p-16" 
             initial="hidden" 
             whileInView="visible" 
             viewport={{ once: true }} 
