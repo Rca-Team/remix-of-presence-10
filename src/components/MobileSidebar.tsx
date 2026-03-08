@@ -83,6 +83,7 @@ const MobileSidebar = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      haptic.onSuccess();
       setOpen(false);
       toast({ title: 'Logged out', description: 'You have been successfully logged out.' });
       navigate('/');
