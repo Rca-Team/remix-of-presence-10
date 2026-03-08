@@ -107,6 +107,7 @@ function App() {
               <AnimatedRoutes />
               <MobileSidebar />
               <PWAInstallPrompt />
+              <EmergencyAlertListener />
             </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>

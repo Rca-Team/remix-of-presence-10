@@ -279,6 +279,8 @@ const Admin = () => {
         return <NotificationLog />;
       case 'inbox':
         return <AdminInbox />;
+      case 'emergency':
+        return <EmergencyAlertPanel />;
       case 'settings':
         return (
           <div className="space-y-6">
