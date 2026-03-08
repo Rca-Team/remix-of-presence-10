@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import brandMascot from '@/assets/brand-mascot.png';
+import mascotWelcome from '@/assets/mascot-welcome.png';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import PageLayout from '@/components/layouts/PageLayout';
