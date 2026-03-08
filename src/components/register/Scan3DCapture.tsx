@@ -456,6 +456,31 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
       return;
     }
 
+    // If primaryImage wasn't captured at start, try capturing now
+    let finalImage = primaryImage;
+    if (!finalImage && videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      if (video.readyState >= 2 && video.videoWidth > 0) {
+        const canvas = canvasRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0);
+          finalImage = canvas.toDataURL('image/png');
+          setPrimaryImage(finalImage);
+        }
+      }
+    }
+
+    if (!finalImage) {
+      soundRef.current.playFail();
+      setStatusText('Failed to capture face image. Please try again.');
+      setProgress(0);
+      setSamplesCollected(0);
+      return;
+    }
+
     const averaged = new Float32Array(descriptors[0].length);
     for (let i = 0; i < averaged.length; i++) {
       averaged[i] = descriptors.reduce((sum, d) => sum + d[i], 0) / descriptors.length;
@@ -464,7 +489,7 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     soundRef.current.playComplete();
     setScanComplete(true);
     setStatusText(`3D scan complete! ${descriptors.length} samples captured.`);
-    onComplete(averaged, primaryImage!, descriptors);
+    onComplete(averaged, finalImage, descriptors);
   }, [onComplete, primaryImage]);
 
   const resetScan = () => {
