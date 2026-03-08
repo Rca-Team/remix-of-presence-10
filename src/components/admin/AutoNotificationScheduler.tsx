@@ -160,6 +160,24 @@ const AutoNotificationScheduler: React.FC = () => {
           </AlertDescription>
         </Alert>
 
+        <Button 
+          onClick={triggerAutoNotifications}
+          disabled={isLoading}
+          className="w-full"
+        >
+          {isLoading ? (
+            <>
+              <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin mr-2" />
+              Sending Notifications...
+            </>
+          ) : (
+            <>
+              <Bell className="mr-2 h-4 w-4" />
+              Send Notifications Now
+            </>
+          )}
+        </Button>
+
         <Separator className="my-4" />
 
         <div className="space-y-3">
