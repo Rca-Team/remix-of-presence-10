@@ -92,6 +92,15 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
         await loadModels();
         setModelsLoaded(true);
       }
+      // Pre-load SSD MobileNetV1 so first scan doesn't timeout
+      if (!faceapi.nets.ssdMobilenetv1?.isLoaded) {
+        try {
+          await faceapi.nets.ssdMobilenetv1.load('/models');
+          console.log('SSD MobileNetV1 pre-loaded for scanning');
+        } catch (e) {
+          console.warn('SSD MobileNetV1 pre-load failed, will use TinyFaceDetector', e);
+        }
+      }
     };
     initModels();
   }, []);
