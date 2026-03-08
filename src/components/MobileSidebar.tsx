@@ -128,6 +128,7 @@ const MobileSidebar = () => {
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
             <button
+              onClick={() => haptic.onButtonPress()}
               className={cn(
                 'relative h-[58px] w-[58px] rounded-full',
                 'flex items-center justify-center',
