@@ -5,7 +5,7 @@ import StudentInfoCard from './StudentInfoCard';
 import DailyAttendanceDetails from './DailyAttendanceDetails';
 import AttendanceCalendarView from './AttendanceCalendarView';
 import ReportControls from './ReportControls';
-import { User, CalendarDays } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface AttendanceCalendarProps {
@@ -30,14 +30,14 @@ const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({ selectedFaceId 
     return (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="border-dashed">
-          <CardContent className="py-16 flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-              <CalendarDays className="h-8 w-8 text-muted-foreground/50" />
+          <CardContent className="py-10 sm:py-16 flex flex-col items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-muted flex items-center justify-center">
+              <CalendarDays className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="font-semibold text-lg">No student selected</h3>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                Select a student from the list above to view their attendance calendar and details.
+              <h3 className="font-semibold text-base sm:text-lg">No student selected</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-xs px-4">
+                Select a student from the list to view their attendance calendar.
               </p>
             </div>
           </CardContent>
@@ -50,7 +50,7 @@ const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({ selectedFaceId 
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-4"
+      className="space-y-3 sm:space-y-4"
     >
       {/* Student Header + Report Actions */}
       <StudentInfoCard
@@ -70,8 +70,8 @@ const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({ selectedFaceId 
         }
       />
 
-      {/* Calendar + Daily Details side by side on desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      {/* Calendar + Daily Details — stack on mobile, side-by-side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="lg:col-span-3">
           <AttendanceCalendarView
             selectedDate={selectedDate}

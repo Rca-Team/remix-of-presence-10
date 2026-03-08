@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, Clock, XCircle, CalendarDays, ArrowRight } from 'lucide-react';
+import { UserCheck, Clock, XCircle, CalendarDays } from 'lucide-react';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -69,13 +69,13 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
   if (!selectedDate) {
     return (
       <Card className="h-full border-dashed">
-        <CardContent className="h-full flex flex-col items-center justify-center py-12 gap-3">
-          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-            <CalendarDays className="w-6 h-6 text-muted-foreground/50" />
+        <CardContent className="h-full flex flex-col items-center justify-center py-8 sm:py-12 gap-2 sm:gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-muted flex items-center justify-center">
+            <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground/50" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium">Select a date</p>
-            <p className="text-xs text-muted-foreground">Click any day on the calendar to view details</p>
+            <p className="text-xs sm:text-sm font-medium">Select a date</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Tap any day on the calendar</p>
           </div>
         </CardContent>
       </Card>
@@ -89,7 +89,6 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
   const realtimeRecords = getRealtimeAttendance();
   const records = realtimeRecords && realtimeRecords.length > 0 ? realtimeRecords : filteredDaily;
 
-  // Determine overall status
   let overallStatus: 'present' | 'late' | 'absent' | 'future' | 'no-data' = 'no-data';
   if (isFutureDate(selectedDate)) overallStatus = 'future';
   else if (isPresentDate || records.some(r => r.status?.toLowerCase().includes('present'))) overallStatus = 'present';
@@ -120,43 +119,43 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
         <Card className={cn("h-full overflow-hidden border", config.border)}>
           <CardContent className="p-0">
             {/* Date header */}
-            <div className={cn("px-4 py-3 border-b", config.bg)}>
+            <div className={cn("px-3 sm:px-4 py-2.5 sm:py-3 border-b", config.bg)}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">{format(selectedDate, 'EEEE')}</p>
-                  <p className="font-bold text-lg tabular-nums">{format(selectedDate, 'MMM d, yyyy')}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{format(selectedDate, 'EEEE')}</p>
+                  <p className="font-bold text-base sm:text-lg tabular-nums">{format(selectedDate, 'MMM d, yyyy')}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {isToday(selectedDate) && (
-                    <Badge variant="secondary" className="text-[10px]">Today</Badge>
+                    <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0">Today</Badge>
                   )}
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", config.bg)}>
-                    <StatusIcon className={cn("w-5 h-5", config.color)} />
+                  <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center", config.bg)}>
+                    <StatusIcon className={cn("w-4 h-4 sm:w-5 sm:h-5", config.color)} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Status banner */}
-            <div className={cn("px-4 py-3 flex items-center gap-3", config.bg, "border-b", config.border)}>
-              <span className={cn("w-2.5 h-2.5 rounded-full", config.dot)} />
-              <span className={cn("text-sm font-semibold", config.color)}>{config.label}</span>
+            <div className={cn("px-3 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3", config.bg, "border-b", config.border)}>
+              <span className={cn("w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0", config.dot)} />
+              <span className={cn("text-xs sm:text-sm font-semibold", config.color)}>{config.label}</span>
               {records.length > 0 && records[0]?.timestamp && overallStatus !== 'future' && (
-                <span className="text-xs text-muted-foreground ml-auto">
+                <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto">
                   {formatTime(records[0].timestamp)}
                 </span>
               )}
             </div>
 
             {/* Records */}
-            <div className="p-4">
+            <div className="p-3 sm:p-4">
               {overallStatus === 'future' ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center py-3 sm:py-4">
                   This is a future date. Attendance data will appear after the day passes.
                 </p>
               ) : records.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5 sm:mb-2">
                     Activity Log
                   </p>
                   {records.map((record, i) => (
@@ -165,25 +164,25 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors"
+                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/40 active:bg-muted/60 sm:hover:bg-muted/60 transition-colors"
                     >
                       <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0",
                         record.status?.toLowerCase().includes('late') ? 'bg-amber-500/15' : 'bg-green-500/15'
                       )}>
                         {record.status?.toLowerCase().includes('late') ? (
-                          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
                         ) : (
-                          <UserCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 dark:text-green-400" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{formatTime(record.timestamp)}</p>
+                        <p className="text-xs sm:text-sm font-medium">{formatTime(record.timestamp)}</p>
                       </div>
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px]",
+                          "text-[9px] sm:text-[10px] px-1.5 py-0",
                           record.status?.toLowerCase().includes('late')
                             ? 'border-amber-500/30 text-amber-600 dark:text-amber-400'
                             : 'border-green-500/30 text-green-600 dark:text-green-400'
@@ -195,8 +194,8 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-4 sm:py-6">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {overallStatus === 'absent' ? 'No attendance recorded for this day.' : 'No detailed records available.'}
                   </p>
                 </div>
