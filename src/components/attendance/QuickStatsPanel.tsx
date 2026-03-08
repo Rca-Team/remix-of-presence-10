@@ -35,19 +35,27 @@ const QuickStatsPanel: React.FC = () => {
     faceData?.forEach(f => { if (f.user_id) uniqueRegistered.add(f.user_id); });
     const total = uniqueRegistered.size;
 
-    const uniquePresent = new Set<string>();
-    const uniqueLate = new Set<string>();
+    // Track each user's best status: present > late (a user who was late but later marked present counts as present only)
+    const userStatus = new Map<string, string>();
 
     todayData?.forEach(record => {
       const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
       if (userId) {
-        if (record.status === 'present') uniquePresent.add(String(userId));
-        else if (record.status === 'late') uniqueLate.add(String(userId));
+        const id = String(userId);
+        const current = userStatus.get(id);
+        // "present" wins over "late"
+        if (!current || (record.status === 'present' && current !== 'present')) {
+          userStatus.set(id, record.status!);
+        }
       }
     });
 
-    const present = uniquePresent.size;
-    const late = uniqueLate.size;
+    let present = 0;
+    let late = 0;
+    userStatus.forEach(status => {
+      if (status === 'present') present++;
+      else if (status === 'late') late++;
+    });
 
     setStats({
       totalRegistered: total,
