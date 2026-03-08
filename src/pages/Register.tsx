@@ -331,8 +331,8 @@ const Register = () => {
                                 <Camera className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <h3 className="font-semibold text-white">4-Angle Face Scanner</h3>
-                                <p className="text-sm text-blue-100">Capture front, left, right & up views</p>
+                                <h3 className="font-semibold text-white">3D Face Scanner</h3>
+                                <p className="text-sm text-blue-100">Continuous 3D depth scan of your face</p>
                               </div>
                             </div>
                           </div>
