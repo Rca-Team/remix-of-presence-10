@@ -388,6 +388,47 @@ export type Database = {
         }
         Relationships: []
       }
+      class_teachers: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          role: string
+          subject_id: string | null
+          teacher_name: string
+          teacher_record_id: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          role?: string
+          subject_id?: string | null
+          teacher_name: string
+          teacher_record_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          role?: string
+          subject_id?: string | null
+          teacher_name?: string
+          teacher_record_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_teachers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_events: {
         Row: {
           created_at: string
@@ -692,6 +733,36 @@ export type Database = {
         }
         Relationships: []
       }
+      period_timings: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_break: boolean
+          label: string | null
+          period_number: number
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_break?: boolean
+          label?: string | null
+          period_number: number
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_break?: boolean
+          label?: string | null
+          period_number?: number
+          start_time?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -877,6 +948,80 @@ export type Database = {
           },
         ]
       }
+      subjects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          short_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          short_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          short_name?: string | null
+        }
+        Relationships: []
+      }
+      substitutions: {
+        Row: {
+          absent_teacher_id: string
+          absent_teacher_name: string
+          auto_assigned: boolean
+          category: string
+          created_at: string
+          date: string
+          id: string
+          period_number: number
+          status: string
+          subject_id: string | null
+          substitute_teacher_id: string
+          substitute_teacher_name: string
+        }
+        Insert: {
+          absent_teacher_id: string
+          absent_teacher_name: string
+          auto_assigned?: boolean
+          category: string
+          created_at?: string
+          date: string
+          id?: string
+          period_number: number
+          status?: string
+          subject_id?: string | null
+          substitute_teacher_id: string
+          substitute_teacher_name: string
+        }
+        Update: {
+          absent_teacher_id?: string
+          absent_teacher_name?: string
+          auto_assigned?: boolean
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          period_number?: number
+          status?: string
+          subject_id?: string | null
+          substitute_teacher_id?: string
+          substitute_teacher_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "substitutions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_permissions: {
         Row: {
           can_take_attendance: boolean | null
@@ -909,6 +1054,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      timetable: {
+        Row: {
+          category: string
+          created_at: string
+          day_of_week: number
+          id: string
+          period_number: number
+          subject_id: string | null
+          teacher_name: string
+          teacher_record_id: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          period_number: number
+          subject_id?: string | null
+          teacher_name: string
+          teacher_record_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          period_number?: number
+          subject_id?: string | null
+          teacher_name?: string
+          teacher_record_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

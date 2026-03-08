@@ -6,8 +6,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users, User, Printer, Calendar, Bell, ChevronLeft, GraduationCap,
-  FileText, Download, FolderInput, MoreVertical
+  FileText, Download, FolderInput, MoreVertical, CalendarClock
 } from 'lucide-react';
+import ClassTeacherManager from './ClassTeacherManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWeekend } from 'date-fns';
@@ -52,6 +53,7 @@ const CategoryBasedView: React.FC = () => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [sendingNotification, setSendingNotification] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [showTeacherManager, setShowTeacherManager] = useState(false);
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -243,6 +245,16 @@ const CategoryBasedView: React.FC = () => {
     );
   }
 
+  // Teacher Manager View
+  if (selectedCategory && showTeacherManager) {
+    return (
+      <ClassTeacherManager
+        category={selectedCategory}
+        onBack={() => setShowTeacherManager(false)}
+      />
+    );
+  }
+
   // Level 3: Show students in a specific class-section
   if (selectedCategory) {
     return (
@@ -261,6 +273,11 @@ const CategoryBasedView: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            {selectedCategory !== 'Teacher' && (
+              <Button variant="outline" size="sm" onClick={() => setShowTeacherManager(true)}>
+                <CalendarClock className="h-4 w-4 mr-2" />Timetable
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handlePrintDailyAttendance}>
               <Printer className="h-4 w-4 mr-2" />Daily Report
             </Button>
