@@ -167,25 +167,19 @@ const EmergencyAlertPanel: React.FC = () => {
       }
 
       // 3. Also show via Notification API directly as fallback
-      if (Notification.permission === 'granted') {
+      if (Notification.permission === 'granted' && registration) {
         const alertMeta = ALERT_TYPES.find(a => a.type === selectedAlert.type);
         const title = `🚨 ${alertMeta?.label || 'Emergency Alert'}`;
         const body = customMessage || alertMeta?.description || 'Emergency alert triggered.';
         
-        // Show notification via service worker
-        if (registration) {
-          await registration.showNotification(title, {
-            body,
-            icon: '/favicon.ico',
-            badge: '/favicon.ico',
-            tag: `emergency-${selectedAlert.type}`,
-            renotify: true,
-            vibrate: getVibrationPattern(selectedAlert.type),
-            requireInteraction: selectedAlert.type !== 'allclear',
-            silent: false,
-            data: { url: '/admin', alertType: selectedAlert.type, emergency: true },
-          });
-        }
+        await registration.showNotification(title, {
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: `emergency-${selectedAlert.type}`,
+          silent: false,
+          data: { url: '/admin', alertType: selectedAlert.type, emergency: true },
+        } as NotificationOptions);
       }
 
       setRecentAlerts(prev => [
