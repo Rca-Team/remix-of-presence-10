@@ -11,7 +11,8 @@ import UnrecognizedFaceAlert from './UnrecognizedFaceAlert';
 import RecognizedFaceAlert from './RecognizedFaceAlert';
 import { loadOptimizedModels } from '@/services/face-recognition/OptimizedModelService';
 import { videoEnhancementService } from '@/services/ai/VideoEnhancementService';
-import { AlertCircle, Sparkles, Users, Camera } from 'lucide-react';
+import { usePhotoEnhancer } from '@/hooks/usePhotoEnhancer';
+import { AlertCircle, Sparkles, Users, Camera, Wand2 } from 'lucide-react';
 import * as faceapi from 'face-api.js';
 
 const AttendanceCapture = () => {
