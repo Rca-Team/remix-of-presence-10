@@ -70,12 +70,11 @@ function AnimatedRoutes() {
             <Features />
           </ProtectedRoute>
         } />
-        <Route path="/gate-mode" element={
+        <Route path="/gate" element={
           <ProtectedRoute requireAdmin={true}>
             <GateMode />
           </ProtectedRoute>
         } />
-        <Route path="*" element={<NotFound />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

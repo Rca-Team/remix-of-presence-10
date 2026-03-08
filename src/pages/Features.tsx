@@ -66,7 +66,7 @@ const Features = () => {
           icon={<Sparkles className="h-8 w-8 text-cyan-400" />}
         />
         {isAdminOrPrincipal && (
-          <Button onClick={() => navigate('/gate-mode')} className="gap-2" size="lg">
+          <Button onClick={() => navigate('/gate')} className="gap-2" size="lg">
             <DoorOpen className="h-5 w-5" />
             Launch Gate Mode
           </Button>
