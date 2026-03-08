@@ -109,6 +109,7 @@ function App() {
               <MobileSidebar />
               <PWAInstallPrompt />
               <EmergencyAlertListener />
+              <AIChatbot />
             </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>

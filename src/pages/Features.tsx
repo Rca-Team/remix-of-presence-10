@@ -47,7 +47,7 @@ import SmartReportCard from '@/components/features/SmartReportCard';
 
 const Features = () => {
   const { isAdminOrPrincipal } = useUserRole();
-  const [activeTab, setActiveTab] = useState('heatmap');
+  const [activeTab, setActiveTab] = useState('voice');
   const navigate = useNavigate();
 
   const sampleStudent = {
