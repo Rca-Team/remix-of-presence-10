@@ -124,14 +124,14 @@ export const fetchAttendanceRecords = async (
   }
 };
 
-// Fetch daily attendance for a specific date with improved status normalization
+// Fetch daily attendance for a specific date - returns only the earliest record for selected user
 export const fetchDailyAttendance = async (
   faceId: string, 
   date: Date,
   setDailyAttendance: (records: AttendanceRecord[]) => void
 ) => {
   try {
-    console.log('Fetching daily attendance for date:', date);
+    console.log('Fetching daily attendance for date:', date, 'and faceId:', faceId);
     
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
@@ -139,41 +139,42 @@ export const fetchDailyAttendance = async (
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
     
-    // Use a more inclusive timestamp range query
     const timestampStart = startOfDay.toISOString();
     const timestampEnd = endOfDay.toISOString();
     
     console.log(`Querying from ${timestampStart} to ${timestampEnd}`);
     
-    // First try to fetch records where id equals faceId
-    let { data: recordsById, error: errorById } = await supabase
+    // Fetch records ONLY for the selected user (by id or user_id)
+    let { data: recordsById } = await supabase
       .from('attendance_records')
-      .select('id, timestamp, status, device_info, user_id, image_url')  // Include image_url
+      .select('id, timestamp, status, device_info, user_id, image_url')
       .eq('id', faceId)
       .gte('timestamp', timestampStart)
       .lte('timestamp', timestampEnd)
       .order('timestamp', { ascending: true });
     
-    // Then try to fetch records where user_id equals faceId
-    let { data: recordsByUserId, error: errorByUserId } = await supabase
+    let { data: recordsByUserId } = await supabase
       .from('attendance_records')
-      .select('id, timestamp, status, device_info, user_id, image_url')  // Include image_url
+      .select('id, timestamp, status, device_info, user_id, image_url')
       .eq('user_id', faceId)
       .gte('timestamp', timestampStart)
       .lte('timestamp', timestampEnd)
       .order('timestamp', { ascending: true });
     
-    // Combine the results
-    let allRecords = [...(recordsById || []), ...(recordsByUserId || [])];
+    // Combine and deduplicate
+    const allRecordsMap = new Map();
+    [...(recordsById || []), ...(recordsByUserId || [])].forEach(r => {
+      allRecordsMap.set(r.id, r);
+    });
+    let allRecords = Array.from(allRecordsMap.values());
     
     if (allRecords.length > 0) {
-      console.log('Daily attendance records found:', allRecords.length);
+      console.log('Daily attendance records found for selected user:', allRecords.length);
       
-      // Get names from device_info where available
+      // Process records to get names
       const normalizedRecords = await Promise.all(allRecords.map(async (record) => {
         let name = 'User';
         
-        // Try to extract name from device_info
         if (record.device_info) {
           try {
             const deviceInfo = typeof record.device_info === 'string' 
@@ -181,13 +182,11 @@ export const fetchDailyAttendance = async (
               : record.device_info;
             
             if (typeof deviceInfo === 'object' && !Array.isArray(deviceInfo)) {
-              // Type-safe access to metadata
               if (hasMetadata(deviceInfo) && deviceInfo.metadata) {
                 if (hasName(deviceInfo.metadata)) {
                   name = deviceInfo.metadata.name;
                 }
               } 
-              // Direct name property on device_info
               if (hasName(deviceInfo)) {
                 name = deviceInfo.name;
               }
@@ -197,12 +196,9 @@ export const fetchDailyAttendance = async (
           }
         }
         
-        // If we couldn't find name in device_info, try to get it from profiles table
         if (name === 'User') {
           try {
-            // First try to get the user_id if this record doesn't have it directly
             const userId = record.user_id || faceId;
-            
             if (userId) {
               const { data: profileData } = await supabase
                 .from('profiles')
@@ -229,16 +225,21 @@ export const fetchDailyAttendance = async (
         };
       }));
       
-      // Filter out unknown faces - only include faces with meaningful names
+      // Filter out unknown faces
       const knownFaces = normalizedRecords.filter(record => 
         record.name !== 'User' && 
         record.name !== 'Unknown Student' &&
         !record.name.toLowerCase().includes('unknown')
       );
       
-      console.log('Filtered out unknown faces:', normalizedRecords.length - knownFaces.length);
+      // Sort by timestamp ascending and return ONLY the earliest record
+      knownFaces.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       
-      setDailyAttendance(knownFaces);
+      // Return only the earliest record (first check-in of the day)
+      const earliestRecord = knownFaces.length > 0 ? [knownFaces[0]] : [];
+      
+      console.log('Returning earliest record only:', earliestRecord.length);
+      setDailyAttendance(earliestRecord);
     } else {
       setDailyAttendance([]);
     }
