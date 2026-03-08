@@ -26,6 +26,7 @@ import { ThemeProvider } from './hooks/use-theme';
 import MobileSidebar from "./components/MobileSidebar";
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import EmergencyAlertListener from './components/EmergencyAlertListener';
 
 const queryClient = new QueryClient();
 
