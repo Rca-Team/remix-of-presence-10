@@ -358,10 +358,10 @@ const Admin = () => {
                               {item.badge &&
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                         }
-                              {item.count !== undefined && item.count > 0
-
-
-
+                              {item.count !== undefined && item.count > 0 &&
+                        <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5 min-w-[14px]">
+                          {item.count}
+                        </Badge>
                         }
                             </>
                       }
