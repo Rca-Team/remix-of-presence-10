@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { getFaceDescriptorFromImage, detectFaceInVideo } from '@/services/face-recognition/OptimizedRegistrationService';
 
 interface Scan3DCaptureProps {
-  onComplete: (averagedDescriptor: Float32Array, primaryImage: string) => void;
+  onComplete: (averagedDescriptor: Float32Array, primaryImage: string, allDescriptors: Float32Array[]) => void;
   isModelLoading: boolean;
 }
 
