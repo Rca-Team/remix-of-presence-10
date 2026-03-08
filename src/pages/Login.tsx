@@ -23,14 +23,14 @@ const Login = () => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/attendance');
       }
     });
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/attendance');
       }
     });
 
@@ -56,7 +56,7 @@ const Login = () => {
         description: "Welcome back to Presence",
       });
       
-      navigate('/dashboard');
+      navigate('/attendance');
     } catch (error: any) {
       toast({
         title: "Login failed",

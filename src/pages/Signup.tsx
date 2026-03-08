@@ -26,14 +26,14 @@ const Signup = () => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/attendance');
       }
     });
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/attendance');
       }
     });
 
