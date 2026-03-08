@@ -281,7 +281,7 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
             try {
               await withTimeout(
                 faceapi.nets.ssdMobilenetv1.load('/models'),
-                4000,
+                10000,
                 'SSD model load timed out'
               );
             } catch (e) {
