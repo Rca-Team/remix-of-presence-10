@@ -49,7 +49,7 @@ export async function loadModels() {
     
     // Check if models directory exists by attempting to fetch a manifest file
     try {
-      const testResponse = await fetch('/models/tiny_face_detector_model-weights_manifest.json');
+      const testResponse = await fetch('/models/ssd_mobilenetv1_model-weights_manifest.json');
       if (!testResponse.ok) {
         throw new Error(`Failed to access models directory: ${testResponse.status} ${testResponse.statusText}`);
       }
