@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import PageLayout from '@/components/layouts/PageLayout';
 import PushNotificationSettings from '@/components/notifications/PushNotificationSettings';
+import FaceReRegistration from '@/components/profile/FaceReRegistration';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
