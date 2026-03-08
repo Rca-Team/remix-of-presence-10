@@ -76,6 +76,11 @@ function AnimatedRoutes() {
             <GateMode />
           </ProtectedRoute>
         } />
+        <Route path="/parent" element={
+          <ProtectedRoute>
+            <ParentPortal />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
