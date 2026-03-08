@@ -3,15 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bell, Clock, CheckCircle2, AlertCircle, MailWarning } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 const AutoNotificationScheduler: React.FC = () => {
   const { toast } = useToast();
   const [cutoffTime, setCutoffTime] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCutoffLoading, setIsCutoffLoading] = useState(false);
   const [lastRun, setLastRun] = useState<Date | null>(null);
   const [isPastCutoff, setIsPastCutoff] = useState(false);
+  const [cutoffResult, setCutoffResult] = useState<{ absentCount?: number; emailsSent?: number; inAppSent?: number } | null>(null);
 
   useEffect(() => {
     // Fetch cutoff time
