@@ -100,7 +100,7 @@ const Register = () => {
         formData.department // category = class-section
       );
       if (registrationData) {
-        toast({ title: "Registration Successful! 🎉", description: "Face registered with 4-angle accuracy." });
+        toast({ title: "Registration Successful! 🎉", description: "Face registered with 3D scan accuracy." });
         setFormData({ name: '', email: '', phone: '', parentName: '', parentEmail: '', parentPhone: '', employeeId: '', department: '', position: '', rollNumber: '', bloodGroup: '', medicalInfo: '', transportMode: '' });
         setFaceImage(null);
         setFaceDescriptor(null);
