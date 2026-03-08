@@ -105,36 +105,36 @@ export default {
 					to: { height: '0' }
 				},
 				'fade-in': {
-					from: { opacity: '0' },
-					to: { opacity: '1' }
+					from: { opacity: '0', transform: 'translateY(8px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
 				},
 				'fade-out': {
-					from: { opacity: '1' },
-					to: { opacity: '0' }
+					from: { opacity: '1', transform: 'translateY(0)' },
+					to: { opacity: '0', transform: 'translateY(8px)' }
 				},
 				'slide-in-up': {
-					from: { transform: 'translateY(20px)', opacity: '0' },
+					from: { transform: 'translateY(30px)', opacity: '0' },
 					to: { transform: 'translateY(0)', opacity: '1' }
 				},
 				'slide-in-down': {
-					from: { transform: 'translateY(-20px)', opacity: '0' },
+					from: { transform: 'translateY(-30px)', opacity: '0' },
 					to: { transform: 'translateY(0)', opacity: '1' }
 				},
 				'slide-in-left': {
-					from: { transform: 'translateX(-20px)', opacity: '0' },
+					from: { transform: 'translateX(-30px)', opacity: '0' },
 					to: { transform: 'translateX(0)', opacity: '1' }
 				},
 				'slide-in-right': {
-					from: { transform: 'translateX(20px)', opacity: '0' },
+					from: { transform: 'translateX(30px)', opacity: '0' },
 					to: { transform: 'translateX(0)', opacity: '1' }
 				},
 				'pulse-subtle': {
 					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.8' }
+					'50%': { opacity: '0.7' }
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
-					'50%': { transform: 'translateY(-10px)' }
+					'50%': { transform: 'translateY(-12px)' }
 				},
 				'logo-spin': {
 					'0%': { transform: 'rotate(0deg)' },
@@ -142,13 +142,36 @@ export default {
 				},
 				'logo-pulse': {
 					'0%, 100%': { opacity: '1', transform: 'scale(1)' },
-					'50%': { opacity: '0.8', transform: 'scale(1.05)' }
+					'50%': { opacity: '0.85', transform: 'scale(1.08)' }
 				},
 				'shimmer': {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' }
 				},
-				// New ISO UI animations
+				// iOS spring animations
+				'ios-bounce': {
+					'0%': { transform: 'scale(0.9)', opacity: '0' },
+					'50%': { transform: 'scale(1.05)' },
+					'70%': { transform: 'scale(0.98)' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'ios-slide-up': {
+					'0%': { transform: 'translateY(100%)', opacity: '0' },
+					'100%': { transform: 'translateY(0)', opacity: '1' }
+				},
+				'ios-pop': {
+					'0%': { transform: 'scale(0.8)', opacity: '0' },
+					'60%': { transform: 'scale(1.08)' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'ios-wiggle': {
+					'0%, 100%': { transform: 'rotate(-2deg)' },
+					'50%': { transform: 'rotate(2deg)' }
+				},
+				'ios-glow': {
+					'0%, 100%': { boxShadow: '0 0 20px rgba(0, 122, 255, 0.3)' },
+					'50%': { boxShadow: '0 0 40px rgba(0, 122, 255, 0.6)' }
+				},
 				'smooth-slide': {
 					'0%': { transform: 'translateY(10px)', opacity: '0' },
 					'100%': { transform: 'translateY(0)', opacity: '1' }
@@ -159,12 +182,23 @@ export default {
 					'100%': { transform: 'scale(1)' }
 				},
 				'glow-pulse': {
-					'0%, 100%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
-					'50%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)' }
+					'0%, 100%': { boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)' },
+					'50%': { boxShadow: '0 0 30px rgba(59, 130, 246, 0.7)' }
 				},
 				'scale-in': {
 					'0%': { transform: 'scale(0.9)', opacity: '0' },
 					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'color-shift': {
+					'0%, 100%': { filter: 'hue-rotate(0deg)' },
+					'50%': { filter: 'hue-rotate(15deg)' }
+				},
+				'rainbow-glow': {
+					'0%': { boxShadow: '0 0 20px rgba(0, 122, 255, 0.5)' },
+					'25%': { boxShadow: '0 0 20px rgba(175, 82, 222, 0.5)' },
+					'50%': { boxShadow: '0 0 20px rgba(255, 45, 85, 0.5)' },
+					'75%': { boxShadow: '0 0 20px rgba(52, 199, 89, 0.5)' },
+					'100%': { boxShadow: '0 0 20px rgba(0, 122, 255, 0.5)' }
 				}
 			},
 			animation: {
