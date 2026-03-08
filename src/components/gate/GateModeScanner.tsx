@@ -162,7 +162,9 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           if (isRecognized && studentId && !attendanceMarkedRef.current.has(studentId)) {
             attendanceMarkedRef.current.add(studentId);
             try {
-              await recordAttendance(studentId, detection.descriptor, detection.detection.score);
+              const hour = new Date().getHours();
+              const status = hour >= 9 ? 'late' : 'present';
+              await recordAttendance(studentId, status);
             } catch (err) {
               console.error('Failed to record attendance:', err);
             }
