@@ -182,12 +182,22 @@ const UserAccessManager: React.FC = () => {
     setDialogOpen(true);
   };
 
-  const toggleCategory = (category: Category) => {
+  const toggleCategory = (category: string) => {
     setSelectedCategories(prev => 
       prev.includes(category) 
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
+  };
+
+  const toggleAllForClass = (cls: number) => {
+    const classCats = SECTIONS.map(s => `${cls}-${s}`);
+    const allSelected = classCats.every(c => selectedCategories.includes(c));
+    if (allSelected) {
+      setSelectedCategories(prev => prev.filter(c => !classCats.includes(c)));
+    } else {
+      setSelectedCategories(prev => [...new Set([...prev, ...classCats])]);
+    }
   };
 
   const handleSave = async () => {
