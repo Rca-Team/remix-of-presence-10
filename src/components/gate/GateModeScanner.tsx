@@ -6,6 +6,7 @@ import { loadModels, areModelsLoaded } from '@/services/face-recognition/ModelSe
 import { recognizeFace, recordAttendance } from '@/services/face-recognition/RecognitionService';
 import * as faceapi from 'face-api.js';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GateModeScannerProps {
   onFaceDetected: (entry: GateEntry) => void;
