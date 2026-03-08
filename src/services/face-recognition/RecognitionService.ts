@@ -317,7 +317,8 @@ export async function recordAttendance(
   userId: string,
   status: 'present' | 'late' | 'absent' | 'unauthorized',
   confidence?: number,
-  deviceInfo?: any
+  deviceInfo?: any,
+  capturedImageDataUrl?: string
 ): Promise<any> {
   try {
     console.log(`Recording attendance for user ${userId} with status ${status}`);
@@ -351,6 +352,40 @@ export async function recordAttendance(
       }
     }
     
+    // Upload captured image to storage if provided
+    let uploadedImageUrl: string | null = null;
+    if (capturedImageDataUrl) {
+      try {
+        const base64Data = capturedImageDataUrl.split(',')[1];
+        if (base64Data) {
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+          
+          const fileName = `attendance/${userId}/${Date.now()}.jpg`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('face-images')
+            .upload(fileName, blob, { contentType: 'image/jpeg', upsert: false });
+          
+          if (!uploadError && uploadData) {
+            const { data: urlData } = supabase.storage
+              .from('face-images')
+              .getPublicUrl(fileName);
+            uploadedImageUrl = urlData?.publicUrl || null;
+            console.log('Captured image uploaded:', uploadedImageUrl);
+          } else {
+            console.warn('Failed to upload captured image:', uploadError);
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Image upload error:', uploadErr);
+      }
+    }
+    
     const fullDeviceInfo = {
       type: 'webcam',
       timestamp,
@@ -369,7 +404,8 @@ export async function recordAttendance(
         timestamp,
         status: normalizedStatus,
         device_info: fullDeviceInfo,
-        confidence_score: confidence
+        confidence_score: confidence,
+        image_url: uploadedImageUrl
       })
       .select()
       .single();
@@ -381,10 +417,10 @@ export async function recordAttendance(
     
     console.log('Attendance recorded successfully:', data);
     
-    // Auto-send parent notification with photo proof (non-blocking)
+    // Auto-send parent notification with captured photo proof (non-blocking)
     import('@/services/notification/AutoNotificationService').then(({ sendAutoParentNotification }) => {
       const studentName = fullDeviceInfo?.metadata?.name || 'Student';
-      const photoUrl = data?.image_url || deviceInfo?.metadata?.firebase_image_url;
+      const photoUrl = uploadedImageUrl || deviceInfo?.metadata?.firebase_image_url;
       sendAutoParentNotification(userId, studentName, normalizedStatus as 'present' | 'late' | 'absent', photoUrl)
         .then(res => console.log('Auto notification result:', res))
         .catch(err => console.error('Auto notification error:', err));
