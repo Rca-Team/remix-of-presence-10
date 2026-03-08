@@ -36,7 +36,7 @@ const STORAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/publ
 
 export default function ParentPortalPage() {
   const { toast } = useToast();
-  const [admissionNo, setAdmissionNo] = useState('');
+  const [studentId, setStudentId] = useState('');
   const [phoneNo, setPhoneNo] = useState('');
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -47,16 +47,14 @@ export default function ParentPortalPage() {
   const [todayStatus, setTodayStatus] = useState<{ status: string; time?: string }>({ status: 'absent' });
 
   const handleSearch = async () => {
-    if (!admissionNo.trim() || !phoneNo.trim()) {
-      toast({ title: 'Required', description: 'Please enter both Admission No. and Phone No.', variant: 'destructive' });
+    if (!studentId.trim() || !phoneNo.trim()) {
+      toast({ title: 'Required', description: 'Please enter both Student ID and Phone No.', variant: 'destructive' });
       return;
     }
 
-    // Basic input validation
-    const cleanAdmission = admissionNo.trim().substring(0, 50);
     const cleanPhone = phoneNo.trim().replace(/[^0-9+]/g, '').substring(0, 15);
-    if (cleanPhone.length < 10) {
-      toast({ title: 'Invalid Phone', description: 'Please enter a valid phone number.', variant: 'destructive' });
+    if (cleanPhone.replace(/[^0-9]/g, '').length < 10) {
+      toast({ title: 'Invalid Phone', description: 'Please enter a valid 10-digit phone number.', variant: 'destructive' });
       return;
     }
 
@@ -65,41 +63,20 @@ export default function ParentPortalPage() {
     setChild(null);
 
     try {
-      // Fetch registered students
-      const { data: records, error } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .eq('status', 'registered');
+      const { data, error } = await supabase.functions.invoke('parent-lookup', {
+        body: { student_id: studentId.trim(), phone: cleanPhone },
+      });
 
       if (error) throw error;
 
-      // Find matching student by admission no AND parent phone
-      const matched = (records || []).find(r => {
-        const di = r.device_info as any;
-        const meta = di?.metadata || di || {};
-        const empId = (meta.employee_id || meta.roll_number || '').toString().toLowerCase();
-        const parentPhone = (meta.parent_phone || meta.parentPhone || '').toString();
-        const phoneMatch = parentPhone.includes(cleanPhone.replace('+91', '').slice(-10));
-        return empId === cleanAdmission.toLowerCase() && phoneMatch;
-      });
-
-      if (!matched) {
-        toast({ title: 'Not Found', description: 'No student found with this Admission No. and Phone No. combination.', variant: 'destructive' });
+      if (!data?.found) {
+        toast({ title: 'Not Found', description: 'No student found with this ID and Phone combination.', variant: 'destructive' });
         setLoading(false);
         return;
       }
 
-      const di = matched.device_info as any;
-      const meta = di?.metadata || di || {};
-      const childInfo: ChildInfo = {
-        id: matched.id,
-        name: meta.name || meta.label || 'Student',
-        employee_id: meta.employee_id || meta.roll_number || 'N/A',
-        category: matched.category || 'A',
-        image_url: matched.image_url || '',
-      };
-      setChild(childInfo);
-      await loadAttendance(childInfo.employee_id);
+      setChild(data.student);
+      processAttendance(data.attendance);
     } catch (e) {
       console.error('Search error:', e);
       toast({ title: 'Error', description: 'Something went wrong. Please try again.', variant: 'destructive' });
@@ -108,28 +85,16 @@ export default function ParentPortalPage() {
     }
   };
 
-  const loadAttendance = async (employeeId: string) => {
+  const processAttendance = (attendance: { status: string; timestamp: string }[]) => {
     const today = new Date();
     const monthStart = startOfMonth(today);
     const workingDays = eachDayOfInterval({ start: monthStart, end: today }).filter(d => !isWeekend(d));
 
-    const { data: records } = await supabase
-      .from('attendance_records')
-      .select('*')
-      .in('status', ['present', 'late'])
-      .gte('timestamp', format(monthStart, 'yyyy-MM-dd'));
-
-    const studentRecords = (records || []).filter(r => {
-      const di = r.device_info as any;
-      const empId = di?.employee_id || di?.metadata?.employee_id || di?.metadata?.roll_number;
-      return empId === employeeId;
-    });
-
     const dateMap: Record<string, { status: string; time: string }> = {};
-    studentRecords.forEach(r => {
+    attendance.forEach(r => {
       const ds = format(new Date(r.timestamp), 'yyyy-MM-dd');
       if (!dateMap[ds]) {
-        dateMap[ds] = { status: r.status || 'present', time: format(new Date(r.timestamp), 'h:mm a') };
+        dateMap[ds] = { status: r.status, time: format(new Date(r.timestamp), 'h:mm a') };
       }
     });
 
@@ -176,7 +141,6 @@ export default function ParentPortalPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-2">
@@ -192,7 +156,6 @@ export default function ParentPortalPage() {
       </header>
 
       <main className="max-w-lg mx-auto p-4 space-y-4 pb-20">
-        {/* Search Form */}
         {!child && (
           <Card className="border-primary/20">
             <CardHeader>
@@ -207,12 +170,12 @@ export default function ParentPortalPage() {
               </p>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="admission">Student ID</Label>
+                  <Label htmlFor="studentId">Student ID</Label>
                   <Input
-                    id="admission"
+                    id="studentId"
                     placeholder="e.g. STU001"
-                    value={admissionNo}
-                    onChange={(e) => setAdmissionNo(e.target.value)}
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
                     maxLength={50}
                     className="mt-1"
                   />
@@ -242,12 +205,10 @@ export default function ParentPortalPage() {
 
         {child && (
           <>
-            {/* Back button */}
             <Button variant="ghost" size="sm" onClick={() => { setChild(null); setSearched(false); }}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Search Another
             </Button>
 
-            {/* Student Info */}
             <Card className="border-primary/20">
               <CardContent className="p-4 flex items-center gap-4">
                 <Avatar className="h-16 w-16 border-2 border-primary/30">
@@ -260,7 +221,7 @@ export default function ParentPortalPage() {
                     <Badge variant="secondary" className="text-xs">
                       <GraduationCap className="h-3 w-3 mr-1" /> Class {child.category}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">Roll: {child.employee_id}</Badge>
+                    <Badge variant="outline" className="text-xs">ID: {child.employee_id}</Badge>
                   </div>
                 </div>
                 <div className="text-center">
@@ -270,7 +231,6 @@ export default function ParentPortalPage() {
               </CardContent>
             </Card>
 
-            {/* Today's Status */}
             <Card className={`border ${sc.bg}`}>
               <CardContent className="p-5 flex items-center gap-4">
                 <div className={sc.color}>{sc.icon}</div>
@@ -287,7 +247,6 @@ export default function ParentPortalPage() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
             <div className="grid grid-cols-4 gap-2">
               {[
                 { label: 'Working', value: stats.total, icon: <Calendar className="h-4 w-4 text-blue-500" /> },
@@ -305,7 +264,6 @@ export default function ParentPortalPage() {
               ))}
             </div>
 
-            {/* Streak */}
             {stats.streak > 0 && (
               <div className="bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 flex items-center gap-3">
                 <span className="text-2xl">🔥</span>
@@ -316,7 +274,6 @@ export default function ParentPortalPage() {
               </div>
             )}
 
-            {/* Monthly Calendar Grid */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -370,7 +327,6 @@ export default function ParentPortalPage() {
               </CardContent>
             </Card>
 
-            {/* Trend Chart */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
