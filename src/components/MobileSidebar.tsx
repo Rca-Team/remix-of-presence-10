@@ -25,6 +25,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 const navColors: Record<string, string> = {
   Home: 'ios-blue',
