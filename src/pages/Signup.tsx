@@ -26,7 +26,7 @@ const Signup = () => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/attendance');
       }
     });
 
