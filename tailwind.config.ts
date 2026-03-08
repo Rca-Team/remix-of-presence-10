@@ -233,16 +233,21 @@ export default {
 				'gradient-subtle': 'linear-gradient(to right, var(--gradient-start), var(--gradient-end))',
 				'blue-gradient': 'linear-gradient(90deg, hsla(221, 45%, 73%, 1) 0%, hsla(220, 78%, 29%, 1) 100%)',
 				'shimmer-gradient': 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 20%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0))',
-				// Multi-color gradients
-				'gradient-ocean': 'linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--primary)))',
-				'gradient-sunset': 'linear-gradient(135deg, hsl(var(--rose)), hsl(var(--amber)))',
-				'gradient-aurora': 'linear-gradient(135deg, hsl(var(--emerald)), hsl(var(--cyan)), hsl(var(--violet)))',
-				'gradient-cosmic': 'linear-gradient(135deg, hsl(var(--violet)), hsl(var(--fuchsia)), hsl(var(--rose)))',
-				'gradient-tropical': 'linear-gradient(135deg, hsl(var(--teal)), hsl(var(--emerald)))',
-				'gradient-neon': 'linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--violet)))',
-				'gradient-fire': 'linear-gradient(135deg, hsl(var(--amber)), hsl(var(--rose)))',
-				'gradient-royal': 'linear-gradient(135deg, hsl(var(--indigo)), hsl(var(--violet)))',
-				// ISO gradients
+				// iOS-inspired gradients
+				'gradient-ios-blue': 'linear-gradient(145deg, hsl(var(--ios-blue)), hsl(var(--ios-purple)))',
+				'gradient-ios-green': 'linear-gradient(145deg, hsl(var(--ios-green)), hsl(var(--ios-mint)))',
+				'gradient-ios-sunset': 'linear-gradient(145deg, hsl(var(--ios-pink)), hsl(var(--ios-orange)))',
+				'gradient-ios-warm': 'linear-gradient(145deg, hsl(var(--ios-orange)), hsl(var(--ios-yellow)))',
+				'gradient-ocean': 'linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--ios-blue)))',
+				'gradient-sunset': 'linear-gradient(135deg, hsl(var(--ios-pink)), hsl(var(--ios-orange)))',
+				'gradient-aurora': 'linear-gradient(135deg, hsl(var(--ios-green)), hsl(var(--ios-mint)), hsl(var(--ios-blue)))',
+				'gradient-cosmic': 'linear-gradient(135deg, hsl(var(--ios-purple)), hsl(var(--ios-pink)), hsl(var(--rose)))',
+				'gradient-tropical': 'linear-gradient(135deg, hsl(var(--teal)), hsl(var(--ios-green)))',
+				'gradient-neon': 'linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--ios-purple)))',
+				'gradient-fire': 'linear-gradient(135deg, hsl(var(--ios-orange)), hsl(var(--ios-red)))',
+				'gradient-royal': 'linear-gradient(135deg, hsl(var(--indigo)), hsl(var(--ios-purple)))',
+				'gradient-rainbow': 'linear-gradient(90deg, hsl(var(--ios-red)), hsl(var(--ios-orange)), hsl(var(--ios-yellow)), hsl(var(--ios-green)), hsl(var(--ios-blue)), hsl(var(--ios-purple)))',
+				// iOS gradients
 				'iso-blue': 'linear-gradient(135deg, #4171f5 0%, #3451b2 100%)',
 				'iso-green': 'linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)',
 				'iso-purple': 'linear-gradient(135deg, #c471ed 0%, #f64f59 100%)'
