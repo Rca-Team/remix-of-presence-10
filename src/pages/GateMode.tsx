@@ -15,8 +15,9 @@ import GateStatsOverlay from '@/components/gate/GateStatsOverlay';
 import StrangerAlert from '@/components/gate/StrangerAlert';
 import LateEntryForm from '@/components/gate/LateEntryForm';
 import GateModeSetup from '@/components/gate/GateModeSetup';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import Logo from '@/components/Logo';
 
 export interface GateEntry {
   id: string;
