@@ -169,7 +169,7 @@ const Signup = () => {
                   Confirm Password
                 </Label>
                 <PasswordInput id="confirmPassword" name="confirmPassword" placeholder="••••••••" value={formData.confirmPassword}
-                  onChange={handleInputChange} className="h-11 sm:h-12 text-sm sm:text-base" required />
+                  onChange={handleInputChange} className="h-12 text-base" required />
               </div>
 
               <Button type="submit" variant="ios" className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold" disabled={isLoading}>
