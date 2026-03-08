@@ -394,15 +394,26 @@ const Scan3DCapture: React.FC<Scan3DCaptureProps> = ({ onComplete, isModelLoadin
     soundRef.current.playScanStart();
 
     // Capture primary image
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        setPrimaryImage(canvas.toDataURL('image/png'));
+    const captureImage = () => {
+      if (videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        if (video.readyState >= 2 && video.videoWidth > 0) {
+          const canvas = canvasRef.current;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0);
+            return canvas.toDataURL('image/png');
+          }
+        }
       }
+      return null;
+    };
+
+    const img = captureImage();
+    if (img) {
+      setPrimaryImage(img);
     }
 
     scanIntervalRef.current = setInterval(async () => {
