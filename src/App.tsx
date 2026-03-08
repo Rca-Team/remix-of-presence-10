@@ -17,6 +17,7 @@ import NotificationDemo from './pages/NotificationDemo';
 import Profile from './pages/Profile';
 import Features from './pages/Features';
 import GateMode from './pages/GateMode';
+import ParentPortal from './pages/ParentPortal';
 
 import SplashAnimation from "./components/SplashAnimation";
 import { AttendanceProvider } from './contexts/AttendanceContext';
