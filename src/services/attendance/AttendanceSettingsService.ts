@@ -101,17 +101,15 @@ export const getAttendanceCutoffTime = async (): Promise<{ hour: number; minute:
  * Update the cutoff time with hour and minute
  */
 export const updateAttendanceCutoffTime = async (hour: number, minute: number): Promise<boolean> => {
-  try {
-    // Format the time string properly
-    const hourStr = hour.toString().padStart(2, '0');
-    const minuteStr = minute.toString().padStart(2, '0');
-    const timeString = `${hourStr}:${minuteStr}`;
-    
-    return await updateCutoffTime(timeString);
-  } catch (error) {
-    console.error('Error updating attendance cutoff time:', error);
-    return false;
+  const hourStr = hour.toString().padStart(2, '0');
+  const minuteStr = minute.toString().padStart(2, '0');
+  const timeString = `${hourStr}:${minuteStr}`;
+  
+  const result = await updateCutoffTime(timeString);
+  if (!result) {
+    throw new Error('Failed to save cutoff time. Make sure you have admin permissions.');
   }
+  return true;
 };
 
 /**
