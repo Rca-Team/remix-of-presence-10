@@ -44,11 +44,10 @@ type Role = 'user' | 'moderator' | 'admin';
 
 interface RegisteredUser {
   id: string;
-  user_id: string | null;
+  user_id: string;
   name: string;
-  employee_id: string;
-  category: string;
-  image_url: string;
+  email: string;
+  avatar_url: string;
   role: Role;
   isTeacher: boolean;
   teacherCategories: string[];
