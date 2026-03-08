@@ -299,7 +299,8 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
 
   return (
     <div className="relative h-full w-full bg-black touch-manipulation">
-      <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
+      <video ref={videoRef} className="h-full w-full object-cover" muted playsInline 
+        style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }} />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
       {isLoading && (
