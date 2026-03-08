@@ -454,7 +454,7 @@ const Admin = () => {
 
         {/* Mobile Bottom Navigation - Improved */}
         {isMobile &&
-        <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-2xl border-t border-border z-50 pb-safe">
             <div className="flex justify-around py-1">
               {mobileQuickNav.map((item) => {
               const isActive = activeTab === item.id;
