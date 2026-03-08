@@ -80,7 +80,17 @@ const GateModeSetup = ({ onStart, onCancel }: GateModeSetupProps) => {
               )}
             </div>
 
-            <div className="flex gap-3 pt-4">
+            {/* Quick Start */}
+            <Button 
+              variant="secondary"
+              className="w-full h-12 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary font-semibold"
+              onClick={() => onStart('Main Gate')}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Quick Start — Main Gate
+            </Button>
+
+            <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={onCancel}>
                 <X className="h-4 w-4 mr-2" /> Cancel
               </Button>
