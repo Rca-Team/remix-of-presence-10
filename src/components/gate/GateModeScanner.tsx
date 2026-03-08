@@ -56,7 +56,7 @@ const GateModeScanner = ({ onFaceDetected, isActive }: GateModeScannerProps) => 
           video: {
             width: { ideal: 1280 },
             height: { ideal: 720 },
-            facingMode: { ideal: 'environment' },
+            facingMode: { ideal: facingMode },
             frameRate: { ideal: 30 }
           }
         }).catch(() =>
