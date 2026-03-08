@@ -178,38 +178,34 @@ const Index = () => {
                     {/* Top Bar */}
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-t-2xl sm:rounded-t-3xl" />
                     
-                    {/* Face Scan Animation */}
-                    <div className="relative aspect-square max-w-[200px] sm:max-w-xs md:max-w-sm mx-auto mb-4 sm:mb-6">
-                      <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10" />
+                    {/* Mascot Hero */}
+                    <div className="relative aspect-square max-w-[200px] sm:max-w-xs md:max-w-sm mx-auto mb-4 sm:mb-6 flex items-center justify-center">
+                      <motion.div
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <img 
+                          src={mascotHero} 
+                          alt="Presence mascot - cute school kid" 
+                          className="w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 lg:w-72 lg:h-72 object-contain drop-shadow-[0_0_25px_hsl(var(--primary)/0.4)]"
+                        />
+                      </motion.div>
                       
-                      {/* Scanning Lines */}
+                      {/* Floating elements around mascot */}
                       <motion.div 
-                        animate={{ y: [0, 200, 0] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-x-4 top-4 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent"
-                      />
-                      <div className="absolute inset-4 rounded-lg sm:rounded-xl border-2 border-dashed border-primary/30" />
-                      <div className="absolute inset-6 sm:inset-8 rounded-lg border border-primary/40" />
-                      
-                      {/* Center Icon */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <motion.div 
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                          className="relative"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full blur-xl opacity-50" />
-                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center backdrop-blur-sm">
-                            <Scan className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 text-primary" />
-                          </div>
-                        </motion.div>
-                      </div>
-
-                      {/* Corner Markers */}
-                      <div className="absolute top-4 left-4 w-6 h-6 sm:w-8 sm:h-8 border-l-2 border-t-2 border-primary rounded-tl-lg" />
-                      <div className="absolute top-4 right-4 w-6 h-6 sm:w-8 sm:h-8 border-r-2 border-t-2 border-primary rounded-tr-lg" />
-                      <div className="absolute bottom-4 left-4 w-6 h-6 sm:w-8 sm:h-8 border-l-2 border-b-2 border-accent rounded-bl-lg" />
-                      <div className="absolute bottom-4 right-4 w-6 h-6 sm:w-8 sm:h-8 border-r-2 border-b-2 border-accent rounded-br-lg" />
+                        animate={{ y: [-5, 5, -5], x: [3, -3, 3] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute top-4 right-4 sm:top-6 sm:right-6 px-2 py-1 rounded-lg bg-green-500/20 border border-green-500/30 text-green-400 text-[10px] sm:text-xs font-medium"
+                      >
+                        ✅ Present
+                      </motion.div>
+                      <motion.div 
+                        animate={{ y: [5, -5, 5], x: [-3, 3, -3] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                        className="absolute bottom-8 left-2 sm:bottom-12 sm:left-4 px-2 py-1 rounded-lg bg-primary/20 border border-primary/30 text-primary text-[10px] sm:text-xs font-medium"
+                      >
+                        🔍 Face Detected
+                      </motion.div>
                     </div>
 
                     {/* Status */}
