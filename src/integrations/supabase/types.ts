@@ -731,6 +731,51 @@ export type Database = {
         }
         Relationships: []
       }
+      received_emails: {
+        Row: {
+          attachments: Json | null
+          body_html: string | null
+          body_text: string | null
+          created_at: string
+          from_email: string
+          from_name: string | null
+          id: string
+          is_read: boolean | null
+          is_starred: boolean | null
+          received_at: string
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          attachments?: Json | null
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          from_email: string
+          from_name?: string | null
+          id?: string
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          received_at?: string
+          subject?: string
+          to_email?: string
+        }
+        Update: {
+          attachments?: Json | null
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          received_at?: string
+          subject?: string
+          to_email?: string
+        }
+        Relationships: []
+      }
       school_gates: {
         Row: {
           camera_id: string | null
