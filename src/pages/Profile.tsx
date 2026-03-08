@@ -369,10 +369,14 @@ const Profile = () => {
 
               {/* Tabs */}
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 bg-white/50 dark:bg-slate-800/50 p-1 rounded-xl border border-blue-100 dark:border-blue-900">
+                <TabsList className="grid w-full grid-cols-4 mb-4 sm:mb-6 bg-white/50 dark:bg-slate-800/50 p-1 rounded-xl border border-blue-100 dark:border-blue-900">
                   <TabsTrigger value="details" className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg">
                     <User className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Details</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="face" className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg">
+                    <Scan className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Face ID</span>
                   </TabsTrigger>
                   <TabsTrigger value="insights" className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg">
                     <Sparkles className="h-4 w-4 sm:mr-2" />
