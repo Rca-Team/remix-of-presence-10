@@ -6,8 +6,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users, User, Printer, Calendar, Bell, ChevronLeft, GraduationCap,
-  FileText, Download, FolderInput, MoreVertical
+  FileText, Download, FolderInput, MoreVertical, CalendarClock
 } from 'lucide-react';
+import ClassTeacherManager from './ClassTeacherManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWeekend } from 'date-fns';
