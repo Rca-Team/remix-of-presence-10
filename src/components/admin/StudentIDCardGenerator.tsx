@@ -470,29 +470,29 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 overflow-y-auto"
             onClick={() => setPreviewStudent(null)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="relative"
+              className="relative my-auto w-[310px] sm:w-[350px] max-w-[95vw]"
               onClick={(e) => e.stopPropagation()}
             >
               <Button
                 size="icon"
                 variant="ghost"
-                className="absolute -top-12 right-0 text-white hover:bg-white/10"
+                className="absolute -top-10 right-0 text-white hover:bg-white/10 z-10"
                 onClick={() => setPreviewStudent(null)}
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </Button>
               
               {/* Live Preview Card */}
               <div
                 ref={cardRef}
-                className="w-[350px] rounded-2xl overflow-hidden shadow-2xl bg-white text-[#1a1a2e]"
+                className="w-full rounded-2xl overflow-hidden shadow-2xl bg-white text-[#1a1a2e]"
               >
                 {/* Header */}
                 <div className="bg-gradient-to-r from-[#1e3a5f] to-[#0d2137] p-3 text-center relative">
@@ -500,9 +500,9 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
                     background: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 8px)'
                   }} />
                   <div className="relative z-10">
-                    <p className="text-white font-extrabold text-base tracking-wider uppercase">{SCHOOL_NAME}</p>
-                    <p className="text-blue-300 text-[10px] tracking-widest uppercase mt-0.5">{SCHOOL_TAGLINE}</p>
-                    <p className="text-slate-400 text-[9px] mt-1">{SCHOOL_ADDRESS}</p>
+                    <p className="text-white font-extrabold text-sm sm:text-base tracking-wider uppercase">{SCHOOL_NAME}</p>
+                    <p className="text-blue-300 text-[9px] sm:text-[10px] tracking-widest uppercase mt-0.5">{SCHOOL_TAGLINE}</p>
+                    <p className="text-slate-400 text-[8px] sm:text-[9px] mt-1">{SCHOOL_ADDRESS}</p>
                   </div>
                 </div>
 
@@ -510,28 +510,28 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
                 <div className="h-1 bg-gradient-to-r from-amber-400 via-red-500 via-purple-500 to-blue-500" />
 
                 {/* Photo + Name */}
-                <div className="flex items-center gap-3 px-4 pt-3 pb-2">
-                  <div className="w-[90px] h-[100px] flex-shrink-0 rounded-lg overflow-hidden border-[3px] border-[#1e3a5f] bg-slate-100">
+                <div className="flex items-center gap-3 px-3 sm:px-4 pt-3 pb-2">
+                  <div className="w-[75px] h-[88px] sm:w-[90px] sm:h-[100px] flex-shrink-0 rounded-lg overflow-hidden border-[3px] border-[#1e3a5f] bg-slate-100">
                     {previewStudent.avatar_url ? (
                       <img src={previewStudent.avatar_url} className="w-full h-full object-cover" alt={previewStudent.name} />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">👤</div>
+                      <div className="w-full h-full flex items-center justify-center text-3xl text-slate-300">👤</div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-lg font-extrabold text-[#1e3a5f] leading-tight">{previewStudent.name}</p>
-                    <span className="inline-block mt-1 bg-[#1e3a5f] text-white text-[11px] font-bold px-2.5 py-0.5 rounded">
+                    <p className="text-base sm:text-lg font-extrabold text-[#1e3a5f] leading-tight truncate">{previewStudent.name}</p>
+                    <span className="inline-block mt-1 bg-[#1e3a5f] text-white text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded">
                       {getCategoryLabel(previewStudent.category)}
                     </span>
-                    <p className="text-[11px] text-slate-500 mt-1.5">
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">
                       Academic Year: <strong className="text-[#1e3a5f]">{ACADEMIC_YEAR}</strong>
                     </p>
                   </div>
                 </div>
 
                 {/* Details */}
-                <div className="px-4 mt-1">
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-[12px]">
+                <div className="px-3 sm:px-4 mt-1">
+                  <div className="bg-slate-50 rounded-lg p-2.5 sm:p-3 border border-slate-200 text-[11px] sm:text-[12px]">
                     {[
                       ['Roll No.', previewStudent.roll_number],
                       ['Student ID', previewStudent.employee_id],
@@ -540,9 +540,9 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
                       ['Contact No.', previewStudent.parent_phone],
                       ['Transport', previewStudent.transport_mode],
                     ].map(([label, value], i) => (
-                      <div key={i} className="flex py-[5px]">
-                        <span className="w-[40%] text-slate-500 text-[11px]">{label}</span>
-                        <span className={`font-semibold ${label === 'Blood Group' ? 'text-red-600' : 'text-[#1e3a5f]'}`}>
+                      <div key={i} className="flex py-[4px]">
+                        <span className="w-[40%] text-slate-500 text-[10px] sm:text-[11px]">{label}</span>
+                        <span className={`font-semibold truncate ${label === 'Blood Group' ? 'text-red-600' : 'text-[#1e3a5f]'}`}>
                           : {value}
                         </span>
                       </div>
@@ -551,8 +551,8 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
                 </div>
 
                 {/* QR + Note */}
-                <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                  <div className="border-2 border-slate-200 rounded-lg p-1.5">
+                <div className="flex items-center justify-between px-3 sm:px-4 pt-2.5 pb-2">
+                  <div className="border-2 border-slate-200 rounded-lg p-1">
                     <QRCodeSVG
                       value={JSON.stringify({
                         type: 'student_id',
@@ -560,13 +560,13 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
                         name: previewStudent.name,
                         employee_id: previewStudent.employee_id
                       })}
-                      size={64}
+                      size={56}
                       fgColor="#1e3a5f"
                     />
                   </div>
                   <div className="flex-1 text-right pl-3">
-                    <p className="text-[9px] text-slate-400 mb-1">Scan for attendance</p>
-                    <p className="text-[8px] text-slate-400 leading-relaxed">
+                    <p className="text-[8px] sm:text-[9px] text-slate-400 mb-1">Scan for attendance</p>
+                    <p className="text-[7px] sm:text-[8px] text-slate-400 leading-relaxed">
                       This card is the property of the school.<br />
                       If found, please return to the school office.
                     </p>
@@ -574,8 +574,8 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gradient-to-r from-[#1e3a5f] to-[#0d2137] px-4 py-2 text-center">
-                  <p className="text-[9px] text-blue-300 tracking-wider">
+                <div className="bg-gradient-to-r from-[#1e3a5f] to-[#0d2137] px-3 py-2 text-center">
+                  <p className="text-[8px] sm:text-[9px] text-blue-300 tracking-wider">
                     Powered by Presences AI • Smart Attendance System
                   </p>
                 </div>
@@ -583,7 +583,7 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
 
               {/* Download Button */}
               <Button
-                className="w-full mt-4"
+                className="w-full mt-3"
                 onClick={() => downloadSingleCard(previewStudent)}
                 disabled={isGenerating}
               >
