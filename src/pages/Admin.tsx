@@ -269,6 +269,7 @@ const Admin = () => {
       case 'reports':
         return (
           <div className="space-y-6">
+            <SubstitutionReport />
             <ClassSectionReport />
             <AttendanceReportGenerator />
           </div>
