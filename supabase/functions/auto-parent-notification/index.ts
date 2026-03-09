@@ -75,10 +75,13 @@ serve(async (req) => {
         const subject = `${statusEmoji} Attendance Alert: ${studentName} marked ${status}`;
 
         const photoSection = imageUrl ? `
-<tr><td style="padding:10px 30px 20px 30px;text-align:center;">
-<p style="margin:0 0 10px 0;color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;">📸 Photo Proof</p>
-<img src="${imageUrl}" alt="Attendance photo of ${escapeHtml(studentName)}" style="max-width:280px;width:100%;border-radius:12px;border:3px solid ${statusColor};box-shadow:0 4px 12px rgba(0,0,0,0.15);" />
-<p style="margin:8px 0 0 0;color:#9ca3af;font-size:11px;">Captured at ${currentTime}</p>
+<tr><td style="padding:20px 30px;text-align:center;background-color:#f0f9ff;border-top:1px solid #e0f2fe;border-bottom:1px solid #e0f2fe;">
+<p style="margin:0 0 15px 0;color:#0369a1;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">📸 Recognition Photo Proof</p>
+<div style="display:inline-block;padding:8px;background:linear-gradient(135deg,${statusColor} 0%,${statusColor}dd 100%);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+<img src="${imageUrl}" alt="Attendance photo of ${escapeHtml(studentName)}" style="display:block;max-width:320px;width:100%;border-radius:10px;border:4px solid #ffffff;" />
+</div>
+<p style="margin:12px 0 0 0;color:#64748b;font-size:12px;font-style:italic;">Captured by AI face recognition at ${currentTime}</p>
+<p style="margin:4px 0 0 0;color:#94a3b8;font-size:10px;">This photo was taken at the moment of attendance verification</p>
 </td></tr>` : '';
 
         const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
