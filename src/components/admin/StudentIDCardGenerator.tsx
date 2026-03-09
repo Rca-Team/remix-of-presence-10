@@ -72,11 +72,14 @@ const StudentIDCardGenerator: React.FC<StudentIDCardGeneratorProps> = ({ student
           const userId = record.user_id || record.id;
           if (!uniqueStudents.has(userId)) {
             const imageUrl = record.image_url || metadata.firebase_image_url;
-            const fullImageUrl = imageUrl?.startsWith('data:') 
-              ? imageUrl 
-              : imageUrl 
-                ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/face-images/${imageUrl}`
-                : '';
+            let fullImageUrl = '';
+            if (imageUrl) {
+              if (imageUrl.startsWith('data:') || imageUrl.startsWith('http')) {
+                fullImageUrl = imageUrl;
+              } else {
+                fullImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/face-images/${imageUrl}`;
+              }
+            }
 
             uniqueStudents.set(userId, {
               id: userId,
