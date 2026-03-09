@@ -20,6 +20,7 @@ import BatchIDCardExtractor from '@/components/admin/BatchIDCardExtractor';
 import StudentIDCardGenerator from '@/components/admin/StudentIDCardGenerator';
 import AttendanceReportGenerator from '@/components/admin/AttendanceReportGenerator';
 import ClassSectionReport from '@/components/admin/ClassSectionReport';
+import SubstitutionReport from '@/components/admin/SubstitutionReport';
 import EmergencyAlertPanel from '@/components/admin/EmergencyAlertPanel';
 import PDFBulkRegistration from '@/components/admin/PDFBulkRegistration';
 import NotificationLog from '@/components/admin/NotificationLog';
