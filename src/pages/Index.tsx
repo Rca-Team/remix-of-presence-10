@@ -199,26 +199,6 @@ const Index = () => {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Mobile: Compact module icons */}
-              <motion.div variants={itemVariants} className="lg:hidden px-2">
-                <div className="grid grid-cols-6 gap-2">
-                  {[
-                    { icon: Scan, label: "Attend", color: "text-ios-blue" },
-                    { icon: BookOpen, label: "Table", color: "text-ios-green" },
-                    { icon: Shield, label: "Safety", color: "text-ios-red" },
-                    { icon: Bell, label: "Alerts", color: "text-ios-orange" },
-                    { icon: BarChart3, label: "Stats", color: "text-ios-purple" },
-                    { icon: Bus, label: "Bus", color: "text-ios-mint" },
-                  ].map((mod, i) => (
-                    <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3 + i * 0.06, type: "spring" }}
-                      className="flex flex-col items-center gap-1 py-2.5 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-sm">
-                      <mod.icon className={`w-5 h-5 ${mod.color}`} />
-                      <span className="text-[9px] font-medium text-muted-foreground">{mod.label}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
             </div>
           </motion.div>
         </section>
