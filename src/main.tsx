@@ -61,26 +61,51 @@ const loadFaceModels = async (retries = 2, delay = 1500) => {
   return false;
 }
 
+// Global error handler to prevent white screens
+window.addEventListener('error', (event) => {
+  console.error('Global error caught:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
+
 // Initialize application
 const initApp = () => {
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  );
-  
-  // Load face models after app is rendered
-  loadFaceModels()
-    .then(success => {
-      if (!success) {
-        setTimeout(() => {
-          toast.error('Failed to pre-load face recognition models. Some features may not work correctly.', {
-            duration: 6000,
-            id: 'face-models-error' // Prevent duplicate toasts
-          });
-        }, 1000);
-      }
-    });
+  try {
+    const root = document.getElementById("root");
+    if (!root) {
+      console.error('Root element not found');
+      return;
+    }
+    
+    createRoot(root).render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+    
+    // Load face models after app is rendered
+    loadFaceModels()
+      .then(success => {
+        if (!success) {
+          setTimeout(() => {
+            toast.error('Failed to pre-load face recognition models. Some features may not work correctly.', {
+              duration: 6000,
+              id: 'face-models-error'
+            });
+          }, 1000);
+        }
+      });
+  } catch (err) {
+    console.error('Failed to initialize app:', err);
+    const root = document.getElementById("root");
+    if (root) {
+      root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#fff;font-family:sans-serif;padding:20px;text-align:center;">
+        <div><h2>Something went wrong</h2><p style="color:#94a3b8;margin-top:8px;">Please refresh the page. If the issue persists, clear your browser cache.</p><button onclick="location.reload()" style="margin-top:16px;padding:8px 24px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;">Refresh</button></div>
+      </div>`;
+    }
+  }
 }
 
 // Start the application
