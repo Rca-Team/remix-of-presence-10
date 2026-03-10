@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UserCheck, Clock, XCircle, CalendarDays } from 'lucide-react';
-import { useAttendance } from '@/contexts/AttendanceContext';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +23,16 @@ interface DailyAttendanceDetailsProps {
   selectedUserName?: string | null;
 }
 
+// Normalize status for comparison
+function normalizeStatus(status: string | null | undefined): string {
+  if (!status) return 'unknown';
+  const s = status.toLowerCase().trim();
+  if (s === 'unauthorized' || s.includes('present')) return 'present';
+  if (s.includes('late')) return 'late';
+  if (s.includes('absent')) return 'absent';
+  return s;
+}
+
 const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
   selectedDate,
   dailyAttendance,
@@ -34,8 +43,6 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
   selectedFaceId,
   selectedUserName
 }) => {
-  const { recentAttendance } = useAttendance();
-
   const formatTime = (dateString: string) => format(new Date(dateString), 'h:mm a');
 
   const isToday = (date: Date) => {
@@ -46,34 +53,9 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
   const isFutureDate = (date: Date) => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
-    return date > t;
-  };
-
-  const filterKnownFaces = (records: any[]) =>
-    records.filter(r => r.name && r.name !== 'User' && r.name !== 'Unknown Student' && !r.name.toLowerCase().includes('unknown'));
-
-  const getRealtimeAttendance = () => {
-    if (!selectedDate || recentAttendance.length === 0 || !selectedFaceId) return null;
-    const start = new Date(selectedDate); start.setHours(0, 0, 0, 0);
-    const end = new Date(selectedDate); end.setHours(23, 59, 59, 999);
-    const userName = selectedUserName || (dailyAttendance.length > 0 ? dailyAttendance[0].name : null);
-    
-    // Filter records strictly for selected user only
-    const userRecords = recentAttendance.filter(r => {
-      const d = new Date(r.timestamp);
-      const matchesDate = d >= start && d <= end;
-      // Must match by user_id OR id - not by name alone to avoid showing other users
-      const matchesUser = r.user_id === selectedFaceId || r.id === selectedFaceId;
-      const isKnown = r.name && r.name !== 'User' && r.name !== 'Unknown Student' && !r.name.toLowerCase().includes('unknown');
-      return matchesDate && matchesUser && isKnown;
-    });
-    
-    // Sort by timestamp and return only the earliest record
-    if (userRecords.length > 0) {
-      userRecords.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-      return [userRecords[0]]; // Return only earliest
-    }
-    return [];
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d > t;
   };
 
   if (!selectedDate) {
@@ -95,16 +77,38 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
   const isPresentDate = isDateInArray(selectedDate, attendanceDays);
   const isLateDate = isDateInArray(selectedDate, lateAttendanceDays);
   const isAbsentDate = isDateInArray(selectedDate, absentDays);
-  const filteredDaily = filterKnownFaces(dailyAttendance);
-  const realtimeRecords = getRealtimeAttendance();
-  const records = realtimeRecords && realtimeRecords.length > 0 ? realtimeRecords : filteredDaily;
+  
+  // Normalize daily attendance records
+  const records = dailyAttendance.map(r => ({
+    ...r,
+    status: normalizeStatus(r.status)
+  }));
 
+  // Determine overall status - prioritize: records > calendar arrays > absent
   let overallStatus: 'present' | 'late' | 'absent' | 'future' | 'no-data' = 'no-data';
-  if (isFutureDate(selectedDate)) overallStatus = 'future';
-  else if (isPresentDate || records.some(r => r.status?.toLowerCase().includes('present'))) overallStatus = 'present';
-  else if (isLateDate || records.some(r => r.status?.toLowerCase().includes('late'))) overallStatus = 'late';
-  else if (isAbsentDate) overallStatus = 'absent';
-  else overallStatus = 'absent';
+  
+  if (isFutureDate(selectedDate)) {
+    overallStatus = 'future';
+  } else if (records.some(r => r.status === 'present')) {
+    overallStatus = 'present';
+  } else if (isPresentDate) {
+    overallStatus = 'present';
+  } else if (records.some(r => r.status === 'late')) {
+    overallStatus = 'late';
+  } else if (isLateDate) {
+    overallStatus = 'late';
+  } else if (isAbsentDate) {
+    overallStatus = 'absent';
+  } else {
+    // Check if it's a weekday in the past - if so, absent; otherwise no-data
+    const dayOfWeek = selectedDate.getDay();
+    const isPastWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selDate = new Date(selectedDate);
+    selDate.setHours(0, 0, 0, 0);
+    overallStatus = (isPastWeekday && selDate < today) ? 'absent' : 'no-data';
+  }
 
   const statusConfig = {
     present: { icon: UserCheck, label: 'Present', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', dot: 'bg-green-500' },
@@ -178,9 +182,9 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
                     >
                       <div className={cn(
                         "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0",
-                        record.status?.toLowerCase().includes('late') ? 'bg-amber-500/15' : 'bg-green-500/15'
+                        record.status === 'late' ? 'bg-amber-500/15' : 'bg-green-500/15'
                       )}>
-                        {record.status?.toLowerCase().includes('late') ? (
+                        {record.status === 'late' ? (
                           <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
                         ) : (
                           <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 dark:text-green-400" />
@@ -193,12 +197,12 @@ const DailyAttendanceDetails: React.FC<DailyAttendanceDetailsProps> = ({
                         variant="outline"
                         className={cn(
                           "text-[9px] sm:text-[10px] px-1.5 py-0",
-                          record.status?.toLowerCase().includes('late')
+                          record.status === 'late'
                             ? 'border-amber-500/30 text-amber-600 dark:text-amber-400'
                             : 'border-green-500/30 text-green-600 dark:text-green-400'
                         )}
                       >
-                        {record.status?.toLowerCase().includes('late') ? 'Late' : 'Present'}
+                        {record.status === 'late' ? 'Late' : 'Present'}
                       </Badge>
                     </motion.div>
                   ))}
