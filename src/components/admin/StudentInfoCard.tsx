@@ -20,8 +20,9 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
   lateAttendanceDays,
   reportControls
 }) => {
-  const totalDays = attendanceDays.length + lateAttendanceDays.length;
-  const attendanceRate = totalDays > 0 ? Math.round((attendanceDays.length / totalDays) * 100) : 0;
+  const totalAttended = attendanceDays.length + lateAttendanceDays.length;
+  // Show rate as percentage of total attended days (present only, excluding late)
+  const attendanceRate = totalAttended > 0 ? Math.round((attendanceDays.length / totalAttended) * 100) : 0;
 
   return (
     <Card className="overflow-hidden">
