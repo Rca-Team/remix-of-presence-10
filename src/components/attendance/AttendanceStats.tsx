@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GradientCard } from '@/components/ui/gradient-card';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,84 +8,74 @@ import { Users, UserCheck, AlertTriangle, UserX } from 'lucide-react';
 const AttendanceStats = () => {
   const [stats, setStats] = useState({
     present: 0,
-    unauthorized: 0,
+    late: 0,
     absent: 0,
     total: 0
   });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id');
-        
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        return;
-      }
-      
-      const totalProfiles = profilesData?.length || 0;
-      
-      const { data: presentData, error: presentError } = await supabase
-        .from('attendance_records')
-        .select('id')
-        .eq('status', 'present')
-        .gte('timestamp', `${today}T00:00:00`)
-        .lte('timestamp', `${today}T23:59:59`);
-        
-      if (presentError) {
-        console.error('Error fetching present users:', presentError);
-        return;
-      }
-      
-      const presentUsers = presentData?.length || 0;
-      
-      const { data: unauthorizedData, error: unauthorizedError } = await supabase
-        .from('attendance_records')
-        .select('id')
-        .eq('status', 'unauthorized')
-        .gte('timestamp', `${today}T00:00:00`)
-        .lte('timestamp', `${today}T23:59:59`);
-        
-      if (unauthorizedError) {
-        console.error('Error fetching unauthorized users:', unauthorizedError);
-        return;
-      }
-      
-      const unauthorizedUsers = unauthorizedData?.length || 0;
-      
-      const absentUsers = Math.max(0, totalProfiles - presentUsers - unauthorizedUsers);
-      
-      setStats({
-        present: presentUsers,
-        unauthorized: unauthorizedUsers,
-        absent: absentUsers,
-        total: totalProfiles
-      });
-    };
+  const fetchStats = useCallback(async () => {
+    const today = new Date().toISOString().split('T')[0];
     
+    const [profilesRes, todayRes] = await Promise.all([
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('attendance_records')
+        .select('id, status, user_id')
+        .gte('timestamp', `${today}T00:00:00`)
+        .lte('timestamp', `${today}T23:59:59`)
+    ]);
+    
+    if (profilesRes.error || todayRes.error) {
+      console.error('Error fetching stats:', profilesRes.error || todayRes.error);
+      return;
+    }
+    
+    const totalProfiles = profilesRes.count || 0;
+    const records = todayRes.data || [];
+    
+    // Count unique users by status (present includes unauthorized for backward compat)
+    const presentUsers = new Set<string>();
+    const lateUsers = new Set<string>();
+    
+    for (const rec of records) {
+      const userId = rec.user_id || rec.id;
+      const status = (rec.status || '').toLowerCase();
+      
+      if (status === 'present' || status === 'unauthorized') {
+        presentUsers.add(userId);
+        lateUsers.delete(userId); // If marked present, remove from late
+      } else if (status === 'late' && !presentUsers.has(userId)) {
+        lateUsers.add(userId);
+      }
+    }
+    
+    const presentCount = presentUsers.size;
+    const lateCount = lateUsers.size;
+    const absentCount = Math.max(0, totalProfiles - presentCount - lateCount);
+    
+    setStats({
+      present: presentCount,
+      late: lateCount,
+      absent: absentCount,
+      total: totalProfiles
+    });
+  }, []);
+
+  useEffect(() => {
     fetchStats();
     
-    // Set up a realtime subscription for attendance records changes
     const channel = supabase
       .channel('attendance_stats_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'attendance_records' },
-        () => {
-          fetchStats();
-        }
+        () => fetchStats()
       )
       .subscribe();
     
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchStats]);
 
   const presentPercentage = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
-  const latePercentage = stats.total > 0 ? Math.round((stats.unauthorized / stats.total) * 100) : 0;
+  const latePercentage = stats.total > 0 ? Math.round((stats.late / stats.total) * 100) : 0;
   const absentPercentage = stats.total > 0 ? Math.round((stats.absent / stats.total) * 100) : 0;
 
   return (
@@ -114,7 +104,7 @@ const AttendanceStats = () => {
       {/* Late Arrivals Card */}
       <GradientCard
         title="Late Arrivals"
-        value={stats.unauthorized}
+        value={stats.late}
         icon={AlertTriangle}
         gradient="orange"
         subtitle={`${latePercentage}% of total`}
