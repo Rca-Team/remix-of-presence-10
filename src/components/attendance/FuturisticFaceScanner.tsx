@@ -275,15 +275,17 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       const useSsd = faceapi.nets.ssdMobilenetv1?.isLoaded;
       console.log(`Using ${useSsd ? 'SSD MobileNetV1' : 'TinyFaceDetector'} for scan`);
 
-      const detectionPromise = useSsd
+      const detectionPromise: Promise<faceapi.WithFaceDescriptor<faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }, faceapi.FaceLandmarks68>>[]> = useSsd
         ? faceapi
             .detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
             .withFaceLandmarks()
             .withFaceDescriptors()
+            .run()
         : faceapi
             .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 }))
             .withFaceLandmarks()
-            .withFaceDescriptors();
+            .withFaceDescriptors()
+            .run();
 
       const fullDetections = await withTimeout(
         detectionPromise,
