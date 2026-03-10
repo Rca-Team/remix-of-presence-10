@@ -2,7 +2,6 @@ import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
 import App from './App.tsx'
 import './index.css'
-import { loadModels, areModelsLoaded } from './services/FaceRecognitionService'
 import { toast } from 'sonner'
 
 // If a previous PWA service worker cached an older bundle (common after remixing),
