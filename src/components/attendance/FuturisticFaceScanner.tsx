@@ -270,49 +270,24 @@ const FuturisticFaceScanner: React.FC<FuturisticFaceScannerProps> = ({ onScanCom
       await new Promise(r => setTimeout(r, 400));
       setScanPhase('analyzing');
 
-      // Detect all faces with full descriptors - with 8 second timeout
-      // NOTE: SsdMobilenetv1 requires its own model to be loaded; we gracefully fallback to TinyFaceDetector.
-      const detectionPromise = new Promise<faceapi.WithFaceDescriptor<faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }, faceapi.FaceLandmarks68>>[]>(async (resolve, reject) => {
-        try {
-          const canUseSsd = faceapi.nets.ssdMobilenetv1?.isLoaded;
+      // Detect all faces with full descriptors
+      // Use whichever detector is already loaded (prefer SSD, fallback to TinyFaceDetector)
+      const useSsd = faceapi.nets.ssdMobilenetv1?.isLoaded;
+      console.log(`Using ${useSsd ? 'SSD MobileNetV1' : 'TinyFaceDetector'} for scan`);
 
-          // Try a quick SSD load if not ready (best-effort; fallback if it fails)
-          if (!canUseSsd) {
-            try {
-              await withTimeout(
-                faceapi.nets.ssdMobilenetv1.load('/models'),
-                10000,
-                'SSD model load timed out'
-              );
-            } catch (e) {
-              console.warn('SSD MobileNet model not available; falling back to TinyFaceDetector.', e);
-            }
-          }
+      const detectionPromise = useSsd
+        ? faceapi
+            .detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
+            .withFaceLandmarks()
+            .withFaceDescriptors()
+        : faceapi
+            .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 }))
+            .withFaceLandmarks()
+            .withFaceDescriptors();
 
-          const useSsdNow = faceapi.nets.ssdMobilenetv1?.isLoaded;
-
-          const result = useSsdNow
-            ? await faceapi
-                .detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
-                .withFaceLandmarks()
-                .withFaceDescriptors()
-            : await faceapi
-                .detectAllFaces(
-                  video,
-                  new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 })
-                )
-                .withFaceLandmarks()
-                .withFaceDescriptors();
-
-          resolve(result);
-        } catch (err) {
-          reject(err);
-        }
-      });
-      
       const fullDetections = await withTimeout(
         detectionPromise,
-        12000,
+        20000,
         'Face detection timed out. Please ensure good lighting and try again.'
       );
 
