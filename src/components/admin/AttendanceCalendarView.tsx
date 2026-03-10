@@ -55,11 +55,14 @@ const AttendanceCalendarView: React.FC<AttendanceCalendarViewProps> = ({
 
     if (isPresentDay) {
       dotColor = 'bg-green-500';
-      const rec = records.find(r => r.status.toLowerCase().includes('present'));
+      const rec = records.find(r => {
+        const s = (r.status || '').toLowerCase();
+        return s.includes('present') || s === 'unauthorized';
+      });
       tooltipContent = rec ? `Present at ${format(new Date(rec.timestamp), 'h:mm a')}` : 'Present';
     } else if (isLateDay) {
       dotColor = 'bg-amber-500';
-      const rec = records.find(r => r.status.toLowerCase().includes('late'));
+      const rec = records.find(r => (r.status || '').toLowerCase().includes('late'));
       tooltipContent = rec ? `Late at ${format(new Date(rec.timestamp), 'h:mm a')}` : 'Late';
     } else if (isAbsentDay) {
       dotColor = 'bg-red-400';
