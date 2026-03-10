@@ -70,7 +70,7 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2 mt-3 overflow-x-auto no-scrollbar">
             <StatChip icon={CheckCircle2} value={attendanceDays.length} label="Present" className="text-green-600 dark:text-green-400 bg-green-500/10" />
             <StatChip icon={Clock} value={lateAttendanceDays.length} label="Late" className="text-amber-600 dark:text-amber-400 bg-amber-500/10" />
-            {totalDays > 0 && (
+            {totalAttended > 0 && (
               <StatChip icon={TrendingUp} value={`${attendanceRate}%`} label="Rate" className="text-primary bg-primary/10" />
             )}
           </div>
