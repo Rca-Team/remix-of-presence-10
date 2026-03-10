@@ -2,7 +2,6 @@ import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
 import App from './App.tsx'
 import './index.css'
-import { loadModels, areModelsLoaded } from './services/FaceRecognitionService'
 import { toast } from 'sonner'
 
 // If a previous PWA service worker cached an older bundle (common after remixing),
@@ -28,33 +27,38 @@ const unregisterStaleServiceWorkers = async () => {
 void unregisterStaleServiceWorkers();
 
 
-// Improved model loading with retry mechanism
+// Lazy model loading - deferred to avoid blocking app startup
 const loadFaceModels = async (retries = 2, delay = 1500) => {
   let attempt = 0;
   
-  while (attempt <= retries) {
-    try {
-      if (areModelsLoaded()) {
-        console.log('Face recognition models already loaded');
+  try {
+    const { loadModels, areModelsLoaded } = await import('./services/FaceRecognitionService');
+    
+    while (attempt <= retries) {
+      try {
+        if (areModelsLoaded()) {
+          console.log('Face recognition models already loaded');
+          return true;
+        }
+        
+        console.log(`Loading face recognition models (attempt ${attempt + 1}/${retries + 1})...`);
+        await loadModels();
+        console.log('Face recognition models loaded successfully');
         return true;
+      } catch (err) {
+        console.error(`Error loading face models (attempt ${attempt + 1}/${retries + 1}):`, err);
+        
+        if (attempt < retries) {
+          console.log(`Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay = delay * 1.5;
+        }
+        
+        attempt++;
       }
-      
-      console.log(`Loading face recognition models (attempt ${attempt + 1}/${retries + 1})...`);
-      await loadModels();
-      console.log('Face recognition models loaded successfully');
-      return true;
-    } catch (err) {
-      console.error(`Error loading face models (attempt ${attempt + 1}/${retries + 1}):`, err);
-      
-      if (attempt < retries) {
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        // Increase delay for each retry using exponential backoff
-        delay = delay * 1.5;
-      }
-      
-      attempt++;
     }
+  } catch (importErr) {
+    console.error('Failed to import FaceRecognitionService:', importErr);
   }
   
   console.error(`Failed to load face models after ${retries + 1} attempts`);
