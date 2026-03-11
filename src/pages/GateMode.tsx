@@ -47,6 +47,8 @@ const GateMode = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [totalStudents, setTotalStudents] = useState(0);
   const [mobileStatsOpen, setMobileStatsOpen] = useState(false);
+  const [cutoffHour, setCutoffHour] = useState(9);
+  const [cutoffMinute, setCutoffMinute] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
