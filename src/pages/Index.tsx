@@ -166,8 +166,14 @@ const Index = () => {
               </div>
 
               {/* Hero Visual */}
-              <motion.div variants={itemVariants} className="relative flex justify-center lg:block">
-                <div className="relative group">
+              <motion.div variants={itemVariants} className="relative flex justify-center lg:block"
+                style={{ perspective: 1000 }}>
+                <motion.div 
+                  className="relative group"
+                  whileHover={{ rotateY: -3, rotateX: 2, scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
                   <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 via-primary/30 to-accent/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative bg-gradient-to-br from-background via-background to-muted border border-primary/20 rounded-3xl p-6 md:p-8 shadow-2xl">
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-t-3xl" />
@@ -181,8 +187,11 @@ const Index = () => {
                         { icon: BarChart3, label: "Analytics", color: "text-ios-purple" },
                         { icon: Bus, label: "Transport", color: "text-ios-mint" },
                       ].map((mod, i) => (
-                        <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 + i * 0.1, type: "spring" }}
-                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                        <motion.div key={i} initial={{ scale: 0, rotateY: -90 }} animate={{ scale: 1, rotateY: 0 }} 
+                          transition={{ delay: 0.5 + i * 0.1, type: "spring", stiffness: 150 }}
+                          whileHover={{ scale: 1.1, rotateY: 10 }}
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm"
+                          style={{ transformStyle: 'preserve-3d' }}>
                           <mod.icon className={`w-6 h-6 ${mod.color}`} />
                           <span className="text-xs font-medium text-muted-foreground">{mod.label}</span>
                         </motion.div>
@@ -197,7 +206,7 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground">6 modules • Real-time sync</p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </div>
           </motion.div>
