@@ -235,18 +235,21 @@ const Index = () => {
               {/* Feature Cards - 2 columns on mobile, 4 on desktop */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6">
                 {cat.features.map((feature, i) => (
-                  <motion.div key={i} variants={itemVariants} whileHover={{ y: -6 }}
+                  <motion.div key={i} variants={itemVariants} 
+                    whileHover={{ y: -8, rotateX: -3, rotateY: 2, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className="group relative p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 hover:border-primary/30 shadow-sm sm:shadow-lg hover:shadow-2xl overflow-hidden"
-                    style={{ transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                    style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)', perspective: 800, transformStyle: 'preserve-3d' }}
                   >
                     <div className={`absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r ${cat.gradient} rounded-t-xl sm:rounded-t-2xl opacity-60 group-hover:opacity-100 transition-opacity`} />
                     <div className={`absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br ${cat.gradient} rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
                     
-                    <div className={`relative inline-flex p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${cat.gradient} mb-2.5 sm:mb-4 shadow-md group-hover:scale-110 transition-transform duration-500`}>
+                    <div className={`relative inline-flex p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${cat.gradient} mb-2.5 sm:mb-4 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}
+                      style={{ transformStyle: 'preserve-3d', transform: 'translateZ(20px)' }}>
                       <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     
-                    <h3 className="relative text-sm sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight">{feature.title}</h3>
+                    <h3 className="relative text-sm sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight" style={{ transform: 'translateZ(10px)' }}>{feature.title}</h3>
                     <p className="relative text-xs sm:text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.desc}</p>
                   </motion.div>
                 ))}
