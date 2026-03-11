@@ -217,9 +217,11 @@ const Index = () => {
           <motion.div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
             {stats.map((stat, i) => (
               <motion.div key={i} variants={itemVariants}
+                whileHover={{ y: -4, rotateX: -5, scale: 1.03 }}
                 className="text-center p-3 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-sm sm:shadow-lg"
+                style={{ perspective: 600, transformStyle: 'preserve-3d' }}
               >
-                <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+                <motion.div initial={{ scale: 0, rotateY: -180 }} whileInView={{ scale: 1, rotateY: 0 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 150 }}
                   className="text-xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                   {stat.value}
                 </motion.div>
