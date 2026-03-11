@@ -11,6 +11,8 @@ interface StudentInfoCardProps {
   selectedFace: FaceInfo | null;
   attendanceDays: Date[];
   lateAttendanceDays: Date[];
+  absentDays?: Date[];
+  workingDays?: Date[];
   reportControls?: React.ReactNode;
 }
 
