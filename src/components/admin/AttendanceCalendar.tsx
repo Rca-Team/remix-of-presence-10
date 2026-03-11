@@ -57,6 +57,8 @@ const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({ selectedFaceId 
         selectedFace={selectedFace}
         attendanceDays={attendanceDays}
         lateAttendanceDays={lateAttendanceDays}
+        absentDays={absentDays}
+        workingDays={workingDays}
         reportControls={
           <ReportControls
             selectedFace={selectedFace}
