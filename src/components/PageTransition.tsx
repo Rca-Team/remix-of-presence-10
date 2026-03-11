@@ -6,28 +6,35 @@ interface PageTransitionProps {
   className?: string;
 }
 
+// Apple-style page transition with 3D perspective
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 20,
-    scale: 0.98,
+    scale: 0.96,
+    y: 12,
+    rotateX: 2,
+    filter: 'blur(4px)',
   },
   animate: {
     opacity: 1,
-    y: 0,
     scale: 1,
+    y: 0,
+    rotateX: 0,
+    filter: 'blur(0px)',
     transition: {
-      duration: 0.4,
+      duration: 0.5,
       ease: [0.22, 1, 0.36, 1],
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
   exit: {
     opacity: 0,
-    y: -20,
-    scale: 0.98,
+    scale: 0.97,
+    y: -8,
+    rotateX: -1,
+    filter: 'blur(2px)',
     transition: {
-      duration: 0.3,
+      duration: 0.35,
       ease: [0.22, 1, 0.36, 1],
     },
   },
@@ -36,13 +43,15 @@ const pageVariants = {
 const childVariants = {
   initial: {
     opacity: 0,
-    y: 20,
+    y: 24,
+    scale: 0.97,
   },
   animate: {
     opacity: 1,
     y: 0,
+    scale: 1,
     transition: {
-      duration: 0.4,
+      duration: 0.5,
       ease: [0.22, 1, 0.36, 1],
     },
   },
@@ -56,6 +65,7 @@ export const PageTransition = ({ children, className = '' }: PageTransitionProps
       animate="animate"
       exit="exit"
       className={className}
+      style={{ perspective: 1200, transformStyle: 'preserve-3d' }}
     >
       {children}
     </motion.div>
