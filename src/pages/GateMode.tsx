@@ -64,7 +64,7 @@ const GateMode = () => {
     };
   }, []);
 
-  // Fetch total students count
+  // Fetch total students count and cutoff time
   useEffect(() => {
     const fetchTotal = async () => {
       const { count } = await supabase
@@ -72,7 +72,20 @@ const GateMode = () => {
         .select('user_id', { count: 'exact', head: true });
       if (count) setTotalStudents(count);
     };
+    const fetchCutoff = async () => {
+      const { data } = await supabase
+        .from('attendance_settings')
+        .select('value')
+        .eq('key', 'cutoff_time')
+        .maybeSingle();
+      if (data?.value) {
+        const parts = data.value.split(':');
+        setCutoffHour(parseInt(parts[0], 10) || 9);
+        setCutoffMinute(parseInt(parts[1], 10) || 0);
+      }
+    };
     fetchTotal();
+    fetchCutoff();
   }, []);
 
   // Wake Lock to prevent screen sleep
