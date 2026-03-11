@@ -4,13 +4,15 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { FaceInfo } from './utils/attendanceUtils';
 import NotificationService from './NotificationService';
-import { User, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
+import { User, CheckCircle2, Clock, TrendingUp, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StudentInfoCardProps {
   selectedFace: FaceInfo | null;
   attendanceDays: Date[];
   lateAttendanceDays: Date[];
+  absentDays?: Date[];
+  workingDays?: Date[];
   reportControls?: React.ReactNode;
 }
 
@@ -18,11 +20,16 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
   selectedFace, 
   attendanceDays, 
   lateAttendanceDays,
+  absentDays = [],
+  workingDays = [],
   reportControls
 }) => {
   const totalAttended = attendanceDays.length + lateAttendanceDays.length;
-  // Show rate as percentage of total attended days (present only, excluding late)
-  const attendanceRate = totalAttended > 0 ? Math.round((attendanceDays.length / totalAttended) * 100) : 0;
+  // Calculate attendance rate: (present + late) / past working days
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pastWorkingDays = workingDays.filter(d => { const dd = new Date(d); dd.setHours(0,0,0,0); return dd <= today; }).length;
+  const attendanceRate = pastWorkingDays > 0 ? Math.round((totalAttended / pastWorkingDays) * 100) : 0;
 
   return (
     <Card className="overflow-hidden">
@@ -70,7 +77,8 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2 mt-3 overflow-x-auto no-scrollbar">
             <StatChip icon={CheckCircle2} value={attendanceDays.length} label="Present" className="text-green-600 dark:text-green-400 bg-green-500/10" />
             <StatChip icon={Clock} value={lateAttendanceDays.length} label="Late" className="text-amber-600 dark:text-amber-400 bg-amber-500/10" />
-            {totalAttended > 0 && (
+            <StatChip icon={XCircle} value={absentDays.length} label="Absent" className="text-red-500 dark:text-red-400 bg-red-500/10" />
+            {pastWorkingDays > 0 && (
               <StatChip icon={TrendingUp} value={`${attendanceRate}%`} label="Rate" className="text-primary bg-primary/10" />
             )}
           </div>

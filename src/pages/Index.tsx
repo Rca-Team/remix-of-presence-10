@@ -166,8 +166,14 @@ const Index = () => {
               </div>
 
               {/* Hero Visual */}
-              <motion.div variants={itemVariants} className="relative flex justify-center lg:block">
-                <div className="relative group">
+              <motion.div variants={itemVariants} className="relative flex justify-center lg:block"
+                style={{ perspective: 1000 }}>
+                <motion.div 
+                  className="relative group"
+                  whileHover={{ rotateY: -3, rotateX: 2, scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
                   <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 via-primary/30 to-accent/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative bg-gradient-to-br from-background via-background to-muted border border-primary/20 rounded-3xl p-6 md:p-8 shadow-2xl">
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-t-3xl" />
@@ -181,8 +187,11 @@ const Index = () => {
                         { icon: BarChart3, label: "Analytics", color: "text-ios-purple" },
                         { icon: Bus, label: "Transport", color: "text-ios-mint" },
                       ].map((mod, i) => (
-                        <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 + i * 0.1, type: "spring" }}
-                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                        <motion.div key={i} initial={{ scale: 0, rotateY: -90 }} animate={{ scale: 1, rotateY: 0 }} 
+                          transition={{ delay: 0.5 + i * 0.1, type: "spring", stiffness: 150 }}
+                          whileHover={{ scale: 1.1, rotateY: 10 }}
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-border/50 backdrop-blur-sm"
+                          style={{ transformStyle: 'preserve-3d' }}>
                           <mod.icon className={`w-6 h-6 ${mod.color}`} />
                           <span className="text-xs font-medium text-muted-foreground">{mod.label}</span>
                         </motion.div>
@@ -197,7 +206,7 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground">6 modules • Real-time sync</p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </div>
           </motion.div>
@@ -208,9 +217,11 @@ const Index = () => {
           <motion.div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-8" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}>
             {stats.map((stat, i) => (
               <motion.div key={i} variants={itemVariants}
+                whileHover={{ y: -4, rotateX: -5, scale: 1.03 }}
                 className="text-center p-3 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-sm sm:shadow-lg"
+                style={{ perspective: 600, transformStyle: 'preserve-3d' }}
               >
-                <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+                <motion.div initial={{ scale: 0, rotateY: -180 }} whileInView={{ scale: 1, rotateY: 0 }} transition={{ delay: i * 0.1, type: "spring", stiffness: 150 }}
                   className="text-xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue via-ios-purple to-ios-pink">
                   {stat.value}
                 </motion.div>
@@ -235,18 +246,21 @@ const Index = () => {
               {/* Feature Cards - 2 columns on mobile, 4 on desktop */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6">
                 {cat.features.map((feature, i) => (
-                  <motion.div key={i} variants={itemVariants} whileHover={{ y: -6 }}
+                  <motion.div key={i} variants={itemVariants} 
+                    whileHover={{ y: -8, rotateX: -3, rotateY: 2, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className="group relative p-3.5 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 hover:border-primary/30 shadow-sm sm:shadow-lg hover:shadow-2xl overflow-hidden"
-                    style={{ transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                    style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)', perspective: 800, transformStyle: 'preserve-3d' }}
                   >
                     <div className={`absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r ${cat.gradient} rounded-t-xl sm:rounded-t-2xl opacity-60 group-hover:opacity-100 transition-opacity`} />
                     <div className={`absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br ${cat.gradient} rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
                     
-                    <div className={`relative inline-flex p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${cat.gradient} mb-2.5 sm:mb-4 shadow-md group-hover:scale-110 transition-transform duration-500`}>
+                    <div className={`relative inline-flex p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${cat.gradient} mb-2.5 sm:mb-4 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}
+                      style={{ transformStyle: 'preserve-3d', transform: 'translateZ(20px)' }}>
                       <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     
-                    <h3 className="relative text-sm sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight">{feature.title}</h3>
+                    <h3 className="relative text-sm sm:text-sm md:text-base font-bold mb-1 sm:mb-2 leading-tight" style={{ transform: 'translateZ(10px)' }}>{feature.title}</h3>
                     <p className="relative text-xs sm:text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3">{feature.desc}</p>
                   </motion.div>
                 ))}

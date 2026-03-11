@@ -47,6 +47,8 @@ const GateMode = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [totalStudents, setTotalStudents] = useState(0);
   const [mobileStatsOpen, setMobileStatsOpen] = useState(false);
+  const [cutoffHour, setCutoffHour] = useState(9);
+  const [cutoffMinute, setCutoffMinute] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -62,7 +64,7 @@ const GateMode = () => {
     };
   }, []);
 
-  // Fetch total students count
+  // Fetch total students count and cutoff time
   useEffect(() => {
     const fetchTotal = async () => {
       const { count } = await supabase
@@ -70,7 +72,20 @@ const GateMode = () => {
         .select('user_id', { count: 'exact', head: true });
       if (count) setTotalStudents(count);
     };
+    const fetchCutoff = async () => {
+      const { data } = await supabase
+        .from('attendance_settings')
+        .select('value')
+        .eq('key', 'cutoff_time')
+        .maybeSingle();
+      if (data?.value) {
+        const parts = data.value.split(':');
+        setCutoffHour(parseInt(parts[0], 10) || 9);
+        setCutoffMinute(parseInt(parts[1], 10) || 0);
+      }
+    };
     fetchTotal();
+    fetchCutoff();
   }, []);
 
   // Wake Lock to prevent screen sleep
@@ -155,10 +170,9 @@ const GateMode = () => {
 
     if (entry.isRecognized) {
       playSound('success');
-      // Check if late
+      // Check if late based on configured cutoff time
       const now = new Date();
-      const cutoffHour = 9; // TODO: fetch from settings
-      if (now.getHours() >= cutoffHour) {
+      if (now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() >= cutoffMinute)) {
         entry.isLate = true;
         setLateStudent(entry);
         setShowLateForm(true);

@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Logo from './Logo';
@@ -66,31 +67,42 @@ const Navbar = () => {
         </Link>
         
         {/* Desktop Navigation - Hidden on Mobile */}
-        <nav className="hidden md:flex items-center gap-1 animate-fade-in bg-muted/50 backdrop-blur-xl rounded-full p-1.5 border border-border/50">
-          {[
-            { text: 'Home', path: '/', show: true },
-            { text: 'Parent Portal', path: '/parent', show: !isAuthenticated },
-            { text: 'Profile', path: '/profile', show: isAuthenticated },
-            { text: 'Register', path: '/register', show: isAuthenticated },
-            { text: 'Attendance', path: '/attendance', show: isAuthenticated },
-            { text: 'Gate Mode', path: '/gate', show: isAdminOrPrincipal || isTeacher },
-            { text: 'Admin', path: '/admin', show: isAdminOrPrincipal || isTeacher },
-          ].filter(item => item.show).map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "px-5 py-2.5 rounded-full text-sm font-medium mobile-touch-target",
-                isActive(item.path)
-                  ? "bg-gradient-ios-blue text-white shadow-lg shadow-ios-blue/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-              style={{ transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-            >
-              {item.text === 'Admin' && isTeacher && !isAdminOrPrincipal ? 'Teacher' : item.text}
-            </Link>
-          ))}
-        </nav>
+        <LayoutGroup>
+          <nav className="hidden md:flex items-center gap-1 animate-fade-in bg-muted/50 backdrop-blur-xl rounded-full p-1.5 border border-border/50">
+            {[
+              { text: 'Home', path: '/', show: true },
+              { text: 'Parent Portal', path: '/parent', show: !isAuthenticated },
+              { text: 'Profile', path: '/profile', show: isAuthenticated },
+              { text: 'Register', path: '/register', show: isAuthenticated },
+              { text: 'Attendance', path: '/attendance', show: isAuthenticated },
+              { text: 'Gate Mode', path: '/gate', show: isAdminOrPrincipal || isTeacher },
+              { text: 'Admin', path: '/admin', show: isAdminOrPrincipal || isTeacher },
+            ].filter(item => item.show).map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "relative px-5 py-2.5 rounded-full text-sm font-medium mobile-touch-target",
+                  isActive(item.path)
+                    ? "text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={{ transition: 'color 0.3s ease' }}
+              >
+                {isActive(item.path) && (
+                  <motion.div
+                    layoutId="navbar-active-pill"
+                    className="absolute inset-0 bg-gradient-ios-blue rounded-full shadow-lg shadow-ios-blue/30"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">
+                  {item.text === 'Admin' && isTeacher && !isAdminOrPrincipal ? 'Teacher' : item.text}
+                </span>
+              </Link>
+            ))}
+          </nav>
+        </LayoutGroup>
         
         {/* Auth section - Only show on desktop */}
         <div className="hidden md:flex items-center gap-3 animate-fade-in">
