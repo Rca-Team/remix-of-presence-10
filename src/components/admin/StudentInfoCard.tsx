@@ -20,11 +20,16 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
   selectedFace, 
   attendanceDays, 
   lateAttendanceDays,
+  absentDays = [],
+  workingDays = [],
   reportControls
 }) => {
   const totalAttended = attendanceDays.length + lateAttendanceDays.length;
-  // Show rate as percentage of total attended days (present only, excluding late)
-  const attendanceRate = totalAttended > 0 ? Math.round((attendanceDays.length / totalAttended) * 100) : 0;
+  // Calculate attendance rate: (present + late) / past working days
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pastWorkingDays = workingDays.filter(d => { const dd = new Date(d); dd.setHours(0,0,0,0); return dd <= today; }).length;
+  const attendanceRate = pastWorkingDays > 0 ? Math.round((totalAttended / pastWorkingDays) * 100) : 0;
 
   return (
     <Card className="overflow-hidden">
