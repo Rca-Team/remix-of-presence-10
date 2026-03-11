@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { FaceInfo } from './utils/attendanceUtils';
 import NotificationService from './NotificationService';
-import { User, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
+import { User, CheckCircle2, Clock, TrendingUp, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StudentInfoCardProps {

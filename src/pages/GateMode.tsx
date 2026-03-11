@@ -170,10 +170,9 @@ const GateMode = () => {
 
     if (entry.isRecognized) {
       playSound('success');
-      // Check if late
+      // Check if late based on configured cutoff time
       const now = new Date();
-      const cutoffHour = 9; // TODO: fetch from settings
-      if (now.getHours() >= cutoffHour) {
+      if (now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() >= cutoffMinute)) {
         entry.isLate = true;
         setLateStudent(entry);
         setShowLateForm(true);
