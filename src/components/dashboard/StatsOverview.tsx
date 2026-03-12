@@ -31,34 +31,42 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ isLoading, data, refetch 
   const { data: attendanceStats, refetch: refetchStats } = useQuery<AttendanceStats>({
     queryKey: ['attendanceStatsRealtime'],
     queryFn: async () => {
-      // Get today's date
       const today = new Date().toISOString().split('T')[0];
       
-      // Count all users
-      const { count: totalUsers, error: usersError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      // Get registered faces count (actual students, not profiles)
+      const [registeredRes, presentRes, gateRes] = await Promise.all([
+        supabase.from('attendance_records')
+          .select('id, device_info')
+          .eq('status', 'registered'),
+        supabase.from('attendance_records')
+          .select('user_id, device_info')
+          .in('status', ['present', 'late', 'unauthorized'])
+          .gte('timestamp', `${today}T00:00:00`)
+          .lte('timestamp', `${today}T23:59:59`),
+        supabase.from('gate_entries')
+          .select('student_id')
+          .gte('entry_time', `${today}T00:00:00`)
+          .lte('entry_time', `${today}T23:59:59`)
+          .eq('is_recognized', true)
+      ]);
       
-      if (usersError) throw usersError;
+      const registered = (registeredRes.data || []).filter(r => {
+        const name = (r.device_info as any)?.metadata?.name || '';
+        return name && name !== 'Unknown' && !name.toLowerCase().includes('unknown');
+      });
+      const totalUsersCount = registered.length;
       
-      // Count UNIQUE present users today (not total attendance marks)
-      const { data: presentData, error: presentError } = await supabase
-        .from('attendance_records')
-        .select('user_id, device_info')
-        .in('status', ['present', 'late'])
-        .gte('timestamp', `${today}T00:00:00`)
-        .lte('timestamp', `${today}T23:59:59`);
-      
-      if (presentError) throw presentError;
-      
-      // Get unique users
+      // Unique present users from attendance + gate
       const uniqueUsers = new Set<string>();
-      (presentData || []).forEach(record => {
-        const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
+      (presentRes.data || []).forEach(record => {
+        const empId = (record.device_info as any)?.metadata?.employee_id || (record.device_info as any)?.employee_id;
+        const userId = empId || record.user_id;
         if (userId) uniqueUsers.add(String(userId));
       });
+      (gateRes.data || []).forEach(entry => {
+        if (entry.student_id) uniqueUsers.add(entry.student_id);
+      });
       
-      const totalUsersCount = totalUsers || 0;
       const presentTodayCount = uniqueUsers.size;
       const presentPercentage = totalUsersCount > 0 ? Math.round((presentTodayCount / totalUsersCount) * 100) : 0;
       
@@ -75,7 +83,7 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ isLoading, data, refetch 
           presentPercentage: data.presentPercentage
         } 
       : undefined,
-    refetchInterval: 2000, // Poll every 2 seconds for realtime feel
+    refetchInterval: 2000,
     enabled: !isLoading
   });
   
