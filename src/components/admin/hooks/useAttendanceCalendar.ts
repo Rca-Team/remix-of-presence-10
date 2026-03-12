@@ -9,6 +9,7 @@ import {
   isDateInArray,
   FaceInfo
 } from '../utils/attendanceUtils';
+import { getFaceIdentifiers } from '../utils/attendanceRecordsUtils';
 import { format } from 'date-fns';
 
 interface AttendanceRecord {
@@ -19,7 +20,6 @@ interface AttendanceRecord {
   image_url?: string;
 }
 
-// Normalize status consistently
 function normalizeStatus(status: string | null): string {
   if (!status) return 'unknown';
   const s = status.toLowerCase().trim();
@@ -69,7 +69,6 @@ export const useAttendanceCalendar = (selectedFaceId: string | null) => {
     let channel: any = null;
 
     if (selectedFaceId) {
-      // Reset state
       setAttendanceDays([]);
       setLateAttendanceDays([]);
       setAbsentDays([]);
@@ -79,7 +78,6 @@ export const useAttendanceCalendar = (selectedFaceId: string | null) => {
       loadAttendanceRecords(selectedFaceId);
       setWorkingDays(generateWorkingDays(currentDate.getFullYear(), currentDate.getMonth()));
 
-      // Realtime subscription
       channel = supabase
         .channel(`attendance-calendar-${selectedFaceId}`)
         .on('postgres_changes', 
@@ -105,7 +103,6 @@ export const useAttendanceCalendar = (selectedFaceId: string | null) => {
     };
   }, [selectedFaceId]);
 
-  // Load daily attendance when date changes
   useEffect(() => {
     if (selectedFaceId && selectedDate) {
       loadDailyAttendance(selectedFaceId, selectedDate);
@@ -128,31 +125,48 @@ export const useAttendanceCalendar = (selectedFaceId: string | null) => {
       setLoading(true);
       await fetchAttendanceRecords(faceId, setAttendanceDays, setLateAttendanceDays);
       
-      // Also build the records-by-date map for tooltips
-      const { data: records } = await supabase
-        .from('attendance_records')
-        .select('id, timestamp, status, device_info, image_url')
-        .or(`user_id.eq.${faceId},id.eq.${faceId}`)
-        .order('timestamp', { ascending: true });
-        
-      if (records && records.length > 0) {
+      // Build records-by-date map for tooltips using same identifier logic
+      const { userIds, employeeId } = await getFaceIdentifiers(faceId);
+      
+      const queries = userIds.map(uid =>
+        supabase.from('attendance_records')
+          .select('id, timestamp, status, device_info, image_url')
+          .or(`user_id.eq.${uid},id.eq.${uid}`)
+          .in('status', ['present', 'late', 'unauthorized'])
+          .order('timestamp', { ascending: true })
+      );
+
+      if (employeeId) {
+        queries.push(
+          supabase.from('attendance_records')
+            .select('id, timestamp, status, device_info, image_url')
+            .contains('device_info', { metadata: { employee_id: employeeId } })
+            .in('status', ['present', 'late', 'unauthorized'])
+            .order('timestamp', { ascending: true })
+        );
+      }
+
+      const results = await Promise.all(queries);
+      const seen = new Set<string>();
+      const allRecords = results.flatMap(r => r.data || []).filter(r => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      });
+
+      if (allRecords.length > 0) {
         const recordsByDate: Record<string, AttendanceRecord[]> = {};
         
-        for (const record of records) {
-          // Skip registration records
+        for (const record of allRecords) {
           const deviceInfo = record.device_info as any;
           if (deviceInfo?.registration) continue;
           
           const status = normalizeStatus(record.status);
           if (status !== 'present' && status !== 'late') continue;
           
-          let name = '';
-          if (deviceInfo?.metadata?.name) name = deviceInfo.metadata.name;
-          else if (deviceInfo?.name) name = deviceInfo.name;
-          
+          let name = deviceInfo?.metadata?.name || deviceInfo?.name || '';
           const dateKey = format(new Date(record.timestamp), 'yyyy-MM-dd');
           
-          // Keep only earliest record per day
           if (!recordsByDate[dateKey]) {
             recordsByDate[dateKey] = [{
               id: record.id,
@@ -188,7 +202,6 @@ export const useAttendanceCalendar = (selectedFaceId: string | null) => {
   const loadDailyAttendance = async (faceId: string, date: Date) => {
     try {
       await fetchDailyAttendance(faceId, date, (records) => {
-        // Enhance with name from selected face if missing
         const enhanced = records.map(r => ({
           ...r,
           name: r.name && r.name !== 'Student' ? r.name : selectedFace?.name || 'Student'
