@@ -84,14 +84,14 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
     return match ? match[1] : '';
   };
 
-  // Fetch today's attendance statuses
+  // Fetch today's attendance statuses - match by MULTIPLE identifiers
   const fetchTodayStatuses = useCallback(async (faceList: RegisteredFace[]) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const { data: todayData } = await supabase
         .from('attendance_records')
         .select('user_id, status, timestamp, device_info')
-        .in('status', ['present', 'late'])
+        .in('status', ['present', 'late', 'unauthorized'])
         .gte('timestamp', `${today}T00:00:00`)
         .lte('timestamp', `${today}T23:59:59`);
 
@@ -102,16 +102,40 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
         statusMap[face.employee_id] = { status: 'absent' };
       });
 
+      // Build lookup maps: employee_id -> face.employee_id, user_id -> face.employee_id
+      const userIdToEmpId = new Map<string, string>();
+      const recordIdToEmpId = new Map<string, string>();
+      faceList.forEach(face => {
+        if (face.user_id) userIdToEmpId.set(face.user_id, face.employee_id);
+        recordIdToEmpId.set(face.id, face.employee_id);
+      });
+
       (todayData || []).forEach(record => {
-        const empId = (record.device_info as any)?.metadata?.employee_id ||
-                      (record.device_info as any)?.employee_id;
-        if (empId) {
+        // Try multiple matching strategies
+        const diEmpId = (record.device_info as any)?.metadata?.employee_id ||
+                        (record.device_info as any)?.employee_id;
+        
+        // Find the matching face employee_id
+        let matchedEmpId: string | undefined;
+        
+        // Match by employee_id in device_info
+        if (diEmpId && statusMap[diEmpId] !== undefined) {
+          matchedEmpId = diEmpId;
+        }
+        // Match by user_id field
+        if (!matchedEmpId && record.user_id) {
+          matchedEmpId = userIdToEmpId.get(record.user_id);
+        }
+        
+        if (matchedEmpId) {
           const time = format(new Date(record.timestamp), 'hh:mm a');
-          // present overrides late
-          if (record.status === 'present') {
-            statusMap[empId] = { status: 'present', time };
-          } else if (record.status === 'late' && statusMap[empId]?.status !== 'present') {
-            statusMap[empId] = { status: 'late', time };
+          const status = (record.status || '').toLowerCase();
+          const normalizedStatus: TodayStatus = (status === 'present' || status === 'unauthorized') ? 'present' : 'late';
+          
+          if (normalizedStatus === 'present') {
+            statusMap[matchedEmpId] = { status: 'present', time };
+          } else if (normalizedStatus === 'late' && statusMap[matchedEmpId]?.status !== 'present') {
+            statusMap[matchedEmpId] = { status: 'late', time };
           }
         }
       });
@@ -280,11 +304,12 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
 
   const fetchAttendanceCount = async (employeeId: string) => {
     try {
+      // Query by employee_id in device_info AND by status present/late
       const { data, error } = await supabase
         .from('attendance_records')
-        .select('timestamp')
-        .eq('status', 'present')
-        .contains('device_info', { employee_id: employeeId });
+        .select('timestamp, status')
+        .in('status', ['present', 'late', 'unauthorized'])
+        .contains('device_info', { metadata: { employee_id: employeeId } });
 
       if (error) throw error;
 
@@ -467,286 +492,123 @@ const AdminFacesList: React.FC<AdminFacesListProps> = ({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 gap-1 text-xs rounded-lg border-dashed">
-                  <ArrowUpDown className="w-3 h-3" />
-                  {sortField === 'name' ? 'Name' : sortField === 'status' ? 'Status' : sortField === 'attendance' ? 'Days' : 'Recent'}
+                <Button variant="outline" size="sm" className="h-8 text-xs rounded-lg border-dashed gap-1">
+                  <ArrowUpDown className="h-3 w-3" />
+                  Sort
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Sort by</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel className="text-xs">Sort By</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {([
+                {[
                   { field: 'name' as SortField, label: 'Name' },
                   { field: 'status' as SortField, label: 'Status' },
                   { field: 'attendance' as SortField, label: 'Attendance' },
                   { field: 'lastSeen' as SortField, label: 'Last Seen' },
-                ] as const).map(opt => (
-                  <DropdownMenuItem key={opt.field} onClick={() => toggleSort(opt.field)} className={cn("text-xs", sortField === opt.field && "bg-accent")}>
-                    {opt.label} {sortField === opt.field && (sortDir === 'asc' ? '↑' : '↓')}
+                ].map(item => (
+                  <DropdownMenuItem key={item.field} onClick={() => toggleSort(item.field)} className="text-xs gap-2">
+                    {sortField === item.field ? (sortDir === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-30" />}
+                    {item.label}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
             {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1 ml-auto shrink-0"
-                onClick={() => {
-                  setSelectedFaceId(null);
-                  setSectionFilter('all');
-                  setClassFilter('all');
-                  setStatusFilter('all');
-                  setSortField('name');
-                  setSortDir('asc');
-                  setSearchTerm('');
-                }}
-              >
-                <X className="w-3 h-3" /> Clear
+              <Button variant="ghost" size="sm" className="h-8 text-xs rounded-lg gap-1 text-muted-foreground" onClick={() => { setStatusFilter('all'); setSectionFilter('all'); setClassFilter('all'); setSearchTerm(''); }}>
+                <X className="h-3 w-3" /> Clear
               </Button>
             )}
           </div>
         </div>
 
-        {/* ── Active filters chips ── */}
-        <AnimatePresence>
-          {hasActiveFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex items-center gap-1.5 flex-wrap"
-            >
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider mr-1">Showing</span>
-              {statusFilter !== 'all' && (
-                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-full px-2 py-0.5" onClick={() => setStatusFilter('all')}>
-                  {statusFilter} ×
-                </Badge>
-              )}
-              {sectionFilter !== 'all' && (
-                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-full px-2 py-0.5" onClick={() => setSectionFilter('all')}>
-                  Sec {sectionFilter} ×
-                </Badge>
-              )}
-              {classFilter !== 'all' && (
-                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-full px-2 py-0.5" onClick={() => setClassFilter('all')}>
-                  Class {classFilter} ×
-                </Badge>
-              )}
-              <span className="text-[10px] text-muted-foreground tabular-nums ml-auto">
-                {filteredAndSortedFaces.length}/{faces.length}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Student List ── */}
-        {filteredAndSortedFaces.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card className="border-dashed">
-              <CardContent className="py-12 flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
-                  <UserX className="h-7 w-7 text-muted-foreground/60" />
-                </div>
-                <h3 className="font-semibold">No students found</h3>
-                <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  {hasActiveFilters ? 'Try adjusting your filters or search term' : 'Register new faces to see them here'}
-                </p>
-                {hasActiveFilters && (
-                  <Button variant="outline" size="sm" onClick={() => { setStatusFilter('all'); setSectionFilter('all'); setClassFilter('all'); setSearchTerm(''); }}>
-                    Clear Filters
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <AnimatePresence>
-              {filteredAndSortedFaces.map((face, i) => {
-                const statusInfo = todayStatuses[face.employee_id];
-                const status = statusInfo?.status || 'absent';
-                const statusColor = status === 'present' ? 'border-l-green-500' : status === 'late' ? 'border-l-amber-500' : 'border-l-red-400';
-
-                return (
-                  <motion.div
-                    key={face.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.03 }}
+        {/* ── Face List ── */}
+        <div className="space-y-1.5">
+          <AnimatePresence>
+            {filteredAndSortedFaces.length === 0 ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8">
+                <UserX className="mx-auto h-10 w-10 text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">No students found</p>
+              </motion.div>
+            ) : (
+              filteredAndSortedFaces.map((face, index) => (
+                <motion.div
+                  key={face.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ delay: index * 0.02 }}
+                  layout
+                >
+                  <Card
+                    className={cn(
+                      "cursor-pointer transition-all duration-200 active:scale-[0.98] sm:hover:shadow-md overflow-hidden",
+                      selectedFaceId === face.id
+                        ? "ring-2 ring-primary shadow-md"
+                        : "hover:bg-accent/50"
+                    )}
+                    onClick={() => setSelectedFaceId(face.id === selectedFaceId ? null : face.id)}
                   >
-                    <Card
-                      className={cn(
-                        "overflow-hidden cursor-pointer transition-all hover:shadow-md border-l-4",
-                        statusColor,
-                        selectedFaceId === face.id && 'ring-2 ring-primary shadow-lg'
-                      )}
-                      onClick={() => setSelectedFaceId(face.id === selectedFaceId ? null : face.id)}
-                    >
-                      <CardContent className="p-0">
-                        <div className="flex gap-3 p-3">
-                          {/* Avatar */}
-                          <div className="relative shrink-0">
-                            <Avatar className="h-14 w-14 rounded-xl border-2 border-border">
-                              <AvatarImage
-                                src={face.image_url?.startsWith('data:')
-                                  ? face.image_url
-                                  : `https://zovwmlqnrsionbolcpng.supabase.co/storage/v1/object/public/face-images/${face.image_url}`
-                                }
-                                alt={face.name}
-                                className="object-cover"
-                              />
-                              <AvatarFallback className="rounded-xl text-lg font-bold bg-muted">
-                                {face.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {/* Status dot */}
-                            <span className={cn(
-                              "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background",
-                              status === 'present' ? 'bg-green-500' : status === 'late' ? 'bg-amber-500' : 'bg-red-400'
-                            )} />
-                          </div>
+                    <CardContent className="p-2.5 sm:p-3">
+                      <div className="flex items-center gap-2.5 sm:gap-3">
+                        <div className="relative shrink-0">
+                          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl border border-border">
+                            <AvatarImage src={face.image_url} alt={face.name} className="object-cover" />
+                            <AvatarFallback className="rounded-xl text-sm font-bold bg-muted">
+                              {face.name?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          {/* Status dot */}
+                          <span className={cn(
+                            "absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 border-card",
+                            todayStatuses[face.employee_id]?.status === 'present' ? 'bg-green-500' :
+                            todayStatuses[face.employee_id]?.status === 'late' ? 'bg-amber-500' :
+                            'bg-red-400'
+                          )} />
+                        </div>
 
-                          {/* Info */}
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <div className="flex items-start justify-between gap-1">
-                              <div className="min-w-0">
-                                <h3 className="font-semibold text-sm truncate">{face.name}</h3>
-                                <p className="text-[11px] text-muted-foreground">{face.department} · {face.employee_id}</p>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-36">
-                                  <DropdownMenuItem className="text-xs text-destructive gap-2" onClick={(e) => { e.stopPropagation(); handleDeleteFace(face.id); }}>
-                                    <Trash2 className="w-3 h-3" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-
-                            <div className="flex items-center gap-3 text-[11px]">
-                              {getStatusBadge(face.employee_id)}
-                              <span className="text-muted-foreground tabular-nums flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                {face.total_attendance}d
-                              </span>
-                            </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{face.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-muted-foreground">{face.employee_id}</span>
+                            {face.department !== 'N/A' && (
+                              <span className="text-[10px] text-muted-foreground truncate">· {face.department}</span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Bottom action bar */}
-                        <div className="border-t border-border/50 px-3 py-2 flex items-center justify-between bg-muted/30" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[10px] text-muted-foreground">
-                            Last: {face.last_attendance === 'Never' ? 'Never' : new Date(face.last_attendance!).toLocaleDateString()}
-                          </span>
-                          <NotificationService
-                            studentId={face.user_id}
-                            studentName={face.name}
-                            attendanceStatus="present"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        ) : (
-          /* ── Table View ── */
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="py-2.5 px-3 text-left font-medium text-xs text-muted-foreground w-12"></th>
-                    <th className="py-2.5 px-3 text-left font-medium text-xs text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => toggleSort('name')}>
-                      Student {sortField === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th className="py-2.5 px-3 text-center font-medium text-xs text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => toggleSort('status')}>
-                      Status {sortField === 'status' && (sortDir === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th className="py-2.5 px-3 text-center font-medium text-xs text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => toggleSort('attendance')}>
-                      Days {sortField === 'attendance' && (sortDir === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th className="py-2.5 px-3 text-right font-medium text-xs text-muted-foreground w-20"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedFaces.map((face) => {
-                    const status = todayStatuses[face.employee_id]?.status || 'absent';
-                    return (
-                      <tr
-                        key={face.id}
-                        className={cn(
-                          "border-b border-border/50 hover:bg-muted/40 cursor-pointer transition-colors",
-                          selectedFaceId === face.id && 'bg-primary/5'
-                        )}
-                        onClick={() => setSelectedFaceId(face.id === selectedFaceId ? null : face.id)}
-                      >
-                        <td className="py-2.5 px-3">
-                          <div className="relative">
-                            <Avatar className="h-9 w-9 rounded-lg">
-                              <AvatarImage
-                                src={face.image_url?.startsWith('data:')
-                                  ? face.image_url
-                                  : `https://zovwmlqnrsionbolcpng.supabase.co/storage/v1/object/public/face-images/${face.image_url}`
-                                }
-                                alt={face.name}
-                              />
-                              <AvatarFallback className="rounded-lg text-xs">{face.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className={cn(
-                              "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
-                              status === 'present' ? 'bg-green-500' : status === 'late' ? 'bg-amber-500' : 'bg-red-400'
-                            )} />
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <p className="font-medium text-sm">{face.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{face.department} · {face.employee_id}</p>
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {getStatusBadge(face.employee_id)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <span className="text-sm font-semibold tabular-nums">{face.total_attendance}</span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-1 justify-end">
-                            <NotificationService
-                              studentId={face.user_id}
-                              studentName={face.name}
-                              attendanceStatus="present"
-                            />
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7">
-                                  <MoreVertical className="h-3.5 w-3.5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-36">
-                                <DropdownMenuItem className="text-xs text-destructive gap-2" onClick={(e) => { e.stopPropagation(); handleDeleteFace(face.id); }}>
-                                  <Trash2 className="w-3 h-3" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        )}
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={e => e.stopPropagation()}>
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedFaceId(face.id); }} className="text-xs gap-2">
+                                <Calendar className="h-3 w-3" /> View Calendar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteFace(face.id); }} className="text-xs text-destructive gap-2">
+                                <Trash2 className="h-3 w-3" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            )}
+          </AnimatePresence>
+        </div>
+
+        <p className="text-[10px] text-muted-foreground text-center pt-2">
+          {filteredAndSortedFaces.length} of {totalStudents} students
+        </p>
       </div>
     </>
   );

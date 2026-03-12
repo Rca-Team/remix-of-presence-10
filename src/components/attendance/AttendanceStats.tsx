@@ -16,47 +16,85 @@ const AttendanceStats = () => {
   const fetchStats = useCallback(async () => {
     const today = new Date().toISOString().split('T')[0];
     
-    const [profilesRes, todayRes] = await Promise.all([
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+    // Get total registered faces (not profiles - registered faces are the actual students)
+    const [registeredRes, todayAttendanceRes, todayGateRes] = await Promise.all([
       supabase.from('attendance_records')
-        .select('id, status, user_id')
+        .select('id, device_info')
+        .eq('status', 'registered'),
+      supabase.from('attendance_records')
+        .select('id, status, user_id, device_info')
+        .in('status', ['present', 'late', 'unauthorized'])
         .gte('timestamp', `${today}T00:00:00`)
-        .lte('timestamp', `${today}T23:59:59`)
+        .lte('timestamp', `${today}T23:59:59`),
+      supabase.from('gate_entries')
+        .select('id, student_id, student_name, entry_type')
+        .gte('entry_time', `${today}T00:00:00`)
+        .lte('entry_time', `${today}T23:59:59`)
+        .eq('is_recognized', true)
     ]);
     
-    if (profilesRes.error || todayRes.error) {
-      console.error('Error fetching stats:', profilesRes.error || todayRes.error);
+    if (registeredRes.error || todayAttendanceRes.error) {
+      console.error('Error fetching stats:', registeredRes.error || todayAttendanceRes.error);
       return;
     }
     
-    const totalProfiles = profilesRes.count || 0;
-    const records = todayRes.data || [];
+    // Build set of registered employee IDs and user_ids
+    const registeredFaces = (registeredRes.data || []).filter(r => {
+      const di = r.device_info as any;
+      const name = di?.metadata?.name || '';
+      return name && name !== 'Unknown' && !name.toLowerCase().includes('unknown');
+    });
+    const totalRegistered = registeredFaces.length;
     
-    // Count unique users by status (present includes unauthorized for backward compat)
+    // Build lookup: employee_id -> true, user_id -> employee_id
+    const empIdSet = new Set<string>();
+    const userIdToEmpId = new Map<string, string>();
+    registeredFaces.forEach(r => {
+      const di = r.device_info as any;
+      const empId = di?.metadata?.employee_id;
+      if (empId) {
+        empIdSet.add(empId);
+      }
+    });
+    
+    const records = todayAttendanceRes.data || [];
+    const gateRecords = todayGateRes.data || [];
+    
+    // Track unique present/late by employee_id
     const presentUsers = new Set<string>();
     const lateUsers = new Set<string>();
     
     for (const rec of records) {
-      const userId = rec.user_id || rec.id;
+      const di = rec.device_info as any;
+      const empId = di?.metadata?.employee_id || di?.employee_id;
       const status = (rec.status || '').toLowerCase();
       
+      const identifier = empId || rec.user_id || rec.id;
+      
       if (status === 'present' || status === 'unauthorized') {
-        presentUsers.add(userId);
-        lateUsers.delete(userId); // If marked present, remove from late
-      } else if (status === 'late' && !presentUsers.has(userId)) {
-        lateUsers.add(userId);
+        presentUsers.add(identifier);
+        lateUsers.delete(identifier);
+      } else if (status === 'late' && !presentUsers.has(identifier)) {
+        lateUsers.add(identifier);
+      }
+    }
+    
+    // Also include gate entries
+    for (const entry of gateRecords) {
+      if (entry.student_id && !presentUsers.has(entry.student_id)) {
+        presentUsers.add(entry.student_id);
       }
     }
     
     const presentCount = presentUsers.size;
     const lateCount = lateUsers.size;
-    const absentCount = Math.max(0, totalProfiles - presentCount - lateCount);
+    const absentCount = Math.max(0, totalRegistered - presentCount - lateCount);
     
     setStats({
       present: presentCount,
       late: lateCount,
       absent: absentCount,
-      total: totalProfiles
+      total: totalRegistered
     });
   }, []);
 
@@ -70,8 +108,19 @@ const AttendanceStats = () => {
         () => fetchStats()
       )
       .subscribe();
+
+    const gateChannel = supabase
+      .channel('gate_stats_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'gate_entries' },
+        () => fetchStats()
+      )
+      .subscribe();
     
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      supabase.removeChannel(channel);
+      supabase.removeChannel(gateChannel);
+    };
   }, [fetchStats]);
 
   const presentPercentage = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;

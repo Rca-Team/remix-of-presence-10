@@ -57,13 +57,13 @@ const Attendance = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-4 sm:mb-8"
+            className="text-center mb-3 sm:mb-6"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-2.5 sm:mb-4"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-2 sm:mb-4"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'hsl(var(--ios-green))' }} />
@@ -72,19 +72,19 @@ const Attendance = () => {
               <span className="text-xs font-medium text-primary">Recognition Active</span>
             </motion.div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-1.5 sm:mb-3 text-foreground">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-3 text-foreground">
               Smart Attendance
             </h1>
             <p className="text-muted-foreground text-xs sm:text-base max-w-lg mx-auto">
               AI-powered face recognition & QR code attendance
             </p>
 
-            {/* Feature pills - smaller on mobile */}
+            {/* Feature pills */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-1.5 sm:gap-3 mt-2.5 sm:mt-5"
+              className="flex flex-wrap justify-center gap-1.5 sm:gap-3 mt-2 sm:mt-5"
             >
               {[
                 { icon: Zap, text: '<0.5s', color: '--ios-orange' },
@@ -102,22 +102,12 @@ const Attendance = () => {
             </motion.div>
           </motion.div>
 
-          {/* Quick Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-4 sm:mb-6"
-          >
-            <QuickStatsPanel />
-          </motion.div>
-
-          {/* Tab Bar - Full width touch targets on mobile */}
+          {/* Tab Bar - MOVED ABOVE Quick Stats for mobile accessibility */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mb-4 sm:mb-6"
+            className="mb-3 sm:mb-5"
           >
             <div className="flex gap-1 p-1 bg-card/70 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm">
               {tabConfig.map((tab) => {
@@ -148,6 +138,16 @@ const Attendance = () => {
                 );
               })}
             </div>
+          </motion.div>
+
+          {/* Quick Stats - now below tab bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-4 sm:mb-6"
+          >
+            <QuickStatsPanel />
           </motion.div>
 
           {/* Tab Content */}
@@ -218,7 +218,7 @@ const Attendance = () => {
                     </div>
                   </div>
 
-                  {/* Voice Commands - hide on small mobile */}
+                  {/* Voice Commands */}
                   <div className="hidden sm:block">
                     <VoiceCommands
                       onCommand={handleVoiceCommand}

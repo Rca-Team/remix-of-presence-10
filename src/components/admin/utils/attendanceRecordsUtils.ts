@@ -2,34 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SetDatesFunction, AttendanceRecord } from './types';
 
-// Type guard to check if an object is a record with metadata
-function hasMetadata(obj: any): obj is { metadata: any } {
-  return obj && typeof obj === 'object' && 'metadata' in obj;
-}
-
-// Type guard to check if an object has a name property
-function hasName(obj: any): obj is { name: string } {
-  return obj && typeof obj === 'object' && 'name' in obj;
-}
-
-// Extract name from device_info
-function extractName(deviceInfo: any): string {
-  let name = '';
-  try {
-    if (deviceInfo && typeof deviceInfo === 'object' && !Array.isArray(deviceInfo)) {
-      if (hasMetadata(deviceInfo) && deviceInfo.metadata && hasName(deviceInfo.metadata)) {
-        name = deviceInfo.metadata.name;
-      }
-      if (!name && hasName(deviceInfo)) {
-        name = deviceInfo.name;
-      }
-    }
-  } catch (e) {
-    console.error('Error extracting name from device_info:', e);
-  }
-  return name;
-}
-
 // Normalize status to consistent lowercase values
 function normalizeStatus(status: string | null): string {
   if (!status) return 'unknown';
@@ -47,133 +19,175 @@ function toMidnight(date: Date): Date {
   return d;
 }
 
-// Fetch attendance records from Supabase - determines present/late days
+// Extract name from device_info
+function extractName(deviceInfo: any): string {
+  try {
+    if (deviceInfo && typeof deviceInfo === 'object' && !Array.isArray(deviceInfo)) {
+      if (deviceInfo.metadata?.name) return deviceInfo.metadata.name;
+      if (deviceInfo.name) return deviceInfo.name;
+    }
+  } catch (e) {
+    console.error('Error extracting name from device_info:', e);
+  }
+  return '';
+}
+
+// Get all identifiers for a registered face to match attendance records
+async function getFaceIdentifiers(faceId: string): Promise<{ userIds: string[]; employeeId: string | null }> {
+  const { data } = await supabase
+    .from('attendance_records')
+    .select('user_id, device_info')
+    .eq('id', faceId)
+    .eq('status', 'registered')
+    .single();
+
+  const userIds: string[] = [faceId]; // Always include the registration record ID
+  let employeeId: string | null = null;
+
+  if (data) {
+    if (data.user_id) userIds.push(data.user_id);
+    const di = data.device_info as any;
+    employeeId = di?.metadata?.employee_id || di?.employee_id || null;
+    if (employeeId) userIds.push(employeeId);
+  }
+
+  return { userIds: [...new Set(userIds)], employeeId };
+}
+
+// Fetch attendance records - determines present/late days
 export const fetchAttendanceRecords = async (
   faceId: string,
   setAttendanceDays: SetDatesFunction,
   setLateAttendanceDays: SetDatesFunction
 ) => {
   try {
-    console.log('Fetching attendance records for face ID:', faceId);
+    const { userIds, employeeId } = await getFaceIdentifiers(faceId);
     
-    // Fetch records where id or user_id equals faceId
-    const [{ data: recordsById }, { data: recordsByUserId }] = await Promise.all([
-      supabase.from('attendance_records').select('id, timestamp, status, device_info').eq('id', faceId),
-      supabase.from('attendance_records').select('id, timestamp, status, device_info').eq('user_id', faceId)
-    ]);
+    // Build queries for all possible identifier matches
+    const queries = userIds.map(uid =>
+      supabase.from('attendance_records')
+        .select('id, timestamp, status, device_info')
+        .or(`user_id.eq.${uid},id.eq.${uid}`)
+        .in('status', ['present', 'late', 'unauthorized'])
+    );
+
+    // Also query by employee_id in device_info if available
+    if (employeeId) {
+      queries.push(
+        supabase.from('attendance_records')
+          .select('id, timestamp, status, device_info')
+          .contains('device_info', { metadata: { employee_id: employeeId } })
+          .in('status', ['present', 'late', 'unauthorized'])
+      );
+    }
+
+    const results = await Promise.all(queries);
     
-    // Deduplicate
+    // Deduplicate by record ID
     const seen = new Set<string>();
-    const allRecords = [...(recordsById || []), ...(recordsByUserId || [])].filter(r => {
+    const allRecords = results.flatMap(r => r.data || []).filter(r => {
       if (seen.has(r.id)) return false;
       seen.add(r.id);
       return true;
     });
-    
+
     if (allRecords.length === 0) {
-      console.log('No records found for face ID:', faceId);
       setAttendanceDays([]);
       setLateAttendanceDays([]);
       return;
     }
-    
-    console.log('Total records found:', allRecords.length);
-    
-    // Track unique days by status - use dateKey to avoid duplicates
+
     const presentDaysMap = new Map<string, Date>();
     const lateDaysMap = new Map<string, Date>();
-    
+
     for (const record of allRecords) {
       if (!record.timestamp) continue;
-      
-      // Skip registration records
-      const deviceInfo = record.device_info as any;
-      if (deviceInfo?.registration) continue;
-      
+      const di = record.device_info as any;
+      if (di?.registration) continue;
+
       const status = normalizeStatus(record.status);
       if (status !== 'present' && status !== 'late') continue;
-      
+
       const date = toMidnight(new Date(record.timestamp));
       const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      
-      // Present takes priority over late for same day
+
       if (status === 'present') {
         presentDaysMap.set(dateKey, date);
-        lateDaysMap.delete(dateKey); // Remove from late if already there
+        lateDaysMap.delete(dateKey);
       } else if (status === 'late' && !presentDaysMap.has(dateKey)) {
         lateDaysMap.set(dateKey, date);
       }
     }
-    
-    const presentDays = Array.from(presentDaysMap.values());
-    const lateDays = Array.from(lateDaysMap.values());
-    
-    console.log('Present days:', presentDays.length, 'Late days:', lateDays.length);
-    
-    setAttendanceDays(presentDays);
-    setLateAttendanceDays(lateDays);
+
+    setAttendanceDays(Array.from(presentDaysMap.values()));
+    setLateAttendanceDays(Array.from(lateDaysMap.values()));
   } catch (error) {
     console.error('Error in fetchAttendanceRecords:', error);
     throw error;
   }
 };
 
-// Fetch daily attendance for a specific date - returns only the earliest record for selected user
+// Fetch daily attendance for a specific date
 export const fetchDailyAttendance = async (
-  faceId: string, 
+  faceId: string,
   date: Date,
   setDailyAttendance: (records: AttendanceRecord[]) => void
 ) => {
   try {
+    const { userIds, employeeId } = await getFaceIdentifiers(faceId);
+
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
-    
+
     const timestampStart = startOfDay.toISOString();
     const timestampEnd = endOfDay.toISOString();
-    
-    // Fetch records for the selected user
-    const [{ data: recordsById }, { data: recordsByUserId }] = await Promise.all([
+
+    const queries = userIds.map(uid =>
       supabase.from('attendance_records')
         .select('id, timestamp, status, device_info, user_id, image_url')
-        .eq('id', faceId)
-        .gte('timestamp', timestampStart).lte('timestamp', timestampEnd)
-        .order('timestamp', { ascending: true }),
-      supabase.from('attendance_records')
-        .select('id, timestamp, status, device_info, user_id, image_url')
-        .eq('user_id', faceId)
-        .gte('timestamp', timestampStart).lte('timestamp', timestampEnd)
+        .or(`user_id.eq.${uid},id.eq.${uid}`)
+        .gte('timestamp', timestampStart)
+        .lte('timestamp', timestampEnd)
         .order('timestamp', { ascending: true })
-    ]);
-    
-    // Deduplicate
+    );
+
+    if (employeeId) {
+      queries.push(
+        supabase.from('attendance_records')
+          .select('id, timestamp, status, device_info, user_id, image_url')
+          .contains('device_info', { metadata: { employee_id: employeeId } })
+          .gte('timestamp', timestampStart)
+          .lte('timestamp', timestampEnd)
+          .order('timestamp', { ascending: true })
+      );
+    }
+
+    const results = await Promise.all(queries);
+
     const allRecordsMap = new Map();
-    [...(recordsById || []), ...(recordsByUserId || [])].forEach(r => allRecordsMap.set(r.id, r));
+    results.flatMap(r => r.data || []).forEach(r => allRecordsMap.set(r.id, r));
     let allRecords = Array.from(allRecordsMap.values());
-    
+
     // Filter out registration records
     allRecords = allRecords.filter(r => {
       const di = r.device_info as any;
-      return !di?.registration;
+      if (di?.registration) return false;
+      const status = normalizeStatus(r.status);
+      return status === 'present' || status === 'late';
     });
-    
+
     if (allRecords.length > 0) {
-      const normalizedRecords = allRecords.map(record => {
-        let name = extractName(record.device_info);
-        
-        return {
-          id: record.id,
-          timestamp: record.timestamp,
-          status: normalizeStatus(record.status),
-          name: name || 'Student',
-          image_url: record.image_url
-        };
-      });
-      
-      // Sort by timestamp ascending - return earliest record
+      const normalizedRecords = allRecords.map(record => ({
+        id: record.id,
+        timestamp: record.timestamp,
+        status: normalizeStatus(record.status),
+        name: extractName(record.device_info) || 'Student',
+        image_url: record.image_url
+      }));
+
       normalizedRecords.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-      
       setDailyAttendance([normalizedRecords[0]]);
     } else {
       setDailyAttendance([]);
@@ -183,3 +197,6 @@ export const fetchDailyAttendance = async (
     throw error;
   }
 };
+
+// Export for reuse
+export { getFaceIdentifiers };
