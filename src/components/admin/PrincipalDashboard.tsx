@@ -190,7 +190,7 @@ const PrincipalDashboard: React.FC = () => {
       const { data: weekData } = await supabase
         .from('attendance_records')
         .select('timestamp, device_info')
-        .in('status', ['present', 'late'])
+        .in('status', ['present', 'late', 'unauthorized'])
         .gte('timestamp', format(workingDays[0] || new Date(), 'yyyy-MM-dd'))
         .lte('timestamp', format(new Date(), "yyyy-MM-dd'T'23:59:59"));
 
