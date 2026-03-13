@@ -236,6 +236,7 @@ export const generatePrintableReport = async ({
       let statusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="status-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
       
       if (attendanceOnlyRecords.length > 0) {
+        // Use earliest record (already sorted ascending)
         const firstRecord = attendanceOnlyRecords[0];
         const recordTime = new Date(firstRecord.timestamp);
         attendanceTime = recordTime.toLocaleTimeString('en-US', {
@@ -243,10 +244,8 @@ export const generatePrintableReport = async ({
           minute: '2-digit'
         });
         
-        const hasLateRecord = attendanceOnlyRecords.some(record => 
-          record.status === 'late' || record.status === 'unauthorized'
-        );
-        if (hasLateRecord) {
+        const earliestStatus = normalizeReportStatus(firstRecord.status);
+        if (earliestStatus === 'late') {
           status = 'Late';
           statusClass = 'status-late';
           statusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="status-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
