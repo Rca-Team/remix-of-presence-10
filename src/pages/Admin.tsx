@@ -448,12 +448,12 @@ const Admin = () => {
 
             {/* Stats Bar - Scrollable on mobile */}
             <div className="border-b border-border bg-card/50 px-3 sm:px-4 py-1.5 sm:py-2">
-              <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar">
+              <div className="flex gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
                 {statsCards.map((stat, i) =>
-                <div key={i} className="flex items-center gap-1.5 sm:gap-2 py-0.5 sm:py-1 min-w-fit">
-                    <stat.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", stat.color)} />
-                    <span className="text-base sm:text-lg font-bold">{stat.value}</span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</span>
+                <div key={i} className="flex items-center gap-1.5 py-0.5 min-w-fit">
+                    <stat.icon className={cn("w-3.5 h-3.5", stat.color)} />
+                    <span className="text-sm sm:text-lg font-bold tabular-nums">{stat.value}</span>
+                    <span className="text-[9px] sm:text-xs text-muted-foreground">{stat.label}</span>
                   </div>
                 )}
               </div>
