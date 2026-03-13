@@ -78,14 +78,14 @@ export const generatePrintableReport = async ({
   
   console.log('Report matching identifiers:', { registeredEmployeeId, registeredUserId });
 
-  // Now get all attendance records for the last 30 days
+  // Now get all attendance records for the last 30 days (ascending for earliest-first)
   const { data: allAttendanceRecords, error: attendanceError } = await supabase
     .from('attendance_records')
     .select('*')
     .gte('timestamp', thirtyDaysAgo.toISOString())
     .lte('timestamp', today.toISOString())
     .in('status', ['present', 'late', 'unauthorized'])
-    .order('timestamp', { ascending: false });
+    .order('timestamp', { ascending: true });
 
   if (attendanceError) {
     console.error('Error fetching attendance records:', attendanceError);
