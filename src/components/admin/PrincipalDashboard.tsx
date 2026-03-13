@@ -244,139 +244,227 @@ const PrincipalDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Connection Status & Refresh */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {isConnected ? (
-            <Badge variant="outline" className="gap-1.5 text-green-600 border-green-500/30 bg-green-500/10">
+            <Badge variant="outline" className="gap-1.5 text-green-600 border-green-500/30 bg-green-500/10 text-[10px] sm:text-xs">
               <Wifi className="w-3 h-3" /> Live
             </Badge>
           ) : (
-            <Badge variant="outline" className="gap-1.5 text-muted-foreground">
+            <Badge variant="outline" className="gap-1.5 text-muted-foreground text-[10px] sm:text-xs">
               <WifiOff className="w-3 h-3" /> Offline
             </Badge>
           )}
-          <span className="text-xs text-muted-foreground">
-            Updated {format(lastRefreshed, 'hh:mm a')}
+          <span className="text-[10px] sm:text-xs text-muted-foreground">
+            {format(lastRefreshed, 'hh:mm a')}
           </span>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => fetchAllData()} className="gap-1.5 text-xs">
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+        <Button variant="ghost" size="sm" onClick={() => fetchAllData()} className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3">
+          <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Refresh
         </Button>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Key Metrics — 2x2 grid on mobile */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         <MetricCard label="Registered" value={overallStats.totalRegistered} icon={Users} color="text-primary" bgColor="bg-primary/10" />
         <MetricCard label="Present" value={overallStats.presentToday} icon={CheckCircle2} color="text-green-600 dark:text-green-400" bgColor="bg-green-500/10" subtitle={`${overallStats.attendanceRate}%`} />
         <MetricCard label="Late" value={overallStats.lateToday} icon={Clock} color="text-orange-600 dark:text-orange-400" bgColor="bg-orange-500/10" />
         <MetricCard label="Absent" value={overallStats.absentToday} icon={UserX} color="text-red-600 dark:text-red-400" bgColor="bg-red-500/10" />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left: Student Directory + Chart */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Weekly Trend */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                This Week's Trend
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeklyTrend} barSize={isMobile ? 20 : 32}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px', fontSize: '12px',
-                      }}
-                    />
-                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Attendance Rate Ring - Mobile Friendly */}
+      <Card className="overflow-hidden">
+        <CardContent className="p-3 sm:p-5 flex items-center gap-4 sm:gap-5">
+          <ProgressRing
+            value={overallStats.attendanceRate}
+            size={isMobile ? 'md' : 'lg'}
+            color={overallStats.attendanceRate >= 80 ? 'success' : overallStats.attendanceRate >= 60 ? 'warning' : 'destructive'}
+            thickness={isMobile ? 5 : 7}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Today's Rate</p>
+            <p className="text-2xl sm:text-3xl font-bold tabular-nums">{overallStats.attendanceRate}%</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+              {overallStats.presentToday + overallStats.lateToday} of {overallStats.totalRegistered} present
+            </p>
+          </div>
 
-        {/* Right: Rate Ring + Live Feed */}
-        <div className="space-y-4">
-          <Card className="overflow-hidden">
-            <CardContent className="p-5 flex items-center gap-5">
-              <ProgressRing
-                value={overallStats.attendanceRate}
-                size="lg"
-                color={overallStats.attendanceRate >= 80 ? 'success' : overallStats.attendanceRate >= 60 ? 'warning' : 'destructive'}
-                thickness={7}
-              />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Today's Rate</p>
-                <p className="text-3xl font-bold">{overallStats.attendanceRate}%</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {overallStats.presentToday + overallStats.lateToday} of {overallStats.totalRegistered} present
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary" />
-                Live Activity
-                {isConnected && (
-                  <span className="relative flex h-2 w-2 ml-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                  </span>
+          {/* Status filter chips on mobile */}
+          <div className="hidden sm:flex flex-col gap-1">
+            {statusFilterOptions.map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setStatusFilter(statusFilter === opt.key ? 'all' : opt.key)}
+                className={cn(
+                  "text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors",
+                  statusFilter === opt.key ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"
                 )}
-              </CardTitle>
+              >
+                {opt.label} ({opt.count})
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Status filter pills - mobile only */}
+      {isMobile && (
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+          {statusFilterOptions.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setStatusFilter(statusFilter === opt.key ? 'all' : opt.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0",
+                "active:scale-95",
+                statusFilter === opt.key
+                  ? opt.key === 'present' ? "bg-green-500/15 text-green-700 dark:text-green-400"
+                    : opt.key === 'late' ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                    : opt.key === 'absent' ? "bg-red-500/15 text-red-700 dark:text-red-400"
+                    : "bg-primary/15 text-primary"
+                  : "bg-muted/60 text-muted-foreground"
+              )}
+            >
+              {opt.label} <span className="font-bold tabular-nums">{opt.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Weekly Trend Chart */}
+      <Card>
+        <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+          <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2">
+            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+            This Week's Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-1 sm:px-4 pb-3 sm:pb-4">
+          <div className="h-36 sm:h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyTrend} barSize={isMobile ? 18 : 32}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="day" tick={{ fontSize: isMobile ? 10 : 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 11 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 25 : 40} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px', fontSize: '12px',
+                  }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filtered Student List + Live Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        {/* Filtered Students */}
+        {filteredStudents.length > 0 && (
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                  Students ({filteredStudents.length})
+                </CardTitle>
+                <div className="relative w-32 sm:w-40">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full text-[10px] sm:text-xs bg-muted/40 rounded-lg pl-6 pr-2 py-1.5 outline-none focus:ring-1 focus:ring-primary/30"
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[400px]">
-                <AnimatePresence initial={false}>
-                  {liveEntries.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <Activity className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                      <p className="text-sm">No attendance yet today</p>
+              <ScrollArea className="h-[280px] sm:h-[360px]">
+                <div className="divide-y divide-border">
+                  {filteredStudents.map((student, i) => (
+                    <div key={i} className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 active:bg-muted/60 sm:hover:bg-muted/40 transition-colors">
+                      <div className={cn(
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0",
+                        student.status === 'present' ? "bg-green-500/15 text-green-600 dark:text-green-400"
+                          : student.status === 'late' ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          : "bg-red-500/10 text-red-500 dark:text-red-400"
+                      )}>
+                        {student.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium truncate">{student.name}</p>
+                        <p className="text-[9px] sm:text-[10px] text-muted-foreground">{student.employee_id}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        <StatusDot status={student.status} showLabel />
+                        {student.time && (
+                          <span className="text-[9px] text-muted-foreground tabular-nums">{student.time}</span>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="divide-y divide-border">
-                      {liveEntries.map((entry, i) => (
-                        <motion.div
-                          key={entry.id}
-                          initial={i === 0 ? { opacity: 0, x: -20 } : false}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.4 }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
-                        >
-                          <Avatar className="h-8 w-8 flex-shrink-0">
-                            <AvatarImage src={entry.imageUrl?.startsWith('data:') ? entry.imageUrl : ''} />
-                            <AvatarFallback className="text-xs font-medium bg-muted">{entry.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{entry.name}</p>
-                            <span className="text-[10px] text-muted-foreground">{entry.time}</span>
-                          </div>
-                          <StatusDot status={entry.status} showLabel />
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </AnimatePresence>
+                  ))}
+                </div>
               </ScrollArea>
             </CardContent>
           </Card>
-        </div>
+        )}
+
+        {/* Live Activity */}
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+            <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              Live Activity
+              {isConnected && (
+                <span className="relative flex h-2 w-2 ml-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[280px] sm:h-[360px]">
+              <AnimatePresence initial={false}>
+                {liveEntries.length === 0 ? (
+                  <div className="p-6 sm:p-8 text-center text-muted-foreground">
+                    <Activity className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 sm:mb-3 opacity-40" />
+                    <p className="text-xs sm:text-sm">No attendance yet today</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {liveEntries.map((entry, i) => (
+                      <motion.div
+                        key={entry.id}
+                        initial={i === 0 ? { opacity: 0, x: -20 } : false}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 active:bg-muted/60 sm:hover:bg-muted/50 transition-colors"
+                      >
+                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
+                          <AvatarImage src={entry.imageUrl?.startsWith('data:') ? entry.imageUrl : ''} />
+                          <AvatarFallback className="text-[10px] sm:text-xs font-medium bg-muted">{entry.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs sm:text-sm font-medium truncate">{entry.name}</p>
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground">{entry.time}</span>
+                        </div>
+                        <StatusDot status={entry.status} showLabel />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </AnimatePresence>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
