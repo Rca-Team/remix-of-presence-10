@@ -278,7 +278,7 @@ export const generatePrintableReport = async ({
     const attendanceOnly = dayRecords.filter((r: any) => !(r.device_info as any)?.registration);
     let status = 'absent';
     if (attendanceOnly.length > 0) {
-      status = attendanceOnly.some((r: any) => r.status === 'late' || r.status === 'unauthorized') ? 'late' : 'present';
+      status = normalizeReportStatus(attendanceOnly[0].status) === 'late' ? 'late' : 'present';
     }
     const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
     return { dayLabel, status };
