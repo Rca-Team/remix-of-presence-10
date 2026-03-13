@@ -935,17 +935,15 @@ export const exportToCSV = async ({
     let timeInfo = '';
     
     if (attendanceOnlyRecords.length > 0) {
-      const firstRecord = attendanceOnlyRecords[0];
+      const firstRecord = attendanceOnlyRecords[0]; // earliest
       const recordTime = new Date(firstRecord.timestamp);
       timeInfo = recordTime.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
       
-      const hasLateRecord = attendanceOnlyRecords.some(record => 
-        record.status === 'late' || record.status === 'unauthorized'
-      );
-      status = hasLateRecord ? 'Late' : 'Present';
+      const earliestNorm = normalizeCSVStatus(firstRecord.status);
+      status = earliestNorm === 'late' ? 'Late' : 'Present';
     }
     
     csvContent += `${formatDate(date)},${status},${attendanceOnlyRecords.length > 0 ? timeInfo : '-'}\n`;
