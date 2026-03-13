@@ -827,7 +827,7 @@ export const exportToCSV = async ({
     .gte('timestamp', thirtyDaysAgo.toISOString())
     .lte('timestamp', today.toISOString())
     .in('status', ['present', 'late', 'unauthorized'])
-    .order('timestamp', { ascending: false });
+    .order('timestamp', { ascending: true });
 
   if (attendanceError) {
     console.error('Error fetching attendance records:', attendanceError);
