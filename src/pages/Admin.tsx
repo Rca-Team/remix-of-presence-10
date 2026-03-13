@@ -461,7 +461,7 @@ const Admin = () => {
 
             {/* Content Area */}
             <PullToRefresh onRefresh={handleRefresh} enabled={isMobile} className="flex-1 overflow-auto">
-              <div className="p-3 sm:p-4 md:p-6 pb-28 sm:pb-6">
+              <div className="p-2.5 sm:p-4 md:p-6 pb-24 sm:pb-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
