@@ -720,12 +720,12 @@ export const generatePrintableReport = async ({
                     let timeStr = '—';
                     
                     if (attendanceOnly.length > 0) {
-                      const first = attendanceOnly[0];
+                      const first = attendanceOnly[0]; // earliest (sorted ascending)
                       const t = new Date(first.timestamp);
                       timeStr = t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                      const isLate = attendanceOnly.some((r: any) => r.status === 'late' || r.status === 'unauthorized');
-                      status = isLate ? 'Late' : 'Present';
-                      badgeClass = isLate ? 'badge-late' : 'badge-present';
+                      const earliestNorm = normalizeReportStatus(first.status);
+                      status = earliestNorm === 'late' ? 'Late' : 'Present';
+                      badgeClass = earliestNorm === 'late' ? 'badge-late' : 'badge-present';
                     }
                     
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
