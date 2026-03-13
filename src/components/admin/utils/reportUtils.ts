@@ -886,7 +886,15 @@ export const exportToCSV = async ({
     return Math.max(0, 1 - distance);
   }
 
-  // Process attendance records
+  // Normalize status for CSV (same logic as calendar)
+  function normalizeCSVStatus(status: string): string {
+    const s = (status || '').toLowerCase().trim();
+    if (s === 'unauthorized' || s.includes('present')) return 'present';
+    if (s.includes('late')) return 'late';
+    return s;
+  }
+
+  // Process attendance records - sort ascending per day for earliest first
   const recordsByDate = new Map<string, any[]>();
   attendanceRecords?.forEach(record => {
     const recordDate = new Date(record.timestamp).toDateString();
@@ -894,6 +902,9 @@ export const exportToCSV = async ({
       recordsByDate.set(recordDate, []);
     }
     recordsByDate.get(recordDate)!.push(record);
+  });
+  recordsByDate.forEach((records) => {
+    records.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   });
 
   // Generate working days for the last 30 days
