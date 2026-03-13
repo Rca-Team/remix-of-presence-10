@@ -114,30 +114,54 @@ const Admin = () => {
       lte('timestamp', `${today}T23:59:59`).
       neq('status', 'registered');
 
+      // Also fetch gate entries for today
+      const { data: gateData } = await supabase
+        .from('gate_entries')
+        .select('student_id, student_name, entry_type')
+        .gte('entry_time', `${today}T00:00:00`)
+        .lte('entry_time', `${today}T23:59:59`)
+        .eq('is_recognized', true);
+
+      const uniquePresent = new Set<string>();
+      const uniqueLate = new Set<string>();
+      const uniqueTotal = new Set<string>();
+
+      // Normalize: unauthorized = present (match calendar logic)
       if (todayData) {
-        const uniquePresent = new Set<string>();
-        const uniqueLate = new Set<string>();
-        const uniqueTotal = new Set<string>();
         todayData.forEach((record) => {
           const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
-          if (userId) {
-            const uid = String(userId);
-            uniqueTotal.add(uid);
-            if (record.status === 'present') {
-              uniquePresent.add(uid);
-              uniqueLate.delete(uid); // present overrides late
-            } else if (record.status === 'late' && !uniquePresent.has(uid)) {
-              uniqueLate.add(uid);
+          if (!userId) return;
+          const uid = String(userId);
+          const s = (record.status || '').toLowerCase().trim();
+          const normalized = (s === 'unauthorized' || s.includes('present')) ? 'present' : s.includes('late') ? 'late' : s;
+          uniqueTotal.add(uid);
+          if (normalized === 'present') {
+            uniquePresent.add(uid);
+            uniqueLate.delete(uid);
+          } else if (normalized === 'late' && !uniquePresent.has(uid)) {
+            uniqueLate.add(uid);
+          }
+        });
+      }
+
+      // Merge gate entries
+      if (gateData) {
+        gateData.forEach((entry) => {
+          if (entry.student_id) {
+            uniqueTotal.add(entry.student_id);
+            if (!uniquePresent.has(entry.student_id) && !uniqueLate.has(entry.student_id)) {
+              uniquePresent.add(entry.student_id);
             }
           }
         });
-        setStats((prev) => ({
-          ...prev,
-          todayAttendance: uniqueTotal.size,
-          presentToday: uniquePresent.size,
-          lateToday: uniqueLate.size
-        }));
       }
+
+      setStats((prev) => ({
+        ...prev,
+        todayAttendance: uniqueTotal.size,
+        presentToday: uniquePresent.size,
+        lateToday: uniqueLate.size
+      }));
 
       const { count } = await supabase.
       from('notifications').

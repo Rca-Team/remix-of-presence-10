@@ -78,14 +78,14 @@ export const generatePrintableReport = async ({
   
   console.log('Report matching identifiers:', { registeredEmployeeId, registeredUserId });
 
-  // Now get all attendance records for the last 30 days
+  // Now get all attendance records for the last 30 days (ascending for earliest-first)
   const { data: allAttendanceRecords, error: attendanceError } = await supabase
     .from('attendance_records')
     .select('*')
     .gte('timestamp', thirtyDaysAgo.toISOString())
     .lte('timestamp', today.toISOString())
     .in('status', ['present', 'late', 'unauthorized'])
-    .order('timestamp', { ascending: false });
+    .order('timestamp', { ascending: true });
 
   if (attendanceError) {
     console.error('Error fetching attendance records:', attendanceError);
@@ -149,7 +149,15 @@ export const generatePrintableReport = async ({
     console.warn('No attendance records found for selected face');
   }
 
-  // Process attendance records to get status counts
+  // Normalize status to match calendar logic: unauthorized = present
+  function normalizeReportStatus(status: string): string {
+    const s = (status || '').toLowerCase().trim();
+    if (s === 'unauthorized' || s.includes('present')) return 'present';
+    if (s.includes('late')) return 'late';
+    return s;
+  }
+
+  // Process attendance records to get status counts - keep only earliest per day
   const recordsByDate = new Map<string, any[]>();
   attendanceRecords?.forEach(record => {
     const recordDate = new Date(record.timestamp).toDateString();
@@ -157,6 +165,10 @@ export const generatePrintableReport = async ({
       recordsByDate.set(recordDate, []);
     }
     recordsByDate.get(recordDate)!.push(record);
+  });
+  // Sort each day's records ascending (earliest first)
+  recordsByDate.forEach((records, key) => {
+    records.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   });
 
   // Generate working days for the last 30 days
@@ -188,10 +200,9 @@ export const generatePrintableReport = async ({
       });
       
       if (attendanceOnlyRecords.length > 0) {
-        const hasLateRecord = attendanceOnlyRecords.some(record => 
-          record.status === 'late' || record.status === 'unauthorized'
-        );
-        if (hasLateRecord) {
+        // Use earliest record's normalized status
+        const earliestStatus = normalizeReportStatus(attendanceOnlyRecords[0].status);
+        if (earliestStatus === 'late') {
           lateCount++;
         } else {
           presentCount++;
@@ -225,6 +236,7 @@ export const generatePrintableReport = async ({
       let statusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="status-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
       
       if (attendanceOnlyRecords.length > 0) {
+        // Use earliest record (already sorted ascending)
         const firstRecord = attendanceOnlyRecords[0];
         const recordTime = new Date(firstRecord.timestamp);
         attendanceTime = recordTime.toLocaleTimeString('en-US', {
@@ -232,10 +244,8 @@ export const generatePrintableReport = async ({
           minute: '2-digit'
         });
         
-        const hasLateRecord = attendanceOnlyRecords.some(record => 
-          record.status === 'late' || record.status === 'unauthorized'
-        );
-        if (hasLateRecord) {
+        const earliestStatus = normalizeReportStatus(firstRecord.status);
+        if (earliestStatus === 'late') {
           status = 'Late';
           statusClass = 'status-late';
           statusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="status-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
@@ -268,7 +278,7 @@ export const generatePrintableReport = async ({
     const attendanceOnly = dayRecords.filter((r: any) => !(r.device_info as any)?.registration);
     let status = 'absent';
     if (attendanceOnly.length > 0) {
-      status = attendanceOnly.some((r: any) => r.status === 'late' || r.status === 'unauthorized') ? 'late' : 'present';
+      status = normalizeReportStatus(attendanceOnly[0].status) === 'late' ? 'late' : 'present';
     }
     const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
     return { dayLabel, status };
@@ -710,12 +720,12 @@ export const generatePrintableReport = async ({
                     let timeStr = '—';
                     
                     if (attendanceOnly.length > 0) {
-                      const first = attendanceOnly[0];
+                      const first = attendanceOnly[0]; // earliest (sorted ascending)
                       const t = new Date(first.timestamp);
                       timeStr = t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                      const isLate = attendanceOnly.some((r: any) => r.status === 'late' || r.status === 'unauthorized');
-                      status = isLate ? 'Late' : 'Present';
-                      badgeClass = isLate ? 'badge-late' : 'badge-present';
+                      const earliestNorm = normalizeReportStatus(first.status);
+                      status = earliestNorm === 'late' ? 'Late' : 'Present';
+                      badgeClass = earliestNorm === 'late' ? 'badge-late' : 'badge-present';
                     }
                     
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
@@ -817,7 +827,7 @@ export const exportToCSV = async ({
     .gte('timestamp', thirtyDaysAgo.toISOString())
     .lte('timestamp', today.toISOString())
     .in('status', ['present', 'late', 'unauthorized'])
-    .order('timestamp', { ascending: false });
+    .order('timestamp', { ascending: true });
 
   if (attendanceError) {
     console.error('Error fetching attendance records:', attendanceError);
@@ -876,7 +886,15 @@ export const exportToCSV = async ({
     return Math.max(0, 1 - distance);
   }
 
-  // Process attendance records
+  // Normalize status for CSV (same logic as calendar)
+  function normalizeCSVStatus(status: string): string {
+    const s = (status || '').toLowerCase().trim();
+    if (s === 'unauthorized' || s.includes('present')) return 'present';
+    if (s.includes('late')) return 'late';
+    return s;
+  }
+
+  // Process attendance records - sort ascending per day for earliest first
   const recordsByDate = new Map<string, any[]>();
   attendanceRecords?.forEach(record => {
     const recordDate = new Date(record.timestamp).toDateString();
@@ -884,6 +902,9 @@ export const exportToCSV = async ({
       recordsByDate.set(recordDate, []);
     }
     recordsByDate.get(recordDate)!.push(record);
+  });
+  recordsByDate.forEach((records) => {
+    records.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   });
 
   // Generate working days for the last 30 days
@@ -914,17 +935,15 @@ export const exportToCSV = async ({
     let timeInfo = '';
     
     if (attendanceOnlyRecords.length > 0) {
-      const firstRecord = attendanceOnlyRecords[0];
+      const firstRecord = attendanceOnlyRecords[0]; // earliest
       const recordTime = new Date(firstRecord.timestamp);
       timeInfo = recordTime.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
       
-      const hasLateRecord = attendanceOnlyRecords.some(record => 
-        record.status === 'late' || record.status === 'unauthorized'
-      );
-      status = hasLateRecord ? 'Late' : 'Present';
+      const earliestNorm = normalizeCSVStatus(firstRecord.status);
+      status = earliestNorm === 'late' ? 'Late' : 'Present';
     }
     
     csvContent += `${formatDate(date)},${status},${attendanceOnlyRecords.length > 0 ? timeInfo : '-'}\n`;
