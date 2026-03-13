@@ -149,7 +149,15 @@ export const generatePrintableReport = async ({
     console.warn('No attendance records found for selected face');
   }
 
-  // Process attendance records to get status counts
+  // Normalize status to match calendar logic: unauthorized = present
+  function normalizeReportStatus(status: string): string {
+    const s = (status || '').toLowerCase().trim();
+    if (s === 'unauthorized' || s.includes('present')) return 'present';
+    if (s.includes('late')) return 'late';
+    return s;
+  }
+
+  // Process attendance records to get status counts - keep only earliest per day
   const recordsByDate = new Map<string, any[]>();
   attendanceRecords?.forEach(record => {
     const recordDate = new Date(record.timestamp).toDateString();
@@ -157,6 +165,10 @@ export const generatePrintableReport = async ({
       recordsByDate.set(recordDate, []);
     }
     recordsByDate.get(recordDate)!.push(record);
+  });
+  // Sort each day's records ascending (earliest first)
+  recordsByDate.forEach((records, key) => {
+    records.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   });
 
   // Generate working days for the last 30 days
