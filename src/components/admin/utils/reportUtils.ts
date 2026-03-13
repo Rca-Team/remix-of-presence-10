@@ -200,10 +200,9 @@ export const generatePrintableReport = async ({
       });
       
       if (attendanceOnlyRecords.length > 0) {
-        const hasLateRecord = attendanceOnlyRecords.some(record => 
-          record.status === 'late' || record.status === 'unauthorized'
-        );
-        if (hasLateRecord) {
+        // Use earliest record's normalized status
+        const earliestStatus = normalizeReportStatus(attendanceOnlyRecords[0].status);
+        if (earliestStatus === 'late') {
           lateCount++;
         } else {
           presentCount++;
