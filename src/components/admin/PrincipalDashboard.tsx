@@ -99,26 +99,50 @@ const PrincipalDashboard: React.FC = () => {
       const { data: todayData } = await supabase
         .from('attendance_records')
         .select('*')
-        .in('status', ['present', 'late'])
+        .in('status', ['present', 'late', 'unauthorized'])
         .gte('timestamp', `${today}T00:00:00`)
         .lte('timestamp', `${today}T23:59:59`);
+
+      // Also fetch gate entries
+      const { data: gateData } = await supabase
+        .from('gate_entries')
+        .select('student_id, student_name, entry_time')
+        .gte('entry_time', `${today}T00:00:00`)
+        .lte('entry_time', `${today}T23:59:59`)
+        .eq('is_recognized', true);
 
       const presentMap = new Map<string, string>();
       const lateMap = new Map<string, string>();
       const entries: LiveEntry[] = [];
 
+      // Normalize status: unauthorized = present
+      const normalizeStatus = (s: string) => {
+        const lower = (s || '').toLowerCase().trim();
+        if (lower === 'unauthorized' || lower.includes('present')) return 'present';
+        if (lower.includes('late')) return 'late';
+        return lower;
+      };
+
       (todayData || []).forEach(r => {
         const m = (r.device_info as any)?.metadata || {};
         const empId = m.employee_id || (r.device_info as any)?.employee_id || r.user_id;
         const time = format(new Date(r.timestamp), 'hh:mm a');
+        const normalized = normalizeStatus(r.status || '');
         if (empId) {
-          if (r.status === 'present') presentMap.set(empId, time);
-          if (r.status === 'late') lateMap.set(empId, time);
+          if (normalized === 'present') { presentMap.set(empId, time); lateMap.delete(empId); }
+          else if (normalized === 'late' && !presentMap.has(empId)) lateMap.set(empId, time);
         }
         entries.push({
           id: r.id, name: m.name || 'Unknown', category: r.category || '?',
-          status: r.status || 'present', time, imageUrl: r.image_url || m.firebase_image_url || '',
+          status: normalized, time, imageUrl: r.image_url || m.firebase_image_url || '',
         });
+      });
+
+      // Merge gate entries
+      (gateData || []).forEach(g => {
+        if (g.student_id && !presentMap.has(g.student_id) && !lateMap.has(g.student_id)) {
+          presentMap.set(g.student_id, format(new Date(g.entry_time), 'hh:mm a'));
+        }
       });
 
       entries.sort((a, b) => b.time.localeCompare(a.time));
@@ -132,6 +156,11 @@ const PrincipalDashboard: React.FC = () => {
           status = 'present'; time = presentMap.get(u.employee_id);
         } else if (lateMap.has(u.employee_id)) {
           status = 'late'; time = lateMap.get(u.employee_id);
+        }
+        // Also check by user id
+        if (status === 'absent' && u.id) {
+          if (presentMap.has(u.id)) { status = 'present'; time = presentMap.get(u.id); }
+          else if (lateMap.has(u.id)) { status = 'late'; time = lateMap.get(u.id); }
         }
         return { name: u.name, employee_id: u.employee_id, category: u.category, image_url: u.image_url, status, time };
       });
