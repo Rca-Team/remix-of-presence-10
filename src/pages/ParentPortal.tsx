@@ -85,6 +85,13 @@ export default function ParentPortalPage() {
     }
   };
 
+  const normalizeStatus = (s: string) => {
+    const lower = (s || '').toLowerCase().trim();
+    if (lower === 'unauthorized' || lower.includes('present')) return 'present';
+    if (lower.includes('late')) return 'late';
+    return lower;
+  };
+
   const processAttendance = (attendance: { status: string; timestamp: string }[]) => {
     const today = new Date();
     const monthStart = startOfMonth(today);
@@ -93,8 +100,12 @@ export default function ParentPortalPage() {
     const dateMap: Record<string, { status: string; time: string }> = {};
     attendance.forEach(r => {
       const ds = format(new Date(r.timestamp), 'yyyy-MM-dd');
+      const status = normalizeStatus(r.status);
       if (!dateMap[ds]) {
-        dateMap[ds] = { status: r.status, time: format(new Date(r.timestamp), 'h:mm a') };
+        dateMap[ds] = { status, time: format(new Date(r.timestamp), 'h:mm a') };
+      } else if (status === 'present' && dateMap[ds].status === 'late') {
+        // Present overrides late
+        dateMap[ds] = { status, time: format(new Date(r.timestamp), 'h:mm a') };
       }
     });
 
