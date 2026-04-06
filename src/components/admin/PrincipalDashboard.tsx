@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -75,9 +75,7 @@ const PrincipalDashboard: React.FC = () => {
     }
   });
 
-  useEffect(() => { fetchAllData(); }, []);
-
-  const fetchAllData = async (silent = false) => {
+  const fetchAllData = useCallback(async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -213,7 +211,35 @@ const PrincipalDashboard: React.FC = () => {
     } finally {
       if (!silent) setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  useEffect(() => {
+    const refreshDashboard = () => {
+      fetchAllData(true);
+    };
+
+    const channel = supabase
+      .channel('principal-dashboard-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'attendance_records' },
+        refreshDashboard
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gate_entries' },
+        refreshDashboard
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchAllData]);
 
   const filteredStudents = useMemo(() => {
     let list = allStudents;
