@@ -88,7 +88,7 @@ const PrincipalDashboard: React.FC = () => {
       const processedUsers = (users || []).map(r => {
         const m = (r.device_info as any)?.metadata || {};
         return {
-          id: r.id, name: m.name || 'Unknown', category: r.category || 'A',
+          id: r.id, user_id: r.user_id, name: m.name || 'Unknown', category: r.category || 'A',
           employee_id: m.employee_id || '',
           image_url: r.image_url || m.firebase_image_url || '',
         };
@@ -150,15 +150,16 @@ const PrincipalDashboard: React.FC = () => {
       const studentList: StudentRecord[] = processedUsers.map(u => {
         let status: 'present' | 'late' | 'absent' = 'absent';
         let time: string | undefined;
-        if (presentMap.has(u.employee_id)) {
-          status = 'present'; time = presentMap.get(u.employee_id);
-        } else if (lateMap.has(u.employee_id)) {
-          status = 'late'; time = lateMap.get(u.employee_id);
-        }
-        // Also check by user id
-        if (status === 'absent' && u.id) {
-          if (presentMap.has(u.id)) { status = 'present'; time = presentMap.get(u.id); }
-          else if (lateMap.has(u.id)) { status = 'late'; time = lateMap.get(u.id); }
+
+        // Check all possible identifiers: employee_id, user_id, registration id
+        const identifiers = [u.employee_id, u.user_id, u.id].filter(Boolean);
+        for (const identifier of identifiers) {
+          if (!identifier) continue;
+          if (presentMap.has(identifier)) {
+            status = 'present'; time = presentMap.get(identifier); break;
+          } else if (lateMap.has(identifier)) {
+            status = 'late'; time = lateMap.get(identifier);
+          }
         }
         return { name: u.name, employee_id: u.employee_id, category: u.category, image_url: u.image_url, status, time };
       });
