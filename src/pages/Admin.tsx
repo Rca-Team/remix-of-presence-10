@@ -182,6 +182,11 @@ const Admin = () => {
       haptic('medium');
       setTimeout(() => fetchData(), 500);
     }).
+    on('postgres_changes', { event: '*', schema: 'public', table: 'gate_entries' }, () => {
+      setAttendanceUpdated(true);
+      haptic('medium');
+      setTimeout(() => fetchData(), 500);
+    }).
     on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchData()).
     subscribe();
     return () => {supabase.removeChannel(channel);};
