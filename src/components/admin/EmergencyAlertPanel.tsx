@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,13 +18,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   Flame, Lock, LogOut, Activity, HeartPulse, ShieldAlert,
-  CheckCircle, Megaphone, Loader2, Siren, AlertTriangle,
+  CheckCircle, Megaphone, Loader2, Siren, AlertTriangle, 
+  Volume2, Mic, Play, Square,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
-
-export type AlertType = 'fire' | 'lockdown' | 'evacuation' | 'earthquake' | 'medical' | 'intruder' | 'allclear' | 'custom';
+import { emergencyAlarmService, type AlertType } from '@/services/EmergencyAlarmService';
 
 interface AlertConfig {
   type: AlertType;
@@ -127,12 +128,29 @@ const EmergencyAlertPanel: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [recentAlerts, setRecentAlerts] = useState<{ type: string; time: Date; message?: string }[]>([]);
+  const [enableVoice, setEnableVoice] = useState(true);
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
 
   const handleAlertSelect = (alert: AlertConfig) => {
     haptic('selection');
     setSelectedAlert(alert);
     setCustomMessage('');
     setConfirmOpen(true);
+  };
+
+  const handlePreviewSiren = (type: AlertType) => {
+    if (isPreviewPlaying) {
+      emergencyAlarmService.stopAlarm();
+      setIsPreviewPlaying(false);
+    } else {
+      emergencyAlarmService.previewSiren(type);
+      setIsPreviewPlaying(true);
+      setTimeout(() => setIsPreviewPlaying(false), 2500);
+    }
+  };
+
+  const handlePreviewVoice = (type: AlertType) => {
+    emergencyAlarmService.previewAnnouncement(type, customMessage || undefined);
   };
 
   const sendEmergencyAlert = async () => {
@@ -298,14 +316,49 @@ const EmergencyAlertPanel: React.FC = () => {
             <AlertDialogDescription className="space-y-3">
               <p>
                 This will send a <strong>{selectedAlert?.label}</strong> alert to <strong>ALL devices</strong> with
-                the app installed, including alarm vibrations and push notifications.
+                the app installed, including <strong>loud alarm sirens</strong>, <strong>voice announcements</strong>, 
+                vibrations, and push notifications.
               </p>
+
+              {/* Preview buttons */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreviewSiren(selectedAlert!.type as AlertType)}
+                  className="gap-1.5 text-xs"
+                >
+                  {isPreviewPlaying ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                  {isPreviewPlaying ? 'Stop' : 'Preview Siren'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreviewVoice(selectedAlert!.type as AlertType)}
+                  className="gap-1.5 text-xs"
+                >
+                  <Mic className="w-3 h-3" />
+                  Preview Voice
+                </Button>
+              </div>
+
+              {/* Voice toggle */}
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Voice Announcement</span>
+                </div>
+                <Switch checked={enableVoice} onCheckedChange={setEnableVoice} />
+              </div>
+
               <div>
                 <Label className="mb-1.5 block text-sm">Custom message (optional)</Label>
                 <Textarea
                   value={customMessage}
                   onChange={(e) => setCustomMessage(e.target.value)}
-                  placeholder={`Additional instructions for ${selectedAlert?.label}...`}
+                  placeholder={`Additional instructions (will be spoken aloud if voice is enabled)...`}
                   className="min-h-[80px]"
                 />
               </div>
@@ -336,20 +389,5 @@ const EmergencyAlertPanel: React.FC = () => {
     </Card>
   );
 };
-
-// Vibration patterns per alert type
-function getVibrationPattern(type: string): number[] {
-  const patterns: Record<string, number[]> = {
-    fire: [1000, 200, 1000, 200, 1000, 200, 1000],
-    lockdown: [500, 100, 500, 100, 500, 100, 2000],
-    evacuation: [800, 200, 800, 200, 800, 200, 800],
-    earthquake: [300, 100, 300, 100, 1500, 200, 300, 100, 300],
-    medical: [600, 300, 600, 300, 600],
-    intruder: [200, 100, 200, 100, 200, 100, 2000, 200, 200, 100, 200],
-    allclear: [200, 100, 200],
-    custom: [400, 200, 400],
-  };
-  return patterns[type] || [400, 200, 400];
-}
 
 export default EmergencyAlertPanel;
