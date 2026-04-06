@@ -26,7 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { emergencyAlarmService, type AlertType } from '@/services/EmergencyAlarmService';
 
-export type AlertType = 'fire' | 'lockdown' | 'evacuation' | 'earthquake' | 'medical' | 'intruder' | 'allclear' | 'custom';
+import type { AlertType } from '@/services/EmergencyAlarmService';
 
 interface AlertConfig {
   type: AlertType;
