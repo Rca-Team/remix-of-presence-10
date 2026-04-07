@@ -85,83 +85,96 @@ const Admin = () => {
   const fetchData = async () => {
     if (!isAdminOrPrincipal) return;
     try {
-      const { data: faceData } = await supabase.
-      from('attendance_records').
-      select('id, user_id, device_info').
-      eq('status', 'registered');
-
-      if (faceData && faceData.length > 0) {
-        const uniqueFaces = faceData.reduce((acc: {id: string;name: string;employee_id: string;}[], record) => {
-          try {
-            const deviceInfo = record.device_info as any;
-            const name = deviceInfo?.metadata?.name || 'Unknown';
-            const employee_id = deviceInfo?.metadata?.employee_id || 'N/A';
-            if (name === 'Unknown' || name === 'User') return acc;
-            const userId = record.user_id || record.id;
-            if (!acc.some((face) => face.id === userId)) acc.push({ id: userId, name, employee_id });
-            return acc;
-          } catch {return acc;}
-        }, []);
-        setAvailableFaces(uniqueFaces);
-        setStats((prev) => ({ ...prev, totalFaces: uniqueFaces.length }));
-      }
-
       const today = new Date().toISOString().split('T')[0];
-      const { data: todayData } = await supabase.
-      from('attendance_records').
-      select('user_id, status, device_info').
-      gte('timestamp', `${today}T00:00:00`).
-      lte('timestamp', `${today}T23:59:59`).
-      neq('status', 'registered');
 
-      // Also fetch gate entries for today
+      // Fetch registered users
+      const { data: faceData } = await supabase
+        .from('attendance_records')
+        .select('id, user_id, device_info, image_url, category')
+        .eq('status', 'registered');
+
+      const processedUsers = (faceData || []).map(r => {
+        const m = (r.device_info as any)?.metadata || {};
+        return {
+          id: r.id,
+          user_id: r.user_id,
+          name: m.name || 'Unknown',
+          employee_id: m.employee_id || '',
+          category: r.category || 'A',
+        };
+      }).filter(u => u.name !== 'Unknown' && u.name !== 'User');
+
+      // Deduplicate by user_id/employee_id
+      const uniqueFaces = processedUsers.reduce((acc: {id: string; name: string; employee_id: string;}[], u) => {
+        const uid = u.user_id || u.id;
+        if (!acc.some(f => f.id === uid)) acc.push({ id: uid, name: u.name, employee_id: u.employee_id });
+        return acc;
+      }, []);
+      setAvailableFaces(uniqueFaces);
+
+      // Fetch today's attendance
+      const { data: todayData } = await supabase
+        .from('attendance_records')
+        .select('id, user_id, status, device_info')
+        .in('status', ['present', 'late', 'unauthorized'])
+        .gte('timestamp', `${today}T00:00:00`)
+        .lte('timestamp', `${today}T23:59:59`);
+
+      // Fetch today's gate entries
       const { data: gateData } = await supabase
         .from('gate_entries')
-        .select('student_id, student_name, entry_type')
+        .select('student_id, student_name, entry_time')
         .gte('entry_time', `${today}T00:00:00`)
         .lte('entry_time', `${today}T23:59:59`)
         .eq('is_recognized', true);
 
-      const uniquePresent = new Set<string>();
-      const uniqueLate = new Set<string>();
-      const uniqueTotal = new Set<string>();
+      // Build present/late maps (same logic as PrincipalDashboard)
+      const presentMap = new Set<string>();
+      const lateMap = new Set<string>();
 
-      // Normalize: unauthorized = present (match calendar logic)
-      if (todayData) {
-        todayData.forEach((record) => {
-          const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
-          if (!userId) return;
-          const uid = String(userId);
-          const s = (record.status || '').toLowerCase().trim();
-          const normalized = (s === 'unauthorized' || s.includes('present')) ? 'present' : s.includes('late') ? 'late' : s;
-          uniqueTotal.add(uid);
-          if (normalized === 'present') {
-            uniquePresent.add(uid);
-            uniqueLate.delete(uid);
-          } else if (normalized === 'late' && !uniquePresent.has(uid)) {
-            uniqueLate.add(uid);
-          }
-        });
-      }
+      const normalizeStatus = (s: string) => {
+        const lower = (s || '').toLowerCase().trim();
+        if (lower === 'unauthorized' || lower.includes('present')) return 'present';
+        if (lower.includes('late')) return 'late';
+        return lower;
+      };
+
+      (todayData || []).forEach(r => {
+        const m = (r.device_info as any)?.metadata || {};
+        const empId = m.employee_id || (r.device_info as any)?.employee_id || r.user_id;
+        const normalized = normalizeStatus(r.status || '');
+        if (empId) {
+          if (normalized === 'present') { presentMap.add(empId); lateMap.delete(empId); }
+          else if (normalized === 'late' && !presentMap.has(empId)) lateMap.add(empId);
+        }
+      });
 
       // Merge gate entries
-      if (gateData) {
-        gateData.forEach((entry) => {
-          if (entry.student_id) {
-            uniqueTotal.add(entry.student_id);
-            if (!uniquePresent.has(entry.student_id) && !uniqueLate.has(entry.student_id)) {
-              uniquePresent.add(entry.student_id);
-            }
-          }
-        });
-      }
+      (gateData || []).forEach(g => {
+        if (g.student_id && !presentMap.has(g.student_id) && !lateMap.has(g.student_id)) {
+          presentMap.add(g.student_id);
+        }
+      });
 
-      setStats((prev) => ({
-        ...prev,
-        todayAttendance: uniqueTotal.size,
-        presentToday: uniquePresent.size,
-        lateToday: uniqueLate.size
-      }));
+      // Match each registered user using multi-identifier resolution (same as PrincipalDashboard)
+      let totalPresent = 0;
+      let totalLate = 0;
+      processedUsers.forEach(u => {
+        const identifiers = [u.employee_id, u.user_id, u.id].filter(Boolean);
+        let matched = false;
+        for (const id of identifiers) {
+          if (!id) continue;
+          if (presentMap.has(id)) { totalPresent++; matched = true; break; }
+          if (lateMap.has(id)) { totalLate++; matched = true; break; }
+        }
+      });
+
+      setStats({
+        totalFaces: uniqueFaces.length,
+        todayAttendance: totalPresent + totalLate,
+        presentToday: totalPresent,
+        lateToday: totalLate,
+      });
 
       const { count } = await supabase.
       from('notifications').
