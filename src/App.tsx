@@ -27,6 +27,7 @@ import MobileSidebar from "./components/MobileSidebar";
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import EmergencyAlertListener from './components/EmergencyAlertListener';
+import RealtimeNotificationListener from './components/RealtimeNotificationListener';
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,7 @@ function App() {
               <MobileSidebar />
               <PWAInstallPrompt />
               <EmergencyAlertListener />
+              <RealtimeNotificationListener />
             </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>
