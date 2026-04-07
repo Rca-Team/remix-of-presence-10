@@ -195,13 +195,13 @@ class PushNotificationService {
 
       const serialized = this.serializeSubscription(subscription);
       
-      // Store in notifications table or a dedicated push_subscriptions table
-      await supabase.from('notifications').upsert({
+      // Use dedicated push_subscriptions table with proper unique constraint
+      await (supabase as any).from('push_subscriptions').upsert({
         user_id: session.user.id,
-        title: 'Push Subscription',
-        type: 'push_subscription',
-        message: JSON.stringify(serialized),
-        read: true
+        endpoint: serialized.endpoint,
+        keys_p256dh: serialized.keys.p256dh,
+        keys_auth: serialized.keys.auth,
+        updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id'
       });
@@ -218,10 +218,9 @@ class PushNotificationService {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      await supabase.from('notifications')
+      await (supabase as any).from('push_subscriptions')
         .delete()
-        .eq('user_id', session.user.id)
-        .eq('type', 'push_subscription');
+        .eq('user_id', session.user.id);
     } catch (error) {
       console.error('Failed to remove subscription:', error);
     }

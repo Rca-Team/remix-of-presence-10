@@ -162,9 +162,16 @@ const EmergencyAlertPanel: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // 1. Insert into emergency_events table (triggers realtime for all connected clients)
+      // 1. Map alert types to DB-allowed values
+      const eventTypeMap: Record<string, string> = {
+        fire: 'fire', lockdown: 'lockdown', evacuation: 'evacuation',
+        earthquake: 'earthquake', medical: 'medical', intruder: 'intruder',
+        allclear: 'allclear', custom: 'custom',
+      };
+      const dbEventType = eventTypeMap[selectedAlert.type] || 'other';
+
       const { error: dbError } = await supabase.from('emergency_events').insert({
-        event_type: selectedAlert.type,
+        event_type: dbEventType,
         trigger_method: 'admin_panel',
         triggered_by: session?.user?.id || null,
         status: selectedAlert.type === 'allclear' ? 'resolved' : 'active',
