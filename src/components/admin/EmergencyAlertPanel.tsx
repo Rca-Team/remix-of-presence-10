@@ -120,6 +120,14 @@ const ALERT_TYPES: AlertConfig[] = [
   },
 ];
 
+interface ActiveEmergency {
+  id: string;
+  event_type: string;
+  notes: string | null;
+  location: string | null;
+  created_at: string;
+}
+
 const EmergencyAlertPanel: React.FC = () => {
   const { toast } = useToast();
   const { trigger: haptic } = useHapticFeedback();
@@ -130,6 +138,70 @@ const EmergencyAlertPanel: React.FC = () => {
   const [recentAlerts, setRecentAlerts] = useState<{ type: string; time: Date; message?: string }[]>([]);
   const [enableVoice, setEnableVoice] = useState(true);
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const [activeEmergency, setActiveEmergency] = useState<ActiveEmergency | null>(null);
+  const [isResolving, setIsResolving] = useState(false);
+
+  // Fetch active emergency on mount + realtime
+  React.useEffect(() => {
+    const fetchActive = async () => {
+      const { data } = await supabase
+        .from('emergency_events')
+        .select('id, event_type, notes, location, created_at')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      setActiveEmergency(data && data.length > 0 ? data[0] : null);
+    };
+    fetchActive();
+
+    const channel = supabase
+      .channel('admin-emergency-status')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'emergency_events' }, () => {
+        fetchActive();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const resolveEmergency = async () => {
+    if (!activeEmergency) return;
+    setIsResolving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Update existing alert to resolved
+      const { error } = await supabase
+        .from('emergency_events')
+        .update({
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
+          resolved_by: session?.user?.id || null,
+        })
+        .eq('id', activeEmergency.id);
+
+      if (error) throw error;
+
+      // Also send an All Clear event
+      await supabase.from('emergency_events').insert({
+        event_type: 'allclear',
+        trigger_method: 'admin_panel',
+        triggered_by: session?.user?.id || null,
+        status: 'resolved',
+        notes: 'Emergency resolved by admin.',
+        location: 'School-wide',
+      });
+
+      setActiveEmergency(null);
+      haptic('success');
+      toast({ title: '✅ Emergency Resolved', description: 'All Clear signal sent to all devices.' });
+    } catch (e) {
+      console.error('Failed to resolve:', e);
+      toast({ title: 'Failed to resolve', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setIsResolving(false);
+    }
+  };
 
   const handleAlertSelect = (alert: AlertConfig) => {
     haptic('selection');
@@ -248,6 +320,49 @@ const EmergencyAlertPanel: React.FC = () => {
       </CardHeader>
 
       <CardContent className="p-4 sm:p-6 space-y-6">
+        {/* Active Emergency - Resolve Button */}
+        {activeEmergency && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl border-2 border-destructive bg-destructive/10 space-y-3"
+          >
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 1.2 }}
+                className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center"
+              >
+                <Siren className="w-5 h-5 text-destructive" />
+              </motion.div>
+              <div className="flex-1">
+                <p className="font-bold text-destructive text-sm uppercase tracking-wide">
+                  ⚠️ Active Emergency: {activeEmergency.event_type}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Since {new Date(activeEmergency.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  {activeEmergency.location && ` • ${activeEmergency.location}`}
+                </p>
+                {activeEmergency.notes && (
+                  <p className="text-xs text-muted-foreground mt-1 italic">"{activeEmergency.notes}"</p>
+                )}
+              </div>
+            </div>
+            <Button
+              onClick={resolveEmergency}
+              disabled={isResolving}
+              className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
+              size="lg"
+            >
+              {isResolving ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Resolving...</>
+              ) : (
+                <><CheckCircle className="w-5 h-5" /> Stop Emergency &amp; Send All Clear</>
+              )}
+            </Button>
+          </motion.div>
+        )}
+
         {/* Warning Banner */}
         <div className="flex items-start gap-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
           <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
