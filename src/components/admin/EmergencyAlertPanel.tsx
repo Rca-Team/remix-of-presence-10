@@ -319,7 +319,49 @@ const EmergencyAlertPanel: React.FC = () => {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-6 space-y-6">
+        {/* Active Emergency - Resolve Button */}
+        {activeEmergency && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl border-2 border-destructive bg-destructive/10 space-y-3"
+          >
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 1.2 }}
+                className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center"
+              >
+                <Siren className="w-5 h-5 text-destructive" />
+              </motion.div>
+              <div className="flex-1">
+                <p className="font-bold text-destructive text-sm uppercase tracking-wide">
+                  ⚠️ Active Emergency: {activeEmergency.event_type}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Since {new Date(activeEmergency.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  {activeEmergency.location && ` • ${activeEmergency.location}`}
+                </p>
+                {activeEmergency.notes && (
+                  <p className="text-xs text-muted-foreground mt-1 italic">"{activeEmergency.notes}"</p>
+                )}
+              </div>
+            </div>
+            <Button
+              onClick={resolveEmergency}
+              disabled={isResolving}
+              className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
+              size="lg"
+            >
+              {isResolving ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Resolving...</>
+              ) : (
+                <><CheckCircle className="w-5 h-5" /> Stop Emergency &amp; Send All Clear</>
+              )}
+            </Button>
+          </motion.div>
+        )}
+
         {/* Warning Banner */}
         <div className="flex items-start gap-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
           <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
