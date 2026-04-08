@@ -319,6 +319,7 @@ const EmergencyAlertPanel: React.FC = () => {
         </CardTitle>
       </CardHeader>
 
+      <CardContent className="p-4 sm:p-6 space-y-6">
         {/* Active Emergency - Resolve Button */}
         {activeEmergency && (
           <motion.div
