@@ -2,122 +2,55 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { UserCheck, Clock, Percent, Users } from 'lucide-react';
-
-interface Stats {
-  totalRegistered: number;
-  presentCount: number;
-  lateCount: number;
-  attendanceRate: number;
-}
+import { fetchUnifiedAttendanceStats, type UnifiedAttendanceStats } from '@/utils/attendanceStatsHelper';
 
 const QuickStatsPanel: React.FC = () => {
-  const [stats, setStats] = useState<Stats>({
-    totalRegistered: 0, presentCount: 0, lateCount: 0, attendanceRate: 0
+  const [stats, setStats] = useState<UnifiedAttendanceStats>({
+    totalRegistered: 0, presentToday: 0, lateToday: 0, absentToday: 0, attendanceRate: 0
   });
 
-  const fetchStats = useCallback(async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Get today's attendance records
-    const { data: todayData } = await supabase
-      .from('attendance_records')
-      .select('user_id, status, device_info')
-      .gte('timestamp', today.toISOString())
-      .in('status', ['present', 'late', 'absent']);
-
-    // Count total registered students from face_descriptors (unique user_ids)
-    const { data: faceData } = await supabase
-      .from('face_descriptors')
-      .select('user_id');
-
-    const uniqueRegistered = new Set<string>();
-    faceData?.forEach(f => { if (f.user_id) uniqueRegistered.add(f.user_id); });
-    const total = uniqueRegistered.size;
-
-    // Track each user's best status: present > late (a user who was late but later marked present counts as present only)
-    const userStatus = new Map<string, string>();
-
-    todayData?.forEach(record => {
-      const userId = record.user_id || (record.device_info as any)?.metadata?.employee_id;
-      if (userId) {
-        const id = String(userId);
-        const current = userStatus.get(id);
-        // "present" wins over "late"
-        if (!current || (record.status === 'present' && current !== 'present')) {
-          userStatus.set(id, record.status!);
-        }
-      }
-    });
-
-    let present = 0;
-    let late = 0;
-    userStatus.forEach(status => {
-      if (status === 'present') present++;
-      else if (status === 'late') late++;
-    });
-
-    setStats({
-      totalRegistered: total,
-      presentCount: present,
-      lateCount: late,
-      attendanceRate: total > 0 ? Math.round(((present + late) / total) * 100) : 0
-    });
+  const refresh = useCallback(async () => {
+    const result = await fetchUnifiedAttendanceStats();
+    setStats(result);
   }, []);
 
   useEffect(() => {
-    fetchStats();
+    refresh();
     const channel = supabase
       .channel('quick-stats-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_records' }, () => fetchStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_records' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gate_entries' }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [fetchStats]);
+  }, [refresh]);
 
   const statItems = [
     { icon: Users, label: 'Registered', value: stats.totalRegistered, colorVar: '--ios-purple' },
-    { icon: UserCheck, label: 'Present', value: stats.presentCount, colorVar: '--ios-green' },
-    { icon: Clock, label: 'Late', value: stats.lateCount, colorVar: '--ios-orange' },
+    { icon: UserCheck, label: 'Present', value: stats.presentToday, colorVar: '--ios-green' },
+    { icon: Clock, label: 'Late', value: stats.lateToday, colorVar: '--ios-orange' },
     { icon: Percent, label: 'Rate', value: `${stats.attendanceRate}%`, colorVar: '--ios-blue' },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-      {statItems.map((item, index) => (
+    <div className="grid grid-cols-4 gap-2 sm:gap-3">
+      {statItems.map((item, i) => (
         <motion.div
           key={item.label}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.08 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 p-3.5 sm:p-4 shadow-sm"
+          transition={{ delay: i * 0.05 }}
+          className="relative overflow-hidden rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-2.5 sm:p-3 text-center"
         >
-          {/* Gradient orb */}
           <div
-            className="absolute -top-6 -right-6 w-16 h-16 rounded-full opacity-15 blur-xl"
-            style={{ background: `hsl(var(${item.colorVar}))` }}
+            className="absolute inset-0 opacity-10"
+            style={{ background: `radial-gradient(circle at top right, hsl(var(${item.colorVar})), transparent 70%)` }}
           />
-
-          <div className="relative">
-            <div
-              className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl mb-2.5 shadow-sm"
-              style={{ background: `hsl(var(${item.colorVar}) / 0.12)` }}
-            >
-              <item.icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: `hsl(var(${item.colorVar}))` }} />
-            </div>
-
-            <motion.div
-              key={String(item.value)}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-xl sm:text-2xl font-bold text-foreground"
-            >
-              {item.value}
-            </motion.div>
-
-            <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
-          </div>
+          <item.icon
+            className="w-4 h-4 mx-auto mb-1"
+            style={{ color: `hsl(var(${item.colorVar}))` }}
+          />
+          <p className="text-lg sm:text-xl font-bold text-foreground">{item.value}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">{item.label}</p>
         </motion.div>
       ))}
     </div>

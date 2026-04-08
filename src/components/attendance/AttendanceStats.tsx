@@ -4,128 +4,40 @@ import { GradientCard } from '@/components/ui/gradient-card';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, UserCheck, AlertTriangle, UserX } from 'lucide-react';
+import { fetchUnifiedAttendanceStats, type UnifiedAttendanceStats } from '@/utils/attendanceStatsHelper';
 
 const AttendanceStats = () => {
-  const [stats, setStats] = useState({
-    present: 0,
-    late: 0,
-    absent: 0,
-    total: 0
+  const [stats, setStats] = useState<UnifiedAttendanceStats>({
+    totalRegistered: 0, presentToday: 0, lateToday: 0, absentToday: 0, attendanceRate: 0
   });
 
-  const fetchStats = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Get total registered faces (not profiles - registered faces are the actual students)
-    const [registeredRes, todayAttendanceRes, todayGateRes] = await Promise.all([
-      supabase.from('attendance_records')
-        .select('id, device_info')
-        .eq('status', 'registered'),
-      supabase.from('attendance_records')
-        .select('id, status, user_id, device_info')
-        .in('status', ['present', 'late', 'unauthorized'])
-        .gte('timestamp', `${today}T00:00:00`)
-        .lte('timestamp', `${today}T23:59:59`),
-      supabase.from('gate_entries')
-        .select('id, student_id, student_name, entry_type')
-        .gte('entry_time', `${today}T00:00:00`)
-        .lte('entry_time', `${today}T23:59:59`)
-        .eq('is_recognized', true)
-    ]);
-    
-    if (registeredRes.error || todayAttendanceRes.error) {
-      console.error('Error fetching stats:', registeredRes.error || todayAttendanceRes.error);
-      return;
-    }
-    
-    // Build set of registered employee IDs and user_ids
-    const registeredFaces = (registeredRes.data || []).filter(r => {
-      const di = r.device_info as any;
-      const name = di?.metadata?.name || '';
-      return name && name !== 'Unknown' && !name.toLowerCase().includes('unknown');
-    });
-    const totalRegistered = registeredFaces.length;
-    
-    // Build lookup: employee_id -> true, user_id -> employee_id
-    const empIdSet = new Set<string>();
-    const userIdToEmpId = new Map<string, string>();
-    registeredFaces.forEach(r => {
-      const di = r.device_info as any;
-      const empId = di?.metadata?.employee_id;
-      if (empId) {
-        empIdSet.add(empId);
-      }
-    });
-    
-    const records = todayAttendanceRes.data || [];
-    const gateRecords = todayGateRes.data || [];
-    
-    // Track unique present/late by employee_id
-    const presentUsers = new Set<string>();
-    const lateUsers = new Set<string>();
-    
-    for (const rec of records) {
-      const di = rec.device_info as any;
-      const empId = di?.metadata?.employee_id || di?.employee_id;
-      const status = (rec.status || '').toLowerCase();
-      
-      const identifier = empId || rec.user_id || rec.id;
-      
-      if (status === 'present' || status === 'unauthorized') {
-        presentUsers.add(identifier);
-        lateUsers.delete(identifier);
-      } else if (status === 'late' && !presentUsers.has(identifier)) {
-        lateUsers.add(identifier);
-      }
-    }
-    
-    // Also include gate entries
-    for (const entry of gateRecords) {
-      if (entry.student_id && !presentUsers.has(entry.student_id)) {
-        presentUsers.add(entry.student_id);
-      }
-    }
-    
-    const presentCount = presentUsers.size;
-    const lateCount = lateUsers.size;
-    const absentCount = Math.max(0, totalRegistered - presentCount - lateCount);
-    
-    setStats({
-      present: presentCount,
-      late: lateCount,
-      absent: absentCount,
-      total: totalRegistered
-    });
+  const refresh = useCallback(async () => {
+    const result = await fetchUnifiedAttendanceStats();
+    setStats(result);
   }, []);
 
   useEffect(() => {
-    fetchStats();
+    refresh();
     
     const channel = supabase
       .channel('attendance_stats_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'attendance_records' },
-        () => fetchStats()
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_records' }, () => refresh())
       .subscribe();
 
     const gateChannel = supabase
       .channel('gate_stats_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'gate_entries' },
-        () => fetchStats()
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gate_entries' }, () => refresh())
       .subscribe();
     
     return () => { 
       supabase.removeChannel(channel);
       supabase.removeChannel(gateChannel);
     };
-  }, [fetchStats]);
+  }, [refresh]);
 
-  const presentPercentage = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
-  const latePercentage = stats.total > 0 ? Math.round((stats.late / stats.total) * 100) : 0;
-  const absentPercentage = stats.total > 0 ? Math.round((stats.absent / stats.total) * 100) : 0;
+  const presentPercentage = stats.totalRegistered > 0 ? Math.round((stats.presentToday / stats.totalRegistered) * 100) : 0;
+  const latePercentage = stats.totalRegistered > 0 ? Math.round((stats.lateToday / stats.totalRegistered) * 100) : 0;
+  const absentPercentage = stats.totalRegistered > 0 ? Math.round((stats.absentToday / stats.totalRegistered) * 100) : 0;
 
   return (
     <div className="space-y-4">
@@ -137,7 +49,7 @@ const AttendanceStats = () => {
           <div>
             <p className="text-sm font-medium text-muted-foreground">Present Today</p>
             <p className="mt-1 text-2xl font-bold tracking-tight">{presentPercentage}%</p>
-            <p className="text-xs text-muted-foreground mt-1">{stats.present} of {stats.total}</p>
+            <p className="text-xs text-muted-foreground mt-1">{stats.presentToday} of {stats.totalRegistered}</p>
           </div>
           <ProgressRing 
             value={presentPercentage} 
@@ -153,7 +65,7 @@ const AttendanceStats = () => {
       {/* Late Arrivals Card */}
       <GradientCard
         title="Late Arrivals"
-        value={stats.late}
+        value={stats.lateToday}
         icon={AlertTriangle}
         gradient="orange"
         subtitle={`${latePercentage}% of total`}
@@ -162,7 +74,7 @@ const AttendanceStats = () => {
       {/* Absent Card */}
       <GradientCard
         title="Absent"
-        value={stats.absent}
+        value={stats.absentToday}
         icon={UserX}
         gradient="pink"
         subtitle={`${absentPercentage}% of total`}
