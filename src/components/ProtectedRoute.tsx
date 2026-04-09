@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { User } from '@supabase/supabase-js';
+import NotificationPermissionGate from './NotificationPermissionGate';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -73,5 +74,11 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  return isAuthorized ? <>{children}</> : null;
+  if (!isAuthorized) return null;
+
+  return (
+    <NotificationPermissionGate>
+      {children}
+    </NotificationPermissionGate>
+  );
 }
