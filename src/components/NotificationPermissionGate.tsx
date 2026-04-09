@@ -31,7 +31,7 @@ const NotificationPermissionGate: React.FC<NotificationPermissionGateProps> = ({
         await pushNotificationService.registerServiceWorker();
         await pushNotificationService.subscribe();
         pushNotificationService.showLocalNotification('🔔 Notifications Enabled!', {
-          body: 'You'll receive real-time alerts for attendance, emergencies & security.',
+          body: "You'll receive real-time alerts for attendance, emergencies & security.",
           tag: 'welcome-notification',
         });
       }
