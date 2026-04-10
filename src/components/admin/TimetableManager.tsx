@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Save, Trash2, CalendarDays, Plus } from 'lucide-react';
+import { Loader2, Save, Trash2, CalendarDays, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ALL_CLASS_SECTIONS, getCategoryLabel } from '@/constants/schoolConfig';
@@ -24,6 +24,12 @@ interface Teacher {
   record_id: string;
 }
 
+interface Subject {
+  id: string;
+  name: string;
+  short_name: string | null;
+}
+
 interface TimetableEntry {
   id?: string;
   category: string;
@@ -38,6 +44,7 @@ const TimetableManager: React.FC = () => {
   const { toast } = useToast();
   const [periods, setPeriods] = useState<PeriodTiming[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CLASS_SECTIONS[0]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,12 +53,13 @@ const TimetableManager: React.FC = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [periodRes, teacherRes, ttRes] = await Promise.all([
+      const [periodRes, teacherRes, subjectRes, ttRes] = await Promise.all([
         supabase.from('period_timings').select('*').order('period_number'),
         supabase.from('attendance_records')
           .select('id, device_info, image_url')
           .eq('status', 'registered')
           .eq('category', 'Teacher'),
+        supabase.from('subjects').select('*').order('name'),
         supabase.from('timetable').select('*').eq('category', selectedCategory),
       ]);
 
@@ -64,10 +72,14 @@ const TimetableManager: React.FC = () => {
       })));
 
       const teacherList = (teacherRes.data || []).map((r: any) => {
-        const meta = r.device_info?.metadata || {};
+        const meta = (r.device_info as any)?.metadata || {};
         return { id: r.id, name: meta.name || 'Unknown Teacher', record_id: r.id };
       }).filter((t: Teacher) => t.name !== 'Unknown Teacher');
       setTeachers(teacherList);
+
+      setSubjects((subjectRes.data || []).map((s: any) => ({
+        id: s.id, name: s.name, short_name: s.short_name
+      })));
 
       setTimetable((ttRes.data || []).map((t: any) => ({
         id: t.id,
@@ -89,6 +101,12 @@ const TimetableManager: React.FC = () => {
 
   const getEntry = (day: number, period: number) =>
     timetable.find(t => t.day_of_week === day && t.period_number === period);
+
+  const getSubjectName = (subjectId: string | null) => {
+    if (!subjectId) return null;
+    const s = subjects.find(s => s.id === subjectId);
+    return s ? (s.short_name || s.name) : null;
+  };
 
   const setTeacherForSlot = (day: number, period: number, teacherId: string) => {
     const teacher = teachers.find(t => t.record_id === teacherId);
@@ -112,6 +130,14 @@ const TimetableManager: React.FC = () => {
     });
   };
 
+  const setSubjectForSlot = (day: number, period: number, subjectId: string) => {
+    setTimetable(prev => prev.map(t =>
+      t.day_of_week === day && t.period_number === period
+        ? { ...t, subject_id: subjectId }
+        : t
+    ));
+  };
+
   const removeSlot = (day: number, period: number) => {
     setTimetable(prev => prev.filter(t => !(t.day_of_week === day && t.period_number === period)));
   };
@@ -119,7 +145,6 @@ const TimetableManager: React.FC = () => {
   const saveTimetable = async () => {
     setIsSaving(true);
     try {
-      // Delete existing entries for this category
       await supabase.from('timetable').delete().eq('category', selectedCategory);
 
       if (timetable.length > 0) {
@@ -135,16 +160,14 @@ const TimetableManager: React.FC = () => {
         if (error) throw error;
       }
 
-      toast({ title: 'Saved', description: `Timetable for ${getCategoryLabel(selectedCategory)} saved successfully.` });
+      toast({ title: 'Saved', description: `Timetable for ${getCategoryLabel(selectedCategory)} saved.` });
       fetchData();
     } catch (e: any) {
-      toast({ title: 'Error', description: e.message || 'Failed to save timetable', variant: 'destructive' });
+      toast({ title: 'Error', description: e.message || 'Failed to save', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
   };
-
-  const teachingPeriods = periods.filter(p => !p.is_break);
 
   return (
     <Card>
@@ -179,7 +202,7 @@ const TimetableManager: React.FC = () => {
           </div>
         ) : teachers.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p className="text-sm">No teachers registered yet. Register teachers with category "Teacher" first.</p>
+            <p className="text-sm">No teachers registered. Register teachers with category "Teacher" first.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -187,8 +210,8 @@ const TimetableManager: React.FC = () => {
               <thead>
                 <tr>
                   <th className="border border-border bg-muted p-2 text-left text-xs font-semibold min-w-[80px]">Period</th>
-                  {DAYS.map((day, i) => (
-                    <th key={day} className="border border-border bg-muted p-2 text-center text-xs font-semibold min-w-[130px]">
+                  {DAYS.map(day => (
+                    <th key={day} className="border border-border bg-muted p-2 text-center text-xs font-semibold min-w-[150px]">
                       {day}
                     </th>
                   ))}
@@ -215,14 +238,37 @@ const TimetableManager: React.FC = () => {
                       return (
                         <td key={dayIndex} className="border border-border p-1">
                           {entry ? (
-                            <div className="flex items-center gap-1">
-                              <Badge variant="secondary" className="text-[10px] flex-1 justify-center truncate">
-                                {entry.teacher_name}
-                              </Badge>
-                              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0"
-                                onClick={() => removeSlot(dayIndex + 1, period.period_number)}>
-                                <Trash2 className="w-3 h-3 text-destructive" />
-                              </Button>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1">
+                                <Badge variant="secondary" className="text-[10px] flex-1 justify-center truncate">
+                                  {entry.teacher_name}
+                                </Badge>
+                                <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0"
+                                  onClick={() => removeSlot(dayIndex + 1, period.period_number)}>
+                                  <Trash2 className="w-3 h-3 text-destructive" />
+                                </Button>
+                              </div>
+                              {/* Subject selector */}
+                              <Select
+                                value={entry.subject_id || ''}
+                                onValueChange={(val) => setSubjectForSlot(dayIndex + 1, period.period_number, val)}
+                              >
+                                <SelectTrigger className="h-5 text-[9px] border-dashed">
+                                  <SelectValue placeholder="+ Subject" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {subjects.map(s => (
+                                    <SelectItem key={s.id} value={s.id} className="text-xs">
+                                      <BookOpen className="w-3 h-3 inline mr-1" />{s.short_name || s.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {entry.subject_id && (
+                                <div className="text-[9px] text-center text-primary font-medium">
+                                  {getSubjectName(entry.subject_id)}
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <Select onValueChange={(val) => setTeacherForSlot(dayIndex + 1, period.period_number, val)}>
