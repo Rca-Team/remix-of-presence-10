@@ -38,8 +38,9 @@ import {
   User, Calendar, Clock, UserPlus, FolderKanban, School,
   LayoutDashboard, Settings, FileText, Bell, Users, BarChart3,
   Shield, Activity, TrendingUp, ChevronRight, Send, UserCog,
-  CreditCard, Image, Download, RefreshCw, MessageSquareText, Mail, Siren } from
+  CreditCard, Image, Download, RefreshCw, MessageSquareText, Mail, Siren, CalendarDays } from
 'lucide-react';
+import TimetableManager from '@/components/admin/TimetableManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -261,6 +262,7 @@ const Admin = () => {
   { id: 'notif-log', icon: MessageSquareText, label: 'Delivery Log', group: 'Management' },
   { id: 'inbox', icon: Mail, label: 'Inbox', group: 'Management' },
   { id: 'emergency', icon: Siren, label: 'Emergency', group: 'Management' },
+  { id: 'timetable', icon: CalendarDays, label: 'Timetable', group: 'Management' },
   { id: 'settings', icon: Settings, label: 'Settings', group: 'Management' }];
 
 
@@ -326,6 +328,8 @@ const Admin = () => {
         return <AdminInbox />;
       case 'emergency':
         return <EmergencyAlertPanel />;
+      case 'timetable':
+        return <TimetableManager />;
       case 'settings':
         return (
           <div className="space-y-6">

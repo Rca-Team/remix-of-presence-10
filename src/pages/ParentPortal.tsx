@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   UserCheck, UserX, Clock, Calendar, TrendingUp,
-  GraduationCap, CheckCircle2, AlertTriangle, XCircle, Search, ArrowLeft
+  GraduationCap, CheckCircle2, AlertTriangle, XCircle, Search, ArrowLeft, RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import Logo from '@/components/Logo';
@@ -45,6 +45,38 @@ export default function ParentPortalPage() {
   const [trendData, setTrendData] = useState<{ day: string; pct: number }[]>([]);
   const [stats, setStats] = useState({ present: 0, late: 0, absent: 0, total: 0, rate: 0, streak: 0 });
   const [todayStatus, setTodayStatus] = useState<{ status: string; time?: string }>({ status: 'absent' });
+
+  const refreshData = useCallback(async () => {
+    if (!studentId.trim() || !phoneNo.trim()) return;
+    const cleanPhone = phoneNo.trim().replace(/[^0-9+]/g, '').substring(0, 15);
+    try {
+      const { data } = await supabase.functions.invoke('parent-lookup', {
+        body: { student_id: studentId.trim(), phone: cleanPhone },
+      });
+      if (data?.found) {
+        setChild(data.student);
+        processAttendance(data.attendance);
+      }
+    } catch (e) {
+      console.error('Refresh error:', e);
+    }
+  }, [studentId, phoneNo]);
+
+  // Realtime: auto-refresh when attendance changes
+  useEffect(() => {
+    if (!child) return;
+    const channel = supabase
+      .channel('parent-portal-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance_records' }, () => {
+        refreshData();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gate_entries' }, () => {
+        refreshData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [child, refreshData]);
 
   const handleSearch = async () => {
     if (!studentId.trim() || !phoneNo.trim()) {
