@@ -46,6 +46,38 @@ export default function ParentPortalPage() {
   const [stats, setStats] = useState({ present: 0, late: 0, absent: 0, total: 0, rate: 0, streak: 0 });
   const [todayStatus, setTodayStatus] = useState<{ status: string; time?: string }>({ status: 'absent' });
 
+  const refreshData = useCallback(async () => {
+    if (!studentId.trim() || !phoneNo.trim()) return;
+    const cleanPhone = phoneNo.trim().replace(/[^0-9+]/g, '').substring(0, 15);
+    try {
+      const { data } = await supabase.functions.invoke('parent-lookup', {
+        body: { student_id: studentId.trim(), phone: cleanPhone },
+      });
+      if (data?.found) {
+        setChild(data.student);
+        processAttendance(data.attendance);
+      }
+    } catch (e) {
+      console.error('Refresh error:', e);
+    }
+  }, [studentId, phoneNo]);
+
+  // Realtime: auto-refresh when attendance changes
+  useEffect(() => {
+    if (!child) return;
+    const channel = supabase
+      .channel('parent-portal-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance_records' }, () => {
+        refreshData();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gate_entries' }, () => {
+        refreshData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [child, refreshData]);
+
   const handleSearch = async () => {
     if (!studentId.trim() || !phoneNo.trim()) {
       toast({ title: 'Required', description: 'Please enter both Student ID and Phone No.', variant: 'destructive' });
