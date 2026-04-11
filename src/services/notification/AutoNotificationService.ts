@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { backgroundPushService } from '@/services/BackgroundPushService';
 /**
  * Automatically sends a notification to the parent when attendance is marked.
  * This is called from the recognition service after successful attendance recording.
