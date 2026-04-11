@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { emergencyAlarmService, type AlertType } from '@/services/EmergencyAlarmService';
+import { backgroundPushService } from '@/services/BackgroundPushService';
 
 interface AlertConfig {
   type: AlertType;
