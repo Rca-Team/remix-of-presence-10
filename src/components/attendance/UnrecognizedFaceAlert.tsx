@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { UserX, AlertTriangle, Camera, Clock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import NotificationService from '@/components/admin/NotificationService';
+import { backgroundPushService } from '@/services/BackgroundPushService';
 
 interface UnrecognizedFaceAlertProps {
   imageUrl: string;
@@ -25,6 +26,11 @@ const UnrecognizedFaceAlert: React.FC<UnrecognizedFaceAlertProps> = ({
   const [showImage, setShowImage] = useState(false);
 
   const handleSecurityAlert = () => {
+    // Send background push to all admins (works even when their app is closed)
+    backgroundPushService.sendStrangerAlert('Main Entrance')
+      .then(r => console.log('Stranger push sent:', r))
+      .catch(e => console.error('Stranger push error:', e));
+
     toast({
       title: "Security Alert Triggered",
       description: "Unauthorized access attempt has been logged and security has been notified.",

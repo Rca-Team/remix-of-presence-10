@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { backgroundPushService } from '@/services/BackgroundPushService';
 /**
  * Automatically sends a notification to the parent when attendance is marked.
  * This is called from the recognition service after successful attendance recording.
@@ -31,6 +31,12 @@ export const sendAutoParentNotification = async (
     }
 
     console.log('Auto parent notification response:', data);
+
+    // Also send background push notification (works even when app is closed)
+    backgroundPushService.sendAttendanceAlert(
+      studentId, studentName, status, 'School'
+    ).catch(err => console.error('Background push failed:', err));
+
     return { 
       success: data?.success || false, 
       message: data?.message || 'Notification processed' 
