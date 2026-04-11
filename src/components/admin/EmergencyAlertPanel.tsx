@@ -254,7 +254,16 @@ const EmergencyAlertPanel: React.FC = () => {
 
       if (dbError) throw dbError;
 
-      // 2. Trigger local notification via service worker for this device
+      // 2. Send REAL background push notifications to ALL subscribers (works even when app is closed)
+      backgroundPushService.broadcastEmergency(
+        selectedAlert.type,
+        customMessage || undefined,
+        'School-wide'
+      ).then(result => {
+        console.log(`Emergency push sent to ${result.sent} devices`);
+      }).catch(err => console.error('Background push failed:', err));
+
+      // 3. Trigger local notification via service worker for this device
       const registration = await navigator.serviceWorker?.getRegistration();
       if (registration?.active) {
         registration.active.postMessage({
