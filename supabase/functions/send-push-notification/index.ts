@@ -243,11 +243,22 @@ async function createVapidJwt(
   );
   const unsignedToken = `${headerB64}.${claimsB64}`;
 
-  // Import private key
+  // Import private key using JWK format (more reliable than PKCS8 wrapping)
   const privateKeyBytes = base64UrlToUint8Array(privateKeyBase64Url);
+  
+  // We need the public key to build a proper JWK
+  // Extract x and y from the uncompressed public key (skip 0x04 prefix)
+  const vapidPubKeyEnv = Deno.env.get("VAPID_PUBLIC_KEY") || "";
+  const pubKeyBytes = base64UrlToUint8Array(vapidPubKeyEnv);
+  const x = uint8ArrayToBase64Url(pubKeyBytes.slice(1, 33));
+  const y = uint8ArrayToBase64Url(pubKeyBytes.slice(33, 65));
+  const d = privateKeyBase64Url;
+
+  const jwk = { kty: "EC", crv: "P-256", x, y, d };
+
   const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    buildPkcs8FromRaw(privateKeyBytes),
+    "jwk",
+    jwk,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"]
